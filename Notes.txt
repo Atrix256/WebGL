@@ -1,0 +1,7 @@
+
+
+* webgl context notes (alph, depth, antialias, etc)
+ https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+
+* TODO:
+ ?? whats the end goal?
