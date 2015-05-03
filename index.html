@@ -11,15 +11,51 @@
 
     uniform sampler2D uSampler;
 
+    uniform vec2 uResolution;
+
     void main(void) {
-            gl_FragColor = texture2D(uSampler, vec2(gl_FragCoord.x / 500.0, gl_FragCoord.y / 500.0));
+
+        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
+
+        float sample = 0.25 + normCoord.x / 2.0;
+
+        vec4 curveValues = texture2D(uSampler, vec2(sample));
+        vec4 outColor = vec4(0.0,0.0,0.0,1.0);
+
+        // TODO: branchless!
+        // TODO: smoothstep curve for AA!
+        // TODO: use gradient of bezier function to aproximate distance.
+        if (abs(normCoord.y-curveValues.x) < 0.01)
+            outColor.x = 1.0;
+
+        if (abs(normCoord.y-curveValues.y) < 0.01)
+            outColor.y = 1.0;
+
+        if (abs(normCoord.y-curveValues.z) < 0.01)
+            outColor.z = 1.0;
+
+        if (abs(normCoord.y-curveValues.w) < 0.01)
+        {
+            outColor.x = 1.0;
+            outColor.y = 1.0;
+            outColor.z = 1.0;
+        }
+
+        if (normCoord.x < 0.0 || normCoord.y > 1.0)
+        {
+            outColor.x = 1.0;
+            outColor.y = 1.0;
+            outColor.z = 0.0;
+        }
+
+        gl_FragColor = outColor;
     }
 </script>
 
 <script id="shader-vs" type="x-shader/x-vertex">
-    attribute vec3 aVertexPosition;
+    attribute vec2 aVertexPosition;
     void main(void) {
-        gl_Position = vec4(aVertexPosition, 1.0);
+        gl_Position = vec4(aVertexPosition, 1.0, 1.0);
     }
 </script>
 
@@ -97,6 +133,9 @@
         shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
         shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+
+        var resolutionLocation = gl.getUniformLocation(shaderProgram, "uResolution");
+        gl.uniform2f(resolutionLocation, gl.viewportWidth, gl.viewportHeight);
     }
 
     function createTexture(byteArrayWithRGBAData, width, height) {
@@ -111,44 +150,35 @@
         return texture;
     }
 
-    var neheTexture;
+    var bezierTexture;
     function initTexture() {
 
-        neheTexture = createTexture(
-            [255,  0,  0,255,
-               0,255,  0,255,
-               0,255,  0,255,
-               0,  0,255,255],
+        bezierTexture = createTexture(
+            [128,  0, 50,192,
+               0,255,  0,  0,
+               0,255,  0,  0,
+             192, 64,255, 80],
              2, 2
         );
     }
 
     var cubeVertexPositionBuffer;
-    var cubeVertexIndexBuffer;
 
     function initBuffers() {
         cubeVertexPositionBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
         vertices = [
             // Front face
-            -1.0, -1.0,  1.0,
-             1.0, -1.0,  1.0,
-             1.0,  1.0,  1.0,
-            -1.0,  1.0,  1.0,
+            -1.0, -1.0,
+             1.0, -1.0,
+             1.0,  1.0,
+            -1.0, -1.0,
+             1.0,  1.0,
+            -1.0,  1.0,
         ];
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-        cubeVertexPositionBuffer.itemSize = 3;
-        cubeVertexPositionBuffer.numItems = 4;
-
-        cubeVertexIndexBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-        var cubeVertexIndices = [
-            0, 1, 2,      0, 2, 3,    // Front face
-
-        ];
-        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(cubeVertexIndices), gl.STATIC_DRAW);
-        cubeVertexIndexBuffer.itemSize = 1;
-        cubeVertexIndexBuffer.numItems = 6;
+        cubeVertexPositionBuffer.itemSize = 2;
+        cubeVertexPositionBuffer.numItems = 6;
     }
 
     function drawScene() {
@@ -159,11 +189,10 @@
         gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         gl.activeTexture(gl.TEXTURE0);
-        gl.bindTexture(gl.TEXTURE_2D, neheTexture);
+        gl.bindTexture(gl.TEXTURE_2D, bezierTexture);
         gl.uniform1i(shaderProgram.samplerUniform, 0);
 
-        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, cubeVertexIndexBuffer);
-        gl.drawElements(gl.TRIANGLES, cubeVertexIndexBuffer.numItems, gl.UNSIGNED_SHORT, 0);
+        gl.drawArrays(gl.TRIANGLES,0,6);
     }
 
     function tick() {
@@ -187,6 +216,7 @@
 
 TODO:
 
+? how do we draw as fast as possible? how does shadertoy do the equivelant of "requestAnimFrame()"?
 * maybe drag / drop control points
 * ditch code not needed
 ? do we need those js helper files?
