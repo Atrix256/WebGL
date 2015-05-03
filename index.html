@@ -15,40 +15,33 @@
 
     void main(void) {
 
+        // calculate normalized coordinates: 0 to 1 on each axis.
         vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
 
+        // calculate the quadratic bezier curve point by using the bilinear interpolation of bilinear filtering!
+        // The x axis is the "time" parameter of our curve, but the bilinear interpolation happens
+        // from 0.25 to 0.75, not from 0 to 1.
         float sample = 0.25 + normCoord.x / 2.0;
-
         vec4 curveValues = texture2D(uSampler, vec2(sample));
-        vec4 outColor = vec4(0.0,0.0,0.0,1.0);
 
-        // TODO: branchless!
-        // TODO: smoothstep curve for AA!
-        // TODO: use gradient of bezier function to aproximate distance.
-        if (abs(normCoord.y-curveValues.x) < 0.01)
-            outColor.x = 1.0;
+        // red component curve
+        vec3 outColor;
+        outColor.x = smoothstep(0.02,0.0,abs(normCoord.y-curveValues.x));
 
-        if (abs(normCoord.y-curveValues.y) < 0.01)
-            outColor.y = 1.0;
+        // green component curve
+        outColor.y = smoothstep(0.02,0.0,abs(normCoord.y-curveValues.y));
 
-        if (abs(normCoord.y-curveValues.z) < 0.01)
-            outColor.z = 1.0;
+        // blue component curve
+        outColor.z = smoothstep(0.02,0.0,abs(normCoord.y-curveValues.z));
 
-        if (abs(normCoord.y-curveValues.w) < 0.01)
-        {
-            outColor.x = 1.0;
-            outColor.y = 1.0;
-            outColor.z = 1.0;
-        }
+        // alpha component curve
+        float value = smoothstep(0.02,0.0,abs(normCoord.y-curveValues.w));
+        outColor.x += value;
+        outColor.y += value;
+        outColor.z += value;
 
-        if (normCoord.x < 0.0 || normCoord.y > 1.0)
-        {
-            outColor.x = 1.0;
-            outColor.y = 1.0;
-            outColor.z = 0.0;
-        }
-
-        gl_FragColor = outColor;
+        // set the output color, making sure we didn't go over 1.0 on any color component
+        gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
     }
 </script>
 
@@ -75,7 +68,6 @@
             alert("Could not initialise WebGL, sorry :-(");
         }
     }
-
 
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
@@ -200,9 +192,8 @@
         drawScene();
     }
 
-
     function webGLStart() {
-        var canvas = document.getElementById("lesson05-canvas");
+        var canvas = document.getElementById("webglcanvas");
         initGL(canvas);
         initShaders();
         initBuffers();
@@ -216,6 +207,9 @@
 
 TODO:
 
+? better way to draw full screen? like the dx trick...
+* smoothstep distance should use screen resolution or something
+* use gradient of bezier function to aproximate distance.
 ? how do we draw as fast as possible? how does shadertoy do the equivelant of "requestAnimFrame()"?
 * maybe drag / drop control points
 * ditch code not needed
@@ -229,6 +223,8 @@ TODO:
 * blog post! Or paper...
 * tell rick
 
+* attribute gl init code to who you got it from, or change it up a lot
+
 */
 
 
@@ -239,7 +235,7 @@ TODO:
 
 
 <body onload="webGLStart();">
-    <canvas id="lesson05-canvas" style="border: none;" width="500" height="500"/>
+    <canvas id="webglcanvas" style="border: none;" width="500" height="500"/>
 </body>
 
 </html>
