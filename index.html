@@ -24,18 +24,25 @@
         float sample = 0.25 + normCoord.x / 2.0;
         vec4 curveValues = texture2D(uSampler, vec2(sample));
 
+        // TODO: explain finite differences to estimate distance
+        // TODO: what value should h be? figure out the right number!
+        // TODO: is there a better way to get the gradient, or to estimate distance?
+        // TODO: is my method correct? maybe try same math with a smoother function or something
+        float h = sample > 0.5 ? -0.01 : 0.01;
+        vec4 slope = (texture2D(uSampler, vec2(sample + h)) - curveValues) / h; 
+
         // red component curve
         vec3 outColor;
-        outColor.x = smoothstep(0.02,0.0,abs(normCoord.y-curveValues.x));
+        outColor.x = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
 
         // green component curve
-        outColor.y = smoothstep(0.02,0.0,abs(normCoord.y-curveValues.y));
+        outColor.y = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
 
         // blue component curve
-        outColor.z = smoothstep(0.02,0.0,abs(normCoord.y-curveValues.z));
+        outColor.z = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
 
         // alpha component curve
-        float value = smoothstep(0.02,0.0,abs(normCoord.y-curveValues.w));
+        float value = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
         outColor.x += value;
         outColor.y += value;
         outColor.z += value;
@@ -207,6 +214,7 @@
 
 TODO:
 
+? should we FOV correct? or maybe always assume square and note it in a comment
 ? better way to draw full screen? like the dx trick...
 * smoothstep distance should use screen resolution or something
 * use gradient of bezier function to aproximate distance.
@@ -224,6 +232,11 @@ TODO:
 * tell rick
 
 * attribute gl init code to who you got it from, or change it up a lot
+
+* Show enlarged versions of both the filtered and non filtered image
+
+* make some version that lets you compare speed of this vs other ways
+
 
 */
 
