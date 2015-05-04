@@ -24,6 +24,23 @@
         float sample = 0.25 + normCoord.x / 2.0;
         vec4 curveValues = texture2D(uSampler, vec2(sample));
 
+        vec3 outColor = vec3(0.0,0.0,0.0);
+
+        // TODO: option to switch render modes? possibly different shader
+        // TODO: can it be paralelized?
+        outColor.x = step(normCoord.y, curveValues.x) * 0.5;
+        outColor.y = step(normCoord.y, curveValues.y) * 0.5;
+        outColor.z = step(normCoord.y, curveValues.z) * 0.5;
+
+        float v = step(normCoord.y, curveValues.w) * 0.5;
+        outColor.x += v;
+        outColor.y += v;
+        outColor.z += v;
+
+        gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
+
+        return;
+
         // TODO: explain finite differences to estimate distance
         // TODO: what value should h be? figure out the right number!
         // TODO: is there a better way to get the gradient, or to estimate distance?
@@ -32,7 +49,6 @@
         vec4 slope = (texture2D(uSampler, vec2(sample + h)) - curveValues) / h; 
 
         // red component curve
-        vec3 outColor;
         outColor.x = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
 
         // green component curve
@@ -63,6 +79,7 @@
 <script type="text/javascript">
 
     var gl;
+    var g_frameCounter = 0;
 
     function initGL(canvas) {
         try {
@@ -141,8 +158,7 @@
         var data = new Uint8Array(byteArrayWithRGBAData);
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D,
-           0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.bindTexture(gl.TEXTURE_2D, null);
@@ -197,6 +213,7 @@
     function tick() {
         requestAnimFrame(tick);
         drawScene();
+        g_frameCounter++;
     }
 
     function webGLStart() {
@@ -208,14 +225,31 @@
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         tick();
+
+        setInterval(function(){ document.getElementById("fps").innerText = "FPS: " + g_frameCounter; g_frameCounter = 0; }, 1000);
     }
 
 /*
 
 TODO:
 
+* compare to 1x16 curve bake out lerp version
+* higher order curve version w/ lots of lerps (or higher order math)
+
+* I think finite differences might be wrong. Simulate in Shadertoy or something
+* make sure AA is off
+* turn off vsync for better perf numbers. note how to turn off vsync in chrome
+? can code be shared across multiple demos?
+* how to do webgl shader permutations (if needed)
+? would it be smoother if we read all 4 pixels and do it ourselves? im thinking maybe bilinear filtering does 8 bit interpolation.  If we read it in ourselves, we can do it with floats.
+ * could do "true gradianet" in that mode as well with math
+
+? separate canvases for the texture bilinear sampled and not
+* checkbox to turn on and off smoothstep
+? how to get vsync turned off?
+
 ? should we FOV correct? or maybe always assume square and note it in a comment
-? better way to draw full screen? like the dx trick...
+? better way to draw full screen? like the dx one triangle trick...
 * smoothstep distance should use screen resolution or something
 * use gradient of bezier function to aproximate distance.
 ? how do we draw as fast as possible? how does shadertoy do the equivelant of "requestAnimFrame()"?
@@ -237,6 +271,30 @@ TODO:
 
 * make some version that lets you compare speed of this vs other ways
 
+* Explicitly say that bilinear texture filtering can evaluate the equation of bilin interp (quadratic bezier)
+
+=====Paper Notes=====
+* doing manual lerp, you only need 1 pixel per control point.
+ * can do this pattern with vertical texture repeat on to make a looping curve!
+
+A B
+D C
+E F
+H G
+
+A->B->C
+C->D->E
+E->F->G
+G->H->A
+
+! compare quality to doing 1x16
+
+? is bilinear sampling "free" (need citation)
+? what's the cost of 3 neighboring "nearest pixel" pixel samples, is it also "free"?
+
+=====OTHER=====
+
+! note that you changed the webgl-utils.js to update more requently!
 
 */
 
@@ -248,7 +306,9 @@ TODO:
 
 
 <body onload="webGLStart();">
+    <div id="fps">FPS: --</div>
     <canvas id="webglcanvas" style="border: none;" width="500" height="500"/>
+
 </body>
 
 </html>
