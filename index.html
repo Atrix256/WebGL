@@ -6,7 +6,90 @@
 
 <script type="text/javascript" src="webgl-utils.js"></script>
 
-<script id="shader-fs" type="x-shader/x-fragment">
+<script id="shader-fs-bilinear-halfspace" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D uSampler;
+
+    uniform vec2 uResolution;
+
+    void main(void) {
+        // calculate normalized coordinates: 0 to 1 on each axis.
+        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
+
+        vec3 outColor = vec3(0.0,0.0,0.0);    	
+
+        float sample = 0.25 + normCoord.x / 2.0;
+        vec4 curveValues = texture2D(uSampler, vec2(sample));
+
+        // == SHOW "UNDER / OVER"
+
+        // calculate the quadratic bezier curve point by using the bilinear interpolation of bilinear filtering!
+        // The x axis is the "time" parameter of our curve, but the bilinear interpolation happens
+        // from 0.25 to 0.75, not from 0 to 1.
+
+        outColor.x = step(normCoord.y, curveValues.x) * 0.5;
+        outColor.y = step(normCoord.y, curveValues.y) * 0.5;
+        outColor.z = step(normCoord.y, curveValues.z) * 0.5;
+
+        float v = step(normCoord.y, curveValues.w) * 0.5;
+        outColor.x += v;
+        outColor.y += v;
+        outColor.z += v;
+
+        gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
+    }
+</script>
+
+<script id="shader-fs-bilinear-curves" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D uSampler;
+
+    uniform vec2 uResolution;
+
+    void main(void) {
+
+
+        // calculate normalized coordinates: 0 to 1 on each axis.
+        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
+
+        vec3 outColor = vec3(0.0,0.0,0.0); 
+
+        float sample = 0.25 + normCoord.x / 2.0;
+        vec4 curveValues = texture2D(uSampler, vec2(sample));
+
+        // == SHOW LINES
+
+        // TODO: explain finite differences to estimate distance
+        // TODO: what value should h be? figure out the right number!
+        // TODO: is there a better way to get the gradient, or to estimate distance?
+        // TODO: is my method correct? maybe try same math with a smoother function or something
+
+        float h = sample > 0.5 ? -0.01 : 0.01;
+        vec4 slope = (texture2D(uSampler, vec2(sample + h)) - curveValues) / h; 
+
+        // red component curve
+        outColor.x = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
+
+        // green component curve
+        outColor.y = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
+
+        // blue component curve
+        outColor.z = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
+
+        // alpha component curve
+        float value = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
+        outColor.x += value;
+        outColor.y += value;
+        outColor.z += value;
+
+        // set the output color, making sure we didn't go over 1.0 on any color component
+        gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
+    }
+</script>
+
+<script id="shader-fs-equation-halfspace" type="x-shader/x-fragment">
     precision mediump float;
 
     uniform sampler2D uSampler;
@@ -20,24 +103,18 @@
 
         vec3 outColor = vec3(0.0,0.0,0.0);
 
+        vec4 A = texture2D(uSampler, vec2(0.25,0.25));
+        vec4 B = texture2D(uSampler, vec2(0.75,0.25));
+        vec4 C = texture2D(uSampler, vec2(0.75,0.75));
+
+		float t = normCoord.x;
+        vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;
+
         // == sample the 3 pixels and manually calculate curve points
         // TODO: make it a setting to do this or the below? maybe break it into two different shaders or something
         // TODO: do this
-        // TODO: sample a "nearest" sampler
+        // TODO: sample a "nearest" sampler instead of this
 
-        
-
-
-        // == SHOW "UNDER / OVER"
-
-        // calculate the quadratic bezier curve point by using the bilinear interpolation of bilinear filtering!
-        // The x axis is the "time" parameter of our curve, but the bilinear interpolation happens
-        // from 0.25 to 0.75, not from 0 to 1.
-        float sample = 0.25 + normCoord.x / 2.0;
-        vec4 curveValues = texture2D(uSampler, vec2(sample));
-
-        // TODO: option to switch render modes? possibly different shader
-        // TODO: can it be paralelized?
         outColor.x = step(normCoord.y, curveValues.x) * 0.5;
         outColor.y = step(normCoord.y, curveValues.y) * 0.5;
         outColor.z = step(normCoord.y, curveValues.z) * 0.5;
@@ -45,38 +122,57 @@
         float v = step(normCoord.y, curveValues.w) * 0.5;
         outColor.x += v;
         outColor.y += v;
-        outColor.z += v;
+        outColor.z += v;        
 
         gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
+    }
+</script>
 
-        return;
+<script id="shader-fs-equation-curves" type="x-shader/x-fragment">
+    precision mediump float;
 
-        // == SHOW LINES
+    uniform sampler2D uSampler;
 
-        // TODO: explain finite differences to estimate distance
-        // TODO: what value should h be? figure out the right number!
-        // TODO: is there a better way to get the gradient, or to estimate distance?
-        // TODO: is my method correct? maybe try same math with a smoother function or something
-        float h = sample > 0.5 ? -0.01 : 0.01;
-        vec4 slope = (texture2D(uSampler, vec2(sample + h)) - curveValues) / h; 
+    uniform vec2 uResolution;
+
+    void main(void) {
+
+        // calculate normalized coordinates: 0 to 1 on each axis.
+        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
+
+        vec3 outColor = vec3(0.0,0.0,0.0);
+
+        vec4 A = texture2D(uSampler, vec2(0.25,0.25));
+        vec4 B = texture2D(uSampler, vec2(0.75,0.25));
+        vec4 C = texture2D(uSampler, vec2(0.75,0.75)); 
+
+		float t = normCoord.x;
+        vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;
+
+        // == sample the 3 pixels and manually calculate curve points
+        // TODO: make it a setting to do this or the below? maybe break it into two different shaders or something
+        // TODO: do this
+        // TODO: sample a "nearest" sampler instead of this
+
+        vec4 slope = 2.0 * (B + A * (-1.0 + t) - 2.0 * B * t + C * t);
 
         // red component curve
-        outColor.x = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
+        outColor.x = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
 
         // green component curve
-        outColor.y = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
+        outColor.y = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
 
         // blue component curve
-        outColor.z = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
+        outColor.z = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
 
         // alpha component curve
-        float value = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
+        float value = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
         outColor.x += value;
         outColor.y += value;
         outColor.z += value;
 
         // set the output color, making sure we didn't go over 1.0 on any color component
-        gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
+        gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);        
     }
 </script>
 
@@ -144,7 +240,10 @@
     var shaderProgram;
 
     function initShaders() {
-        var fragmentShader = getShader(gl, "shader-fs");
+    	var evaluationMode = document.getElementById("EvaluationMode").value;
+    	var renderMode = document.getElementById("RenderMode").value;
+
+        var fragmentShader = getShader(gl, "shader-fs-"+evaluationMode+"-"+renderMode);
         var vertexShader = getShader(gl, "shader-vs");
 
         shaderProgram = gl.createProgram();
@@ -167,12 +266,17 @@
     }
 
     function createTexture(byteArrayWithRGBAData, width, height) {
+
+    	var filter = (document.getElementById("EvaluationMode").value == "bilinear")
+    		? gl.LINEAR
+    		: gl.NEAREST;
+
         var data = new Uint8Array(byteArrayWithRGBAData);
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
         gl.bindTexture(gl.TEXTURE_2D, null);
         return texture;
     }
@@ -230,6 +334,9 @@
 
     function webGLStart() {
         var canvas = document.getElementById("webglcanvas");
+        var canvassize = document.getElementById("CanvasSize").value;
+        canvas.width = canvassize;
+        canvas.height = canvassize;
         initGL(canvas);
         initShaders();
         initBuffers();
@@ -237,13 +344,33 @@
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         tick();
+    }
 
-        setInterval(function(){ document.getElementById("fps").innerText = "FPS: " + g_frameCounter; g_frameCounter = 0; }, 1000);
+    function DoOnLoad() {
+    	webGLStart();
+    	setInterval(function(){ document.getElementById("fps").innerText = "FPS: " + g_frameCounter + " (" + Math.round(100 * 1000.0/g_frameCounter) / 100 + " ms)"; g_frameCounter = 0; }, 1000);
+    }
+
+    function ResizeCanvas() {
+    	webGLStart();
     }
 
 /*
 
 TODO:
+
+! fix requestAnimFrame stuff, it's screwing with FPS counter after changing canvas size 
+! then, probably show texture in a panel next to it? not sure if i wanna... might screw with fps?  since we are creating a canvas for the image, maybe just display it next ot it as dhtml or something.
+! then, let control points be shown and altered i guess? how to keep control points from altering FPS? maybe it's ok that they do (an inperceptible amount), since faster curves = faster render no matter what else is going on
+
+* build the shader code dynamically from template strings? if not that, make the code a bit more uniform and documented
+* show pixel shader code next to the rendering
+* show the texture used next to the rendering
+* control point movement
+
+* clean up all code: JS and shaders
+
+? option for smoothstep vs not? default to on i guess...
 
 * maybe have the regular curve version (using equation and 3 lookups) as a checkbox to control. you can then compare / contrast the methods
 * compare to 1x16 curve bake out lerp version
@@ -309,6 +436,11 @@ G->H->A
 
 ! note that you changed the webgl-utils.js to update more requently!
 
+=====DEMO NOTES=====
+* chrome disable vsync
+ * run with --disable-gpu-vsync
+ * https://cesiumjs.org/2014/12/01/WebGL-Profiling-Tips/
+
 */
 
 
@@ -318,10 +450,39 @@ G->H->A
 </head>
 
 
-<body onload="webGLStart();">
-    <div id="fps">FPS: --</div>
+<body onload="DoOnLoad()">
+    <div id="fps">FPS: --</div><br>
+    <table>
+	    <tr>
+		    <td>Evaluation:</td>
+		    <td>
+			    <select id="EvaluationMode" onChange="initShaders();">
+			    	<option value="bilinear">Bilinear Texture Filtering</option>
+			    	<option value="equation">Quadratic Bezier Equation</option>
+			    </select>
+		    </td>
+	    </tr>
+	    <tr>
+		    <td>Render:</td>
+		    <td>
+			    <select id="RenderMode" onChange="initShaders();">
+			    	<option value="halfspace">HalfSpace</option>
+			    	<option value="curves">Curves</option>
+			    </select>
+			</td>
+		</tr>
+		<tr>
+		    <td>Resolution:</td>
+		    <td><select id="CanvasSize" onChange="ResizeCanvas();">
+		    	<option value="250">250x250</option>
+		    	<option value="500" selected="selected">500x500</option>
+		    	<option value="1000">1000x1000</option>
+		    </select>
+		    </td>
+	    </tr>
+    </table>
+    <br>
     <canvas id="webglcanvas" style="border: none;" width="500" height="500"/>
-
 </body>
 
 </html>
