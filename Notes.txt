@@ -5,3 +5,6 @@
 
 * TODO:
  ?? whats the end goal?
+
+* procedular texture info, so it can be interactive.
+ http://www.goocreate.com/learn/procedural-textures/
