@@ -18,13 +18,23 @@
         // calculate normalized coordinates: 0 to 1 on each axis.
         vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
 
+        vec3 outColor = vec3(0.0,0.0,0.0);
+
+        // == sample the 3 pixels and manually calculate curve points
+        // TODO: make it a setting to do this or the below? maybe break it into two different shaders or something
+        // TODO: do this
+        // TODO: sample a "nearest" sampler
+
+        
+
+
+        // == SHOW "UNDER / OVER"
+
         // calculate the quadratic bezier curve point by using the bilinear interpolation of bilinear filtering!
         // The x axis is the "time" parameter of our curve, but the bilinear interpolation happens
         // from 0.25 to 0.75, not from 0 to 1.
         float sample = 0.25 + normCoord.x / 2.0;
         vec4 curveValues = texture2D(uSampler, vec2(sample));
-
-        vec3 outColor = vec3(0.0,0.0,0.0);
 
         // TODO: option to switch render modes? possibly different shader
         // TODO: can it be paralelized?
@@ -40,6 +50,8 @@
         gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
 
         return;
+
+        // == SHOW LINES
 
         // TODO: explain finite differences to estimate distance
         // TODO: what value should h be? figure out the right number!
@@ -233,6 +245,7 @@
 
 TODO:
 
+* maybe have the regular curve version (using equation and 3 lookups) as a checkbox to control. you can then compare / contrast the methods
 * compare to 1x16 curve bake out lerp version
 * higher order curve version w/ lots of lerps (or higher order math)
 
