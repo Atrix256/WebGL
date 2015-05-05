@@ -8,9 +8,7 @@
 
 <script id="shader-fs-bilinear-halfspace" type="x-shader/x-fragment">
     precision mediump float;
-
     uniform sampler2D uSampler;
-
     uniform vec2 uResolution;
 
     void main(void) {
@@ -21,8 +19,6 @@
 
         float sample = 0.25 + normCoord.x / 2.0;
         vec4 curveValues = texture2D(uSampler, vec2(sample));
-
-        // == SHOW "UNDER / OVER"
 
         // calculate the quadratic bezier curve point by using the bilinear interpolation of bilinear filtering!
         // The x axis is the "time" parameter of our curve, but the bilinear interpolation happens
@@ -43,14 +39,10 @@
 
 <script id="shader-fs-bilinear-curves" type="x-shader/x-fragment">
     precision mediump float;
-
     uniform sampler2D uSampler;
-
     uniform vec2 uResolution;
 
     void main(void) {
-
-
         // calculate normalized coordinates: 0 to 1 on each axis.
         vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
 
@@ -59,7 +51,6 @@
         float sample = 0.25 + normCoord.x / 2.0;
         vec4 curveValues = texture2D(uSampler, vec2(sample));
 
-        // == SHOW LINES
 
         // TODO: explain finite differences to estimate distance
         // TODO: what value should h be? figure out the right number!
@@ -86,6 +77,17 @@
 
         // set the output color, making sure we didn't go over 1.0 on any color component
         gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
+    }
+</script>
+
+<script id="shader-fs-bilinear-texture" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform sampler2D uSampler;
+    uniform vec2 uResolution;
+
+    void main(void) {
+        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
+        gl_FragColor = vec4(texture2D(uSampler, normCoord).xyz, 1.0);
     }
 </script>
 
@@ -176,6 +178,18 @@
     }
 </script>
 
+<script id="shader-fs-equation-texture" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform sampler2D uSampler;
+    uniform vec2 uResolution;
+
+    void main(void) {
+        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
+        gl_FragColor = vec4(texture2D(uSampler, normCoord).xyz, 1.0);
+    }
+</script>
+
+
 <script id="shader-vs" type="x-shader/x-vertex">
     attribute vec2 aVertexPosition;
     void main(void) {
@@ -254,7 +268,6 @@
     }
 
     function createTexture(byteArrayWithRGBAData, width, height) {
-
     	var filter = (document.getElementById("EvaluationMode").value == "bilinear")
     		? gl.LINEAR
     		: gl.NEAREST;
@@ -270,13 +283,17 @@
     }
 
     var bezierTexture;
+    var pointA = [128,0,50,192];
+    var pointB = [0,255,0,0];
+    var pointC = [192,64,255,80];
+
     function initTexture() {
 
         bezierTexture = createTexture(
-            [128,  0, 50,192,
-               0,255,  0,  0,
-               0,255,  0,  0,
-             192, 64,255, 80],
+            [pointA[0],pointA[1],pointA[2],pointA[3],
+             pointB[0],pointB[1],pointB[2],pointB[3],
+             pointB[0],pointB[1],pointB[2],pointB[3],
+             pointC[0],pointC[1],pointC[2],pointC[3]],
              2, 2
         );
     }
@@ -349,9 +366,7 @@
 
 TODO:
 
-! fix requestAnimFrame stuff, it's screwing with FPS counter after changing canvas size 
-! then, probably show texture in a panel next to it? not sure if i wanna... might screw with fps?  since we are creating a canvas for the image, maybe just display it next ot it as dhtml or something.
-! then, let control points be shown and altered i guess? how to keep control points from altering FPS? maybe it's ok that they do (an inperceptible amount), since faster curves = faster render no matter what else is going on
+! control points next
 
 * build the shader code dynamically from template strings? if not that, make the code a bit more uniform and documented
 * show pixel shader code next to the rendering
@@ -446,7 +461,7 @@ G->H->A
 	    <tr>
 		    <td>Evaluation:</td>
 		    <td>
-			    <select id="EvaluationMode" onChange="initShaders();">
+			    <select id="EvaluationMode" onChange="initShaders();initTexture();">
 			    	<option value="bilinear">Bilinear Texture Filtering</option>
 			    	<option value="equation">Quadratic Bezier Equation</option>
 			    </select>
@@ -455,9 +470,10 @@ G->H->A
 	    <tr>
 		    <td>Render:</td>
 		    <td>
-			    <select id="RenderMode" onChange="initShaders();">
+			    <select id="RenderMode" onChange="initShaders();initTexture();">
 			    	<option value="halfspace">HalfSpace</option>
 			    	<option value="curves">Curves</option>
+                    <option value="texture">Texture</option>
 			    </select>
 			</td>
 		</tr>
@@ -470,9 +486,8 @@ G->H->A
 		    </select>
 		    </td>
 	    </tr>
-    </table>
-    <br>
-    <canvas id="webglcanvas" style="border: none;" width="500" height="500"/>
+    </table><br>
+    <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas>
 </body>
 
 </html>
