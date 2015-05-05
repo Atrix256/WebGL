@@ -196,8 +196,28 @@
 
 <script id="shader-vs" type="x-shader/x-vertex">
     attribute vec2 aVertexPosition;
+
     void main(void) {
         gl_Position = vec4(aVertexPosition, 1.0, 1.0);
+    }
+</script>
+
+<script id="shader-vs-cp" type="x-shader/x-vertex">
+    attribute vec2 aVertexPosition;
+    uniform vec2 uOffset;
+
+    void main(void) {
+    	// TODO: can we pass offset (or some other value) down to pixel shader, so it can make a circle or something?
+        gl_Position = vec4(aVertexPosition+uOffset, 1.0, 1.0);
+    }
+</script>
+
+<script id="shader-fs-cp" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform vec3 uColor;
+
+    void main(void) {
+        gl_FragColor = vec4(uColor,1.0);        
     }
 </script>
 
@@ -238,32 +258,56 @@
         return shader;
     }
 
-
-    var shaderProgram;
+    var FSshaderProgram;
+    var CPShaderProgram;
 
     function initShaders() {
+    	// make the full screen shader program
     	var evaluationMode = document.getElementById("EvaluationMode").value;
     	var renderMode = document.getElementById("RenderMode").value;
 
         var fragmentShader = getShader(gl, "shader-fs-"+evaluationMode+"-"+renderMode);
         var vertexShader = getShader(gl, "shader-vs");
 
-        shaderProgram = gl.createProgram();
-        gl.attachShader(shaderProgram, vertexShader);
-        gl.attachShader(shaderProgram, fragmentShader);
-        gl.linkProgram(shaderProgram);
+        FSshaderProgram = gl.createProgram();
+        gl.attachShader(FSshaderProgram, vertexShader);
+        gl.attachShader(FSshaderProgram, fragmentShader);
+        gl.linkProgram(FSshaderProgram);
 
-        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS))
-            alert("Could not initialise shaders");
+        if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
+            alert("Could not initialise FS shader");
 
-        gl.useProgram(shaderProgram);
+        gl.useProgram(FSshaderProgram);
 
-        shaderProgram.vertexPositionAttribute = gl.getAttribLocation(shaderProgram, "aVertexPosition");
-        gl.enableVertexAttribArray(shaderProgram.vertexPositionAttribute);
-        shaderProgram.samplerUniform = gl.getUniformLocation(shaderProgram, "uSampler");
+        FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
+        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
 
-        var resolutionLocation = gl.getUniformLocation(shaderProgram, "uResolution");
+        var resolutionLocation = gl.getUniformLocation(FSshaderProgram, "uResolution");
         gl.uniform2f(resolutionLocation, gl.viewportWidth, gl.viewportHeight);
+
+        // make the control point shader program
+        fragmentShader = getShader(gl, "shader-fs-cp");
+        vertexShader = getShader(gl, "shader-vs-cp");
+
+        CPshaderProgram = gl.createProgram();
+        gl.attachShader(CPshaderProgram, vertexShader);
+        gl.attachShader(CPshaderProgram, fragmentShader);
+        gl.linkProgram(CPshaderProgram);
+
+        if (!gl.getProgramParameter(CPshaderProgram, gl.LINK_STATUS))
+            alert("Could not initialise CP shader");        
+
+		gl.useProgram(CPshaderProgram);
+
+        CPshaderProgram.vertexPositionAttribute = gl.getAttribLocation(CPshaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(CPshaderProgram.vertexPositionAttribute);
+
+        CPshaderProgram.uOffsetLocation = gl.getUniformLocation(CPshaderProgram, "uOffset");
+        gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 0);
+
+        CPshaderProgram.uColorLocation = gl.getUniformLocation(CPshaderProgram, "uColor");
+        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 0);
     }
 
     function createTexture(byteArrayWithRGBAData, width, height) {
@@ -312,8 +356,10 @@
     }
 
     var screenQuadBuffer;
+    var controlPointBuffer;
 
     function initBuffers() {
+    	// make the full screen quad vertex buffer
         screenQuadBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
         vertices = [
@@ -328,20 +374,78 @@
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
         screenQuadBuffer.itemSize = 2;
         screenQuadBuffer.numItems = 6;
+
+        // make the control point quad vertex buffer
+        controlPointBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
+        var size = 0.1;
+        vertices = [
+            // Front face
+            -size, -size,
+             size, -size,
+             size,  size,
+            -size, -size,
+             size,  size,
+            -size,  size,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        controlPointBuffer.itemSize = 2;
+        controlPointBuffer.numItems = 6;        
     }
 
     function drawScene() {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
+        // draw the full screen quad
+		gl.useProgram(FSshaderProgram);
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
-        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
+        gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, bezierTexture);
-        gl.uniform1i(shaderProgram.samplerUniform, 0);
+        gl.uniform1i(FSshaderProgram.samplerUniform, 0);
+        gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
 
-        gl.drawArrays(gl.TRIANGLES,0,6);
+        // draw the control points
+        gl.useProgram(CPshaderProgram);        
+        gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, controlPointBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+        // Draw Red curve control points
+        gl.uniform3f(CPshaderProgram.uColorLocation, 1, 0, 0);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[0]/255.0 - 0.5));
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[0]/255.0 - 0.5));        
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, 1, 2.0 * (pointC[0]/255.0 - 0.5));        
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+
+        // Draw Green curve control points
+        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 1, 0);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[1]/255.0 - 0.5));
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[1]/255.0 - 0.5));        
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, 1, 2.0 * (pointC[1]/255.0 - 0.5));        
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+
+        // Draw Blue curve control points
+        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 1);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[2]/255.0 - 0.5));
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[2]/255.0 - 0.5));        
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, 1, 2.0 * (pointC[2]/255.0 - 0.5));        
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+
+        // Draw Alpha curve control points
+        gl.uniform3f(CPshaderProgram.uColorLocation, 1, 1, 1);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[3]/255.0 - 0.5));
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[3]/255.0 - 0.5));        
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		gl.uniform2f(CPshaderProgram.uOffsetLocation, 1, 2.0 * (pointC[3]/255.0 - 0.5));        
+        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
     }
 
     function tick() {
@@ -380,6 +484,9 @@
 
 TODO:
 
+* finish control point visualization.
+? if 0,0 is center of screen, how does my curves end up working?!
+
 Next:
  ? control point visualization (in all renders or just some?)
  ? 2d curve rendering?
@@ -397,6 +504,7 @@ Next:
 
 * compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
 
+* onto other curve types next! (cubic?)
 
 */
 
