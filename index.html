@@ -288,6 +288,20 @@
     var pointC = [192,64,255,80];
 
     function initTexture() {
+        pointA[0] = document.getElementById("R0").value * 2.55;
+        pointA[1] = document.getElementById("G0").value * 2.55;
+        pointA[2] = document.getElementById("B0").value * 2.55;
+        pointA[3] = document.getElementById("A0").value * 2.55;
+
+        pointB[0] = document.getElementById("R1").value * 2.55;
+        pointB[1] = document.getElementById("G1").value * 2.55;
+        pointB[2] = document.getElementById("B1").value * 2.55;
+        pointB[3] = document.getElementById("A1").value * 2.55;
+
+        pointC[0] = document.getElementById("R2").value * 2.55;
+        pointC[1] = document.getElementById("G2").value * 2.55;
+        pointC[2] = document.getElementById("B2").value * 2.55;
+        pointC[3] = document.getElementById("A2").value * 2.55;
 
         bezierTexture = createTexture(
             [pointA[0],pointA[1],pointA[2],pointA[3],
@@ -366,7 +380,7 @@
 
 TODO:
 
-! control points next
+* put values next to ranges?
 
 * build the shader code dynamically from template strings? if not that, make the code a bit more uniform and documented
 * show pixel shader code next to the rendering
@@ -487,7 +501,32 @@ G->H->A
 		    </td>
 	    </tr>
     </table><br>
-    <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas>
+
+    <table>
+        <tr>
+            <td>
+                <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas>
+            </td>
+            <td valign="top">
+                Red:<br>
+                <input type="range" min="0" max="100" id="R0" onChange="initTexture();" value="50"><br>
+                <input type="range" min="0" max="100" id="R1" onChange="initTexture();" value="0"><br>
+                <input type="range" min="0" max="100" id="R2" onChange="initTexture();" value="75"><br>
+                Green:<br>
+                <input type="range" min="0" max="100" id="G0" onChange="initTexture();" value="0"><br>
+                <input type="range" min="0" max="100" id="G1" onChange="initTexture();" value="100"><br>
+                <input type="range" min="0" max="100" id="G2" onChange="initTexture();" value="25"><br>
+                Blue:<br>
+                <input type="range" min="0" max="100" id="B0" onChange="initTexture();" value="20"><br>
+                <input type="range" min="0" max="100" id="B1" onChange="initTexture();" value="0"><br>
+                <input type="range" min="0" max="100" id="B2" onChange="initTexture();" value="100"><br>
+                Alpha:<br>
+                <input type="range" min="0" max="100" id="A0" onChange="initTexture();" value="75"><br>
+                <input type="range" min="0" max="100" id="A1" onChange="initTexture();" value="0"><br>
+                <input type="range" min="0" max="100" id="A2" onChange="initTexture();" value="30"><br>
+            </td>
+        </tr>
+    </table>
 </body>
 
 </html>
