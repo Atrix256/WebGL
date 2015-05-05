@@ -1,44 +1,54 @@
+<!--
+	WebGL initialization and basic utility code is based on the source code found here:
+	http://learningwebgl.com/blog/?page_id=1217
 
+	The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
+-->
 <html>
 <head>
-<title>Bilinear Texture Filtering Quadratic Bezier Curves</title>
+<title>Quadratic Bezier Curve</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="webgl-utils.js"></script>
 
 <script id="shader-fs-bilinear-halfspace" type="x-shader/x-fragment">
     precision mediump float;
+
     uniform sampler2D uSampler;
     uniform vec2 uResolution;
 
     void main(void) {
-        // calculate normalized coordinates: 0 to 1 on each axis.
+        // Calculate normalized coordinates: 0 to 1 on each axis.
         vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
 
-        vec3 outColor = vec3(0.0,0.0,0.0);    	
-
+        // Calculate our sample value.
+        // The center of each pixel is where the value starts, not the edge, so our interpolation
+        // goes from 0.25 -> 0.75, not from 0 to 1.
         float sample = 0.25 + normCoord.x / 2.0;
+
+        // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.
         vec4 curveValues = texture2D(uSampler, vec2(sample));
 
-        // calculate the quadratic bezier curve point by using the bilinear interpolation of bilinear filtering!
-        // The x axis is the "time" parameter of our curve, but the bilinear interpolation happens
-        // from 0.25 to 0.75, not from 0 to 1.
-
+        // R,G,B curves add 0.5 to their color channels respectively
+		vec3 outColor;
         outColor.x = step(normCoord.y, curveValues.x) * 0.5;
         outColor.y = step(normCoord.y, curveValues.y) * 0.5;
         outColor.z = step(normCoord.y, curveValues.z) * 0.5;
 
+        // alpha curve adds 0.5 to each color channel
         float v = step(normCoord.y, curveValues.w) * 0.5;
         outColor.x += v;
         outColor.y += v;
         outColor.z += v;
 
+        // make the output color
         gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
     }
 </script>
 
 <script id="shader-fs-bilinear-curves" type="x-shader/x-fragment">
     precision mediump float;
+
     uniform sampler2D uSampler;
     uniform vec2 uResolution;
 
@@ -46,48 +56,46 @@
         // calculate normalized coordinates: 0 to 1 on each axis.
         vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
 
-        vec3 outColor = vec3(0.0,0.0,0.0); 
-
+        // Calculate our sample value.
+        // The center of each pixel is where the value starts, not the edge, so our interpolation
+        // goes from 0.25 -> 0.75, not from 0 to 1.
         float sample = 0.25 + normCoord.x / 2.0;
+
+        // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.
         vec4 curveValues = texture2D(uSampler, vec2(sample));
 
-
-        // TODO: explain finite differences to estimate distance
-        // TODO: what value should h be? figure out the right number!
-        // TODO: is there a better way to get the gradient, or to estimate distance?
-        // TODO: is my method correct? maybe try same math with a smoother function or something
-
+        // use finite differences to get an aproximation of the slope of the curve at this point
         float h = sample > 0.5 ? -0.01 : 0.01;
         vec4 slope = (texture2D(uSampler, vec2(sample + h)) - curveValues) / h; 
 
-        // red component curve
+        // Use the slope to get the gradient, and use the gradient to get a distance estimation to the curves
+        // R,G,B curves add 1.0 to their color channels respectively.
+        vec3 outColor;
         outColor.x = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
-
-        // green component curve
         outColor.y = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
-
-        // blue component curve
         outColor.z = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
 
-        // alpha component curve
+        // alpha curve adds 1.0 to each color channel
         float value = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
         outColor.x += value;
         outColor.y += value;
         outColor.z += value;
 
-        // set the output color, making sure we didn't go over 1.0 on any color component
+        // make the output color
         gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
     }
 </script>
 
 <script id="shader-fs-bilinear-texture" type="x-shader/x-fragment">
     precision mediump float;
+
     uniform sampler2D uSampler;
     uniform vec2 uResolution;
 
     void main(void) {
+    	// show the texture
         vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
-        gl_FragColor = vec4(texture2D(uSampler, normCoord).xyz, 1.0);
+        gl_FragColor = texture2D(uSampler, normCoord);
     }
 </script>
 
@@ -95,37 +103,37 @@
     precision mediump float;
 
     uniform sampler2D uSampler;
-
     uniform vec2 uResolution;
 
     void main(void) {
-
         // calculate normalized coordinates: 0 to 1 on each axis.
         vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
 
-        vec3 outColor = vec3(0.0,0.0,0.0);
-
+        // Get our control points
+        // The center of each pixel is technically where the pixel color is.
+        // Doesn't really matter for NEAREST sampling, but doing it anyhow
         vec4 A = texture2D(uSampler, vec2(0.25,0.25));
         vec4 B = texture2D(uSampler, vec2(0.75,0.25));
         vec4 C = texture2D(uSampler, vec2(0.75,0.75));
 
+        // Evaluate the quadratic bezier curves at time t.
+        // Paralelized since each one is in a different color channel.
 		float t = normCoord.x;
         vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;
 
-        // == sample the 3 pixels and manually calculate curve points
-        // TODO: make it a setting to do this or the below? maybe break it into two different shaders or something
-        // TODO: do this
-        // TODO: sample a "nearest" sampler instead of this
-
+        // R,G,B curves add 0.5 to their color channels respectively
+		vec3 outColor;
         outColor.x = step(normCoord.y, curveValues.x) * 0.5;
         outColor.y = step(normCoord.y, curveValues.y) * 0.5;
         outColor.z = step(normCoord.y, curveValues.z) * 0.5;
 
+		// alpha curve adds 0.5 to each color channel
         float v = step(normCoord.y, curveValues.w) * 0.5;
         outColor.x += v;
         outColor.y += v;
         outColor.z += v;        
 
+		// make the output color
         gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
     }
 </script>
@@ -138,42 +146,38 @@
     uniform vec2 uResolution;
 
     void main(void) {
-
         // calculate normalized coordinates: 0 to 1 on each axis.
         vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
 
-        vec3 outColor = vec3(0.0,0.0,0.0);
-
+        // Get our control points
+        // The center of each pixel is technically where the pixel color is.
+        // Doesn't really matter for NEAREST sampling, but doing it anyhow
         vec4 A = texture2D(uSampler, vec2(0.25,0.25));
         vec4 B = texture2D(uSampler, vec2(0.75,0.25));
         vec4 C = texture2D(uSampler, vec2(0.75,0.75)); 
 
+        // Evaluate the quadratic bezier curves at time t.
+        // Paralelized since each one is in a different color channel.
 		float t = normCoord.x;
         vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;
 
-        // == sample the 3 pixels and manually calculate curve points
-        // TODO: make it a setting to do this or the below? maybe break it into two different shaders or something
-        // TODO: do this
-        // TODO: sample a "nearest" sampler instead of this
-
+        // use the derivative of the quadratic bezier function to calculate the slope at this point
         vec4 slope = 2.0 * (B + A * (-1.0 + t) - 2.0 * B * t + C * t);
 
-        // red component curve
+		// Use the slope to get the gradient, and use the gradient to get a distance estimation to the curves
+		// R,G,B curves add 1.0 to their color channels respectively
+		vec3 outColor;
         outColor.x = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
-
-        // green component curve
         outColor.y = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
-
-        // blue component curve
         outColor.z = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
 
-        // alpha component curve
+        // alpha curve adds 1.0 to each color channel
         float value = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
         outColor.x += value;
         outColor.y += value;
         outColor.z += value;
 
-        // set the output color, making sure we didn't go over 1.0 on any color component
+        // make the output color
         gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);        
     }
 </script>
@@ -184,11 +188,11 @@
     uniform vec2 uResolution;
 
     void main(void) {
+    	// show the texture
         vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
-        gl_FragColor = vec4(texture2D(uSampler, normCoord).xyz, 1.0);
+        gl_FragColor = texture2D(uSampler, normCoord);
     }
 </script>
-
 
 <script id="shader-vs" type="x-shader/x-vertex">
     attribute vec2 aVertexPosition;
@@ -197,7 +201,6 @@
     }
 </script>
 
-
 <script type="text/javascript">
 
     var gl;
@@ -205,27 +208,24 @@
 
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
-        if (!shaderScript) {
+        if (!shaderScript)
             return null;
-        }
 
         var str = "";
         var k = shaderScript.firstChild;
         while (k) {
-            if (k.nodeType == 3) {
+            if (k.nodeType == 3)
                 str += k.textContent;
-            }
             k = k.nextSibling;
         }
 
         var shader;
-        if (shaderScript.type == "x-shader/x-fragment") {
+        if (shaderScript.type == "x-shader/x-fragment")
             shader = gl.createShader(gl.FRAGMENT_SHADER);
-        } else if (shaderScript.type == "x-shader/x-vertex") {
+        else if (shaderScript.type == "x-shader/x-vertex")
             shader = gl.createShader(gl.VERTEX_SHADER);
-        } else {
+        else
             return null;
-        }
 
         gl.shaderSource(shader, str);
         gl.compileShader(shader);
@@ -253,9 +253,8 @@
         gl.attachShader(shaderProgram, fragmentShader);
         gl.linkProgram(shaderProgram);
 
-        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS))
             alert("Could not initialise shaders");
-        }
 
         gl.useProgram(shaderProgram);
 
@@ -283,9 +282,9 @@
     }
 
     var bezierTexture;
-    var pointA = [128,0,50,192];
-    var pointB = [0,255,0,0];
-    var pointC = [192,64,255,80];
+    var pointA = [0,0,0,0];
+    var pointB = [0,0,0,0];
+    var pointC = [0,0,0,0];
 
     function initTexture() {
         pointA[0] = document.getElementById("R0").value * 2.55;
@@ -312,11 +311,11 @@
         );
     }
 
-    var cubeVertexPositionBuffer;
+    var screenQuadBuffer;
 
     function initBuffers() {
-        cubeVertexPositionBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
+        screenQuadBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
         vertices = [
             // Front face
             -1.0, -1.0,
@@ -327,16 +326,16 @@
             -1.0,  1.0,
         ];
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-        cubeVertexPositionBuffer.itemSize = 2;
-        cubeVertexPositionBuffer.numItems = 6;
+        screenQuadBuffer.itemSize = 2;
+        screenQuadBuffer.numItems = 6;
     }
 
     function drawScene() {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        gl.bindBuffer(gl.ARRAY_BUFFER, cubeVertexPositionBuffer);
-        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, cubeVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, bezierTexture);
@@ -356,7 +355,8 @@
         var canvassize = document.getElementById("CanvasSize").value;
         canvas.width = canvassize;
         canvas.height = canvassize;
-        gl = WebGLUtils.setupWebGL(canvas);
+        // details of options below here: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+        gl = WebGLUtils.setupWebGL(canvas, {alpha:true, depth: false, stencil: false, antialias: false, premultipliedAlpha:false, preserveDrawingBuffer: false});
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
         initShaders();
@@ -380,85 +380,23 @@
 
 TODO:
 
-* put values next to ranges?
+Next:
+ ? control point visualization (in all renders or just some?)
+ ? 2d curve rendering?
+ ? move these todo's somewhere else and make cubic?
+ ? put values next to ranges? and labels? labels should change based on view i'd bet
+ ? make sure AA is off (request it from webgl, maybe a checkbox though?)
+ ? how can we get vsync turned off? chrome didn't seem to work... firefox?
+ ? maybe drag control points support
 
-* build the shader code dynamically from template strings? if not that, make the code a bit more uniform and documented
-* show pixel shader code next to the rendering
-* show the texture used next to the rendering
-* control point movement
+* i think the finite difference implementation might be wrong, check it out by simulating it in shadertoy or something
+ * make h be based on resolution or something
+* smoothstep distance should use screen resolution or something. or make it "true" antialiasing somehow? read that one paper about aa of procedular shapes
 
-* clean up all code: JS and shaders
+* 2d curve rendering info: http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html?m=1
 
-? option for smoothstep vs not? default to on i guess...
+* compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
 
-* maybe have the regular curve version (using equation and 3 lookups) as a checkbox to control. you can then compare / contrast the methods
-* compare to 1x16 curve bake out lerp version
-* higher order curve version w/ lots of lerps (or higher order math)
-
-* I think finite differences might be wrong. Simulate in Shadertoy or something
-* make sure AA is off
-* turn off vsync for better perf numbers. note how to turn off vsync in chrome
-? can code be shared across multiple demos?
-* how to do webgl shader permutations (if needed)
-? would it be smoother if we read all 4 pixels and do it ourselves? im thinking maybe bilinear filtering does 8 bit interpolation.  If we read it in ourselves, we can do it with floats.
- * could do "true gradianet" in that mode as well with math
-
-? separate canvases for the texture bilinear sampled and not
-* checkbox to turn on and off smoothstep
-? how to get vsync turned off?
-
-? should we FOV correct? or maybe always assume square and note it in a comment
-? better way to draw full screen? like the dx one triangle trick...
-* smoothstep distance should use screen resolution or something
-* use gradient of bezier function to aproximate distance.
-? how do we draw as fast as possible? how does shadertoy do the equivelant of "requestAnimFrame()"?
-* maybe drag / drop control points
-* ditch code not needed
-? do we need those js helper files?
-* make sliders to control control points, showing values (0-1).  i guess 0-1 = -1 to +1
-* make it update the texture in real time as the control points are changed
-* make it show bezier curves (all 4 of em)
-* make either N control points or a fixed amount, with curves being set up end to end.
-* do a version with volume textures, which does cubvic bezier curves
-* maybe some way to have higher order curves by doing multiple texture lookups and manual lerping?
-* blog post! Or paper...
-* tell rick
-
-* attribute gl init code to who you got it from, or change it up a lot
-
-* Show enlarged versions of both the filtered and non filtered image
-
-* make some version that lets you compare speed of this vs other ways
-
-* Explicitly say that bilinear texture filtering can evaluate the equation of bilin interp (quadratic bezier)
-
-=====Paper Notes=====
-* doing manual lerp, you only need 1 pixel per control point.
- * can do this pattern with vertical texture repeat on to make a looping curve!
-
-A B
-D C
-E F
-H G
-
-A->B->C
-C->D->E
-E->F->G
-G->H->A
-
-! compare quality to doing 1x16
-
-? is bilinear sampling "free" (need citation)
-? what's the cost of 3 neighboring "nearest pixel" pixel samples, is it also "free"?
-
-=====OTHER=====
-
-! note that you changed the webgl-utils.js to update more requently!
-
-=====DEMO NOTES=====
-* chrome disable vsync
- * run with --disable-gpu-vsync
- * https://cesiumjs.org/2014/12/01/WebGL-Profiling-Tips/
 
 */
 
