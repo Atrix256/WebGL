@@ -189,18 +189,6 @@
     var gl;
     var g_frameCounter = 0;
 
-    function initGL(canvas) {
-        try {
-            gl = canvas.getContext("experimental-webgl");
-            gl.viewportWidth = canvas.width;
-            gl.viewportHeight = canvas.height;
-        } catch (e) {
-        }
-        if (!gl) {
-            alert("Could not initialise WebGL, sorry :-(");
-        }
-    }
-
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript) {
@@ -337,18 +325,20 @@
         var canvassize = document.getElementById("CanvasSize").value;
         canvas.width = canvassize;
         canvas.height = canvassize;
-        initGL(canvas);
+        gl = WebGLUtils.setupWebGL(canvas);
+        gl.viewportWidth = canvas.width;
+        gl.viewportHeight = canvas.height;
         initShaders();
         initBuffers();
         initTexture();
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
-        tick();
     }
 
     function DoOnLoad() {
     	webGLStart();
     	setInterval(function(){ document.getElementById("fps").innerText = "FPS: " + g_frameCounter + " (" + Math.round(100 * 1000.0/g_frameCounter) / 100 + " ms)"; g_frameCounter = 0; }, 1000);
+        tick();
     }
 
     function ResizeCanvas() {
