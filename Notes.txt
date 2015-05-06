@@ -1,3 +1,12 @@
+Next:
+ * N-quadratic curves end to end
+ * N-cubic curves end to end
+ * Higher order curve via more lerps & equation
+ * equation only quadratic curve N-points (3 pixels per curve.  maybe loop the curve?)
+ * OpenGL after webgl cleaned up?
+
+
+
 ! need to do perf analasys between methods somehow!
 
 * do 2d curve rendering for quadratic bezier curves
