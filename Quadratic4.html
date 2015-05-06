@@ -20,15 +20,16 @@
     void main(void) {
         // Calculate normalized coordinates: 0 to 1 on each axis.
         vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
-        float t = normCoord.x * 4.0;
-
+        
         // Calculate our sample value.
         // The center of each pixel is where the value starts, not the edge, so our interpolation
         // goes from 0.25 -> 0.75, not from 0 to 1.
-        float sample = 0.25 + t / 2.0;
+        float t = normCoord.x * 4.0;
+        float sampleY = (0.25 + fract(t) / 2.0);
+        float sampleX = sampleY * 0.25 + floor(t) * 0.25;
 
         // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.
-        vec4 curveValues = texture2D(uSampler, vec2(sample/4.0, sample));
+        vec4 curveValues = texture2D(uSampler, vec2(sampleX, sampleY));
 
         // R,G,B curves add 0.5 to their color channels respectively
 		vec3 outColor;
@@ -60,24 +61,26 @@
         // Calculate our sample value.
         // The center of each pixel is where the value starts, not the edge, so our interpolation
         // goes from 0.25 -> 0.75, not from 0 to 1.
-        float sample = 0.25 + normCoord.x / 2.0;
+        float t = normCoord.x * 4.0;
+        float sampleY = (0.25 + fract(t) / 2.0);
+        float sampleX = sampleY * 0.25 + floor(t) * 0.25;
 
         // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.
-        vec4 curveValues = texture2D(uSampler, vec2(sample));
+        vec4 curveValues = texture2D(uSampler, vec2(sampleX, sampleY));
 
         // use finite differences to get an aproximation of the slope of the curve at this point
-        float h = sample > 0.5 ? -0.01 : 0.01;
-        vec4 slope = (texture2D(uSampler, vec2(sample + h)) - curveValues) / h; 
+        float h = sampleY > 0.5 ? -0.01 : 0.01;
+        vec4 slope = (texture2D(uSampler, vec2(sampleX + h, sampleY)) - curveValues) / h; 
 
         // Use the slope to get the gradient, and use the gradient to get a distance estimation to the curves
         // R,G,B curves add 1.0 to their color channels respectively.
         vec3 outColor;
-        outColor.x = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
-        outColor.y = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
-        outColor.z = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
+        outColor.x = smoothstep(0.005,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
+        outColor.y = smoothstep(0.005,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
+        outColor.z = smoothstep(0.005,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
 
         // alpha curve adds 1.0 to each color channel
-        float value = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
+        float value = smoothstep(0.005,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
         outColor.x += value;
         outColor.y += value;
         outColor.z += value;
@@ -113,13 +116,15 @@
         // Get our control points
         // The center of each pixel is technically where the pixel color is.
         // Doesn't really matter for NEAREST sampling, but doing it anyhow
-        vec4 A = texture2D(uSampler, vec2(0.25,0.25));
-        vec4 B = texture2D(uSampler, vec2(0.75,0.25));
-        vec4 C = texture2D(uSampler, vec2(0.75,0.75));
+        float t = normCoord.x * 4.0;
+        float offsetX = floor(t) * 0.25 ;
+        vec4 A = texture2D(uSampler, vec2(1.0/16.0 + offsetX,0.25));
+        vec4 B = texture2D(uSampler, vec2(3.0/16.0 + offsetX,0.25));
+        vec4 C = texture2D(uSampler, vec2(3.0/16.0 + offsetX,0.75)); 
 
         // Evaluate the quadratic bezier curves at time t.
         // Paralelized since each one is in a different color channel.
-		float t = normCoord.x;
+		t = fract(t);
         vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;
 
         // R,G,B curves add 0.5 to their color channels respectively
@@ -153,13 +158,15 @@
         // Get our control points
         // The center of each pixel is technically where the pixel color is.
         // Doesn't really matter for NEAREST sampling, but doing it anyhow
-        vec4 A = texture2D(uSampler, vec2(0.25,0.25));
-        vec4 B = texture2D(uSampler, vec2(0.75,0.25));
-        vec4 C = texture2D(uSampler, vec2(0.75,0.75)); 
+        float t = normCoord.x * 4.0;
+        float offsetX = floor(t) * 0.25 ;
+        vec4 A = texture2D(uSampler, vec2(1.0/16.0 + offsetX,0.25));
+        vec4 B = texture2D(uSampler, vec2(3.0/16.0 + offsetX,0.25));
+        vec4 C = texture2D(uSampler, vec2(3.0/16.0 + offsetX,0.75)); 
 
         // Evaluate the quadratic bezier curves at time t.
         // Paralelized since each one is in a different color channel.
-		float t = normCoord.x;
+        t = fract(t);
         vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;
 
         // use the derivative of the quadratic bezier function to calculate the slope at this point
@@ -168,12 +175,12 @@
 		// Use the slope to get the gradient, and use the gradient to get a distance estimation to the curves
 		// R,G,B curves add 1.0 to their color channels respectively
 		vec3 outColor;
-        outColor.x = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
-        outColor.y = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
-        outColor.z = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
+        outColor.x = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0/4.0)));
+        outColor.y = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0/4.0)));
+        outColor.z = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0/4.0)));
 
         // alpha curve adds 1.0 to each color channel
-        float value = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
+        float value = smoothstep(0.02,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0/4.0)));
         outColor.x += value;
         outColor.y += value;
         outColor.z += value;
@@ -593,7 +600,8 @@
 
 <body onload="DoOnLoad()">
     <h1>4 Quadratic Bezier Curves</h1>
-    <div id="fps">FPS: --</div><br>
+    4 cubic Bezier curves end to end, encoded within an 8x2 RGBA 8BPP texture image.  Curve points evaluated using bilinear texture filtering.  Quadratic bezier equation evaluated curve also presented for comparison.<br>
+    <a href="index.html">Back to Index</a><br><br>        
     <table>
 	    <tr>
 		    <td>Evaluation:</td>
@@ -623,57 +631,64 @@
 		    </select>
 		    </td>
 	    </tr>
-    </table><br>
-
+    </table>
+    <div id="fps">FPS: --</div>
     <table>
         <tr>
             <td valign="top">
                 <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas>
             </td>
-            <td valign="top">
+            <td valign="top" style="border:2px solid red">
                 Red:<br>
-                <input type="range" min="0" max="100" id="R0" onInput="initTexture();" onChange="initTexture();" value="50"><br>
-                <input type="range" min="0" max="100" id="R1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="R2" onInput="initTexture();" onChange="initTexture();" value="75"><br>
-                <input type="range" min="0" max="100" id="R3" onInput="initTexture();" onChange="initTexture();" value="25"><br>
-                <input type="range" min="0" max="100" id="R4" onInput="initTexture();" onChange="initTexture();" value="50"><br>
-                <input type="range" min="0" max="100" id="R5" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="R6" onInput="initTexture();" onChange="initTexture();" value="75"><br>
-                <input type="range" min="0" max="100" id="R7" onInput="initTexture();" onChange="initTexture();" value="25"><br>
-                <input type="range" min="0" max="100" id="R8" onInput="initTexture();" onChange="initTexture();" value="50"><br>
+                1:<input type="range" min="0" max="100" id="R0" onInput="initTexture();" onChange="initTexture();" value="50"><br>
+                2:<input type="range" min="0" max="100" id="R1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                3:<input type="range" min="0" max="100" id="R2" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                4:<input type="range" min="0" max="100" id="R3" onInput="initTexture();" onChange="initTexture();" value="25"><br>
+                5:<input type="range" min="0" max="100" id="R4" onInput="initTexture();" onChange="initTexture();" value="50"><br>
+                6:<input type="range" min="0" max="100" id="R5" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                7:<input type="range" min="0" max="100" id="R6" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                8:<input type="range" min="0" max="100" id="R7" onInput="initTexture();" onChange="initTexture();" value="25"><br>
+                9:<input type="range" min="0" max="100" id="R8" onInput="initTexture();" onChange="initTexture();" value="50"><br>
+            </td>
+            <td valign="top" style="border:2px solid green">
                 Green:<br>
-                <input type="range" min="0" max="100" id="G0" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="G1" onInput="initTexture();" onChange="initTexture();" value="100"><br>
-                <input type="range" min="0" max="100" id="G2" onInput="initTexture();" onChange="initTexture();" value="25"><br>
-                <input type="range" min="0" max="100" id="G3" onInput="initTexture();" onChange="initTexture();" value="75"><br>
-                <input type="range" min="0" max="100" id="G4" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="G5" onInput="initTexture();" onChange="initTexture();" value="100"><br>
-                <input type="range" min="0" max="100" id="G6" onInput="initTexture();" onChange="initTexture();" value="25"><br>
-                <input type="range" min="0" max="100" id="G7" onInput="initTexture();" onChange="initTexture();" value="75"><br>
-                <input type="range" min="0" max="100" id="G8" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                1:<input type="range" min="0" max="100" id="G0" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                2:<input type="range" min="0" max="100" id="G1" onInput="initTexture();" onChange="initTexture();" value="100"><br>
+                3:<input type="range" min="0" max="100" id="G2" onInput="initTexture();" onChange="initTexture();" value="25"><br>
+                4:<input type="range" min="0" max="100" id="G3" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                5:<input type="range" min="0" max="100" id="G4" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                6:<input type="range" min="0" max="100" id="G5" onInput="initTexture();" onChange="initTexture();" value="100"><br>
+                7:<input type="range" min="0" max="100" id="G6" onInput="initTexture();" onChange="initTexture();" value="25"><br>
+                8:<input type="range" min="0" max="100" id="G7" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                9:<input type="range" min="0" max="100" id="G8" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+            </td>
+            <td valign="top" style="border:2px solid blue">                
                 Blue:<br>
-                <input type="range" min="0" max="100" id="B0" onInput="initTexture();" onChange="initTexture();" value="20"><br>
-                <input type="range" min="0" max="100" id="B1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="B2" onInput="initTexture();" onChange="initTexture();" value="100"><br>
-                <input type="range" min="0" max="100" id="B3" onInput="initTexture();" onChange="initTexture();" value="70"><br>
-                <input type="range" min="0" max="100" id="B4" onInput="initTexture();" onChange="initTexture();" value="20"><br>
-                <input type="range" min="0" max="100" id="B5" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="B6" onInput="initTexture();" onChange="initTexture();" value="100"><br>
-                <input type="range" min="0" max="100" id="B7" onInput="initTexture();" onChange="initTexture();" value="70"><br>
-                <input type="range" min="0" max="100" id="B8" onInput="initTexture();" onChange="initTexture();" value="20"><br>
+                1:<input type="range" min="0" max="100" id="B0" onInput="initTexture();" onChange="initTexture();" value="20"><br>
+                2:<input type="range" min="0" max="100" id="B1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                3:<input type="range" min="0" max="100" id="B2" onInput="initTexture();" onChange="initTexture();" value="100"><br>
+                4:<input type="range" min="0" max="100" id="B3" onInput="initTexture();" onChange="initTexture();" value="70"><br>
+                5:<input type="range" min="0" max="100" id="B4" onInput="initTexture();" onChange="initTexture();" value="20"><br>
+                6:<input type="range" min="0" max="100" id="B5" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                7:<input type="range" min="0" max="100" id="B6" onInput="initTexture();" onChange="initTexture();" value="100"><br>
+                8:<input type="range" min="0" max="100" id="B7" onInput="initTexture();" onChange="initTexture();" value="70"><br>
+                9:<input type="range" min="0" max="100" id="B8" onInput="initTexture();" onChange="initTexture();" value="20"><br>
+            </td>
+            <td valign="top" style="border:2px solid black">                
                 Alpha:<br>
-                <input type="range" min="0" max="100" id="A0" onInput="initTexture();" onChange="initTexture();" value="75"><br>
-                <input type="range" min="0" max="100" id="A1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="A2" onInput="initTexture();" onChange="initTexture();" value="30"><br>
-                <input type="range" min="0" max="100" id="A3" onInput="initTexture();" onChange="initTexture();" value="60"><br>
-                <input type="range" min="0" max="100" id="A4" onInput="initTexture();" onChange="initTexture();" value="75"><br>
-                <input type="range" min="0" max="100" id="A5" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="A6" onInput="initTexture();" onChange="initTexture();" value="30"><br>
-                <input type="range" min="0" max="100" id="A7" onInput="initTexture();" onChange="initTexture();" value="60"><br>
-                <input type="range" min="0" max="100" id="A8" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                1:<input type="range" min="0" max="100" id="A0" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                2:<input type="range" min="0" max="100" id="A1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                3:<input type="range" min="0" max="100" id="A2" onInput="initTexture();" onChange="initTexture();" value="30"><br>
+                4:<input type="range" min="0" max="100" id="A3" onInput="initTexture();" onChange="initTexture();" value="60"><br>
+                5:<input type="range" min="0" max="100" id="A4" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                6:<input type="range" min="0" max="100" id="A5" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                7:<input type="range" min="0" max="100" id="A6" onInput="initTexture();" onChange="initTexture();" value="30"><br>
+                8:<input type="range" min="0" max="100" id="A7" onInput="initTexture();" onChange="initTexture();" value="60"><br>
+                9:<input type="range" min="0" max="100" id="A8" onInput="initTexture();" onChange="initTexture();" value="75"><br>
             </td>
         </tr>
     </table>
+    <a href="index.html">Back to Index</a>
 </body>
 
 </html>

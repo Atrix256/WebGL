@@ -1,13 +1,11 @@
 Next:
- * N-quadratic curves end to end
- * N-cubic curves end to end
+  * N-cubic curves end to end
  * Higher order curve via more lerps & equation
- * equation only quadratic curve N-points (3 pixels per curve.  maybe loop the curve?)
- * OpenGL after webgl cleaned up?
+ * equation only quadratic curve N-points (3 pixels per curve.  maybe loop the curve to show that trick?)
+ * make control points into circles via "discard".
+ * OpenGL after webgl cleaned up? 
 
-
-
-! need to do perf analasys between methods somehow!
+! need to do perf analasys between methods somehow! (might need to wait til OpenGL C++ version)
 
 * do 2d curve rendering for quadratic bezier curves
  * http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html?m=1
@@ -35,6 +33,8 @@ Next:
 
  * compare to 1x16 curve bake out lerp version (and any other methods you can find?)
 
+* diff the html demos and make them as close as possible
+* make sure all spaces, no tabs, in all demo files
 
 === perf ===
 
@@ -49,10 +49,6 @@ compare speed vs sending control points in a constant buffer.  also vs hard code
 * i think the finite difference implementation might be wrong, check it out by simulating it in shadertoy or something
  * make h be based on resolution or something
 * smoothstep distance should use screen resolution or something. or make it "true" antialiasing somehow? read that one paper about aa of procedular shapes
-
-* put link back to main page on each demo
-
-* put fps above image instead of above settings?
 
  =====Paper Notes=====
 * doing manual lerp, you only need 1 pixel per control point.

@@ -529,7 +529,8 @@
 
 <body onload="DoOnLoad()">
     <h1>Cubic Bezier Curve</h1>
-    <div id="fps">FPS: --</div><br>
+    A cubic Bezier curve encoded within a 4x2 RGBA 8BPP texture image. Curve points evaluated by linear interpolating two quadratic bezier curves generated  using bilinear texture filtering.  If WebGL supported volumetric textures, those could be used to make evaluation with trilinear texture filtering like the C++ OpenGL demo does.  Cubic bezier equation evaluated curve also presented for comparison.<br>
+    <a href="index.html">Back to Index</a><br><br>    
     <table>
 	    <tr>
 		    <td>Evaluation:</td>
@@ -559,37 +560,44 @@
 		    </select>
 		    </td>
 	    </tr>
-    </table><br>
-
+    </table>
+    <div id="fps">FPS: --</div>
     <table>
         <tr>
             <td>
                 <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas>
             </td>
-            <td valign="top">
+            <td valign="top" style="border:2px solid red">
                 Red:<br>
-                <input type="range" min="0" max="100" id="R0" onInput="initTexture();" onChange="initTexture();" value="50"><br>
-                <input type="range" min="0" max="100" id="R1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="R2" onInput="initTexture();" onChange="initTexture();" value="75"><br>
-                <input type="range" min="0" max="100" id="R3" onInput="initTexture();" onChange="initTexture();" value="25"><br>
+                1:<input type="range" min="0" max="100" id="R0" onInput="initTexture();" onChange="initTexture();" value="50"><br>
+                2:<input type="range" min="0" max="100" id="R1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                3:<input type="range" min="0" max="100" id="R2" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                4:<input type="range" min="0" max="100" id="R3" onInput="initTexture();" onChange="initTexture();" value="25"><br>
+            </td>
+            <td valign="top" style="border:2px solid green">                
                 Green:<br>
-                <input type="range" min="0" max="100" id="G0" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="G1" onInput="initTexture();" onChange="initTexture();" value="100"><br>
-                <input type="range" min="0" max="100" id="G2" onInput="initTexture();" onChange="initTexture();" value="25"><br>
-                <input type="range" min="0" max="100" id="G3" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                1:<input type="range" min="0" max="100" id="G0" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                2:<input type="range" min="0" max="100" id="G1" onInput="initTexture();" onChange="initTexture();" value="100"><br>
+                3:<input type="range" min="0" max="100" id="G2" onInput="initTexture();" onChange="initTexture();" value="25"><br>
+                4:<input type="range" min="0" max="100" id="G3" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+            </td>
+            <td valign="top" style="border:2px solid blue">                
                 Blue:<br>
-                <input type="range" min="0" max="100" id="B0" onInput="initTexture();" onChange="initTexture();" value="20"><br>
-                <input type="range" min="0" max="100" id="B1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="B2" onInput="initTexture();" onChange="initTexture();" value="100"><br>
-                <input type="range" min="0" max="100" id="B3" onInput="initTexture();" onChange="initTexture();" value="70"><br>
+                1:<input type="range" min="0" max="100" id="B0" onInput="initTexture();" onChange="initTexture();" value="20"><br>
+                2:<input type="range" min="0" max="100" id="B1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                3:<input type="range" min="0" max="100" id="B2" onInput="initTexture();" onChange="initTexture();" value="100"><br>
+                4:<input type="range" min="0" max="100" id="B3" onInput="initTexture();" onChange="initTexture();" value="70"><br>
+            </td>
+            <td valign="top" style="border:2px solid black">                
                 Alpha:<br>
-                <input type="range" min="0" max="100" id="A0" onInput="initTexture();" onChange="initTexture();" value="75"><br>
-                <input type="range" min="0" max="100" id="A1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="A2" onInput="initTexture();" onChange="initTexture();" value="30"><br>
-                <input type="range" min="0" max="100" id="A3" onInput="initTexture();" onChange="initTexture();" value="60"><br>
+                1:<input type="range" min="0" max="100" id="A0" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                2:<input type="range" min="0" max="100" id="A1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                3:<input type="range" min="0" max="100" id="A2" onInput="initTexture();" onChange="initTexture();" value="30"><br>
+                4:<input type="range" min="0" max="100" id="A3" onInput="initTexture();" onChange="initTexture();" value="60"><br>
             </td>
         </tr>
     </table>
+    <a href="index.html">Back to Index</a>
 </body>
 
 </html>
