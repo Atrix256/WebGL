@@ -33,10 +33,17 @@ compare speed vs sending control points in a constant buffer.  also vs hard code
 
 === all web curve demos ===
 
+* normCoord.x, not sample, in: float h = sample > 0.5 ? -0.01 : 0.01;
+
+* don't show control points in "texture" render view
+
 * i think the finite difference implementation might be wrong, check it out by simulating it in shadertoy or something
  * make h be based on resolution or something
 * smoothstep distance should use screen resolution or something. or make it "true" antialiasing somehow? read that one paper about aa of procedular shapes
 
+* put link back to main page on each demo
+
+* put fps above image instead of above settings?
 
  =====Paper Notes=====
 * doing manual lerp, you only need 1 pixel per control point.
@@ -68,6 +75,8 @@ G->H->A
 * comapre volume texture cubic curve vs not volume texture (c++ opengl)
 
 * Explicitly say that bilinear texture filtering can evaluate the equation of bilin interp (quadratic bezier)
+
+* could sneak in that smoothstep is 0,0,1,1 cubic curve!
 
 =====OTHER=====
 
