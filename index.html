@@ -207,7 +207,6 @@
     uniform vec2 uOffset;
 
     void main(void) {
-    	// TODO: can we pass offset (or some other value) down to pixel shader, so it can make a circle or something?
         gl_Position = vec4(aVertexPosition+uOffset, 1.0, 1.0);
     }
 </script>
@@ -217,7 +216,7 @@
     uniform vec3 uColor;
 
     void main(void) {
-        gl_FragColor = vec4(uColor,1.0);        
+        gl_FragColor = vec4(uColor,1.0);   
     }
 </script>
 
@@ -378,7 +377,7 @@
         // make the control point quad vertex buffer
         controlPointBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
-        var size = 0.1;
+        var size = 0.025;
         vertices = [
             // Front face
             -size, -size,
@@ -412,7 +411,7 @@
         gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, controlPointBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
         // Draw Red curve control points
-        gl.uniform3f(CPshaderProgram.uColorLocation, 1, 0, 0);
+        gl.uniform3f(CPshaderProgram.uColorLocation, 0.75, 0, 0);
 		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[0]/255.0 - 0.5));
         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
 		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[0]/255.0 - 0.5));        
@@ -421,7 +420,7 @@
         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
 
         // Draw Green curve control points
-        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 1, 0);
+        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0.75, 0);
 		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[1]/255.0 - 0.5));
         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
 		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[1]/255.0 - 0.5));        
@@ -430,7 +429,7 @@
         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
 
         // Draw Blue curve control points
-        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 1);
+        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 0.75);
 		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[2]/255.0 - 0.5));
         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
 		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[2]/255.0 - 0.5));        
@@ -439,7 +438,7 @@
         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
 
         // Draw Alpha curve control points
-        gl.uniform3f(CPshaderProgram.uColorLocation, 1, 1, 1);
+        gl.uniform3f(CPshaderProgram.uColorLocation, 0.75, 0.75, 0.75);
 		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[3]/255.0 - 0.5));
         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
 		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[3]/255.0 - 0.5));        
@@ -479,41 +478,8 @@
     function ResizeCanvas() {
     	webGLStart();
     }
-
-/*
-
-TODO:
-
-* finish control point visualization.
-? if 0,0 is center of screen, how does my curves end up working?!
-
-Next:
- ? control point visualization (in all renders or just some?)
- ? 2d curve rendering?
- ? move these todo's somewhere else and make cubic?
- ? put values next to ranges? and labels? labels should change based on view i'd bet
- ? make sure AA is off (request it from webgl, maybe a checkbox though?)
- ? how can we get vsync turned off? chrome didn't seem to work... firefox?
- ? maybe drag control points support
-
-* i think the finite difference implementation might be wrong, check it out by simulating it in shadertoy or something
- * make h be based on resolution or something
-* smoothstep distance should use screen resolution or something. or make it "true" antialiasing somehow? read that one paper about aa of procedular shapes
-
-* 2d curve rendering info: http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html?m=1
-
-* compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
-
-* onto other curve types next! (cubic?)
-
-*/
-
-
 </script>
-
-
 </head>
-
 
 <body onload="DoOnLoad()">
     <div id="fps">FPS: --</div><br>
@@ -555,21 +521,21 @@ Next:
             </td>
             <td valign="top">
                 Red:<br>
-                <input type="range" min="0" max="100" id="R0" onChange="initTexture();" value="50"><br>
-                <input type="range" min="0" max="100" id="R1" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="R2" onChange="initTexture();" value="75"><br>
+                <input type="range" min="0" max="100" id="R0" onInput="initTexture();" onChange="initTexture();" value="50"><br>
+                <input type="range" min="0" max="100" id="R1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                <input type="range" min="0" max="100" id="R2" onInput="initTexture();" onChange="initTexture();" value="75"><br>
                 Green:<br>
-                <input type="range" min="0" max="100" id="G0" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="G1" onChange="initTexture();" value="100"><br>
-                <input type="range" min="0" max="100" id="G2" onChange="initTexture();" value="25"><br>
+                <input type="range" min="0" max="100" id="G0" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                <input type="range" min="0" max="100" id="G1" onInput="initTexture();" onChange="initTexture();" value="100"><br>
+                <input type="range" min="0" max="100" id="G2" onInput="initTexture();" onChange="initTexture();" value="25"><br>
                 Blue:<br>
-                <input type="range" min="0" max="100" id="B0" onChange="initTexture();" value="20"><br>
-                <input type="range" min="0" max="100" id="B1" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="B2" onChange="initTexture();" value="100"><br>
+                <input type="range" min="0" max="100" id="B0" onInput="initTexture();" onChange="initTexture();" value="20"><br>
+                <input type="range" min="0" max="100" id="B1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                <input type="range" min="0" max="100" id="B2" onInput="initTexture();" onChange="initTexture();" value="100"><br>
                 Alpha:<br>
-                <input type="range" min="0" max="100" id="A0" onChange="initTexture();" value="75"><br>
-                <input type="range" min="0" max="100" id="A1" onChange="initTexture();" value="0"><br>
-                <input type="range" min="0" max="100" id="A2" onChange="initTexture();" value="30"><br>
+                <input type="range" min="0" max="100" id="A0" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                <input type="range" min="0" max="100" id="A1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
+                <input type="range" min="0" max="100" id="A2" onInput="initTexture();" onChange="initTexture();" value="30"><br>
             </td>
         </tr>
     </table>

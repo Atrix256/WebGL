@@ -1,5 +1,10 @@
 ! need to do perf analasys between methods somehow!
 
+* do 2d curve rendering for quadratic bezier curves
+ * http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html?m=1
+
+* reinvestigate turning vsync off inc hrome
+
 * higher order curve version w/ lots of lerps (or higher order math)
 * N control points version
 * C++ opengl versions -> make sure cubic curve uses volume textures!
@@ -20,6 +25,17 @@
  * dimension of texture is 2*numcurves wide, 2 pixels high.
 
  * compare to 1x16 curve bake out lerp version (and any other methods you can find?)
+
+
+=== perf ===
+
+compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
+
+=== all web curve demos ===
+
+* i think the finite difference implementation might be wrong, check it out by simulating it in shadertoy or something
+ * make h be based on resolution or something
+* smoothstep distance should use screen resolution or something. or make it "true" antialiasing somehow? read that one paper about aa of procedular shapes
 
 
  =====Paper Notes=====
