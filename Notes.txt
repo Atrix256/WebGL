@@ -13,6 +13,10 @@ Next:
  * instead of "quadratic bezier equation" etc in the drop downs, mention that it does 3 texture lookups + that (as an example). make the drop downs explain what is being done.
  * call "4 cubic curves"   "4 cubic curves end to end" instead? same w/ quadratic
 
+? does the "cubic needs 3x2 not 4x2" thing have play with higher dimensionality curves?
+
+* do the "all web curve demos" items
+
 * read papers in paper notes section
 
 * do 2d curve rendering for quadratic bezier curves?
@@ -30,10 +34,6 @@ Next:
 
 * show rick details when you have perf info.
 
-=== perf info===
-
-compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
-
 === all web curve demos ===
 
 * normCoord.x, not sample, in: float h = sample > 0.5 ? -0.01 : 0.01;
@@ -45,6 +45,12 @@ compare speed vs sending control points in a constant buffer.  also vs hard code
 * smoothstep distance should use screen resolution or something. or make it "true" antialiasing somehow? read that one paper about aa of procedular shapes
 
 * could possibly have draggable control points, and have them adjust the sliders values at the same time (or maybe, that's how the dragging actually works!)
+
+* make a "all zeros" or "clear" button to make all control points zero.  maybe underneath the control point sliders?
+
+=== perf info===
+
+compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
 
  =====Paper Notes=====
 
