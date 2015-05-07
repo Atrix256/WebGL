@@ -3,43 +3,27 @@ Next:
  * Higher order curve via more lerps & equation
  * equation only quadratic curve N-points (3 pixels per curve.  maybe loop the curve to show that trick?)
  * make control points into circles via "discard".
- * OpenGL after webgl cleaned up? 
  * make a better starting curve for the "4 quadratic bezier curves" demo
  * put descriptions on the index page
  * pluralize title and heading in demos
+ * compare to 1x16 curve bake out lerp version somehow (and any other competing methods you can find?)
+  * could make a "1x16 baked" version for the demos?
+  * search for other ways people do curves on GPU these days (ask game dev places?)
 
-! need to do perf analasys between methods somehow! (might need to wait til OpenGL C++ version)
-
-* do 2d curve rendering for quadratic bezier curves
+* do 2d curve rendering for quadratic bezier curves?
  * http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html?m=1
-
-* reinvestigate turning vsync off inc hrome
-
-* higher order curve version w/ lots of lerps (or higher order math)
-* N control points version
-* C++ opengl versions -> make sure cubic curve uses volume textures!
-
-* make either N control points or a fixed amount, with curves being set up end to end.
-* do a version with volume textures, which does cubvic bezier curves
-* maybe some way to have higher order curves by doing multiple texture lookups and manual lerping?
-* blog post! Or paper...
-* tell rick when done, or have enough to show
-* make some version that lets you compare speed of this vs other ways
-
-* multiple curves end to end
- * each 2x2 adds 2 more control points.
- * A B C D
- * B C D E
- * 0->1 is A->B->C
- * 1->2 is C->D->E
- * dimension of texture is 2*numcurves wide, 2 pixels high.
-
- * compare to 1x16 curve bake out lerp version (and any other methods you can find?)
 
 * diff the html demos and make them as close as possible
 * make sure all spaces, no tabs, in all demo files
 
-=== perf ===
+* Make C++ opengl versions
+ * make sure cubic curve uses volume textures!
+ * need to do perf analasys between methods.
+ ! use glfw library? whats the standard way to provide c++ source for OpenGL these days?
+
+* show rick details when you have perf info.
+
+=== perf info===
 
 compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
 
@@ -52,6 +36,8 @@ compare speed vs sending control points in a constant buffer.  also vs hard code
 * i think the finite difference implementation might be wrong, check it out by simulating it in shadertoy or something
  * make h be based on resolution or something
 * smoothstep distance should use screen resolution or something. or make it "true" antialiasing somehow? read that one paper about aa of procedular shapes
+
+* could possibly have draggable control points, and have them adjust the sliders values at the same time (or maybe, that's how the dragging actually works!)
 
  =====Paper Notes=====
 
