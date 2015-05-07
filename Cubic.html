@@ -28,11 +28,11 @@
 
         // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.
         // note that since our texture is double wide on X axis, we need to divide by 2 to get the first sample
-        // and add 0.5 to that to get the second sample.
+        // and add 0.25 to that to get the second sample.
         // we have to manually interpolate between the two quadratic curves made with bilinear filtering
         // since webgl doesn't support volumetric textures. Else we could do this with trilinear sampling!
         vec4 curveValuesA = texture2D(uSampler, vec2(sample/2.0,sample));
-        vec4 curveValuesB = texture2D(uSampler, vec2(sample/2.0 + 0.5,sample));
+        vec4 curveValuesB = texture2D(uSampler, vec2(sample/2.0 + 0.25,sample));
         vec4 curveValues = mix(curveValuesA, curveValuesB, normCoord.x);
 
         // R,G,B curves add 0.5 to their color channels respectively
@@ -69,17 +69,17 @@
 
         // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.
         // note that since our texture is double wide on X axis, we need to divide by 2 to get the first sample
-        // and add 0.5 to that to get the second sample.
+        // and add 0.25 to that to get the second sample.
         // we have to manually interpolate between the two quadratic curves made with bilinear filtering
         // since webgl doesn't support volumetric textures. Else we could do this with trilinear sampling!
         vec4 curveValuesA = texture2D(uSampler, vec2(sample/2.0,sample));
-        vec4 curveValuesB = texture2D(uSampler, vec2(sample/2.0 + 0.5,sample));
+        vec4 curveValuesB = texture2D(uSampler, vec2(sample/2.0 + 0.25,sample));
         vec4 curveValues = mix(curveValuesA, curveValuesB, normCoord.x);
 
         // use finite differences to get an aproximation of the slope of the curve at this point
         float h = normCoord.x > 0.5 ? -0.01 : 0.01;
         curveValuesA = texture2D(uSampler, vec2(sample/2.0 + h,sample));
-        curveValuesB = texture2D(uSampler, vec2(sample/2.0 + 0.5 + h,sample));
+        curveValuesB = texture2D(uSampler, vec2(sample/2.0 + 0.25 + h,sample));
         vec4 curveValues2 = mix(curveValuesA, curveValuesB, normCoord.x);  
         vec4 slope = (curveValues2 - curveValues) / h; 
 
@@ -128,11 +128,11 @@
         // The center of each pixel is technically where the pixel color is.
         // Doesn't really matter for NEAREST sampling, but doing it anyhow
         // note that since our texture is double wide on X axis, we need to divide by 2 to get the first sample
-        // and add 0.5 to that to get the second sample.
+        // and add 0.25 to that to get the second sample.
         vec4 A = texture2D(uSampler, vec2(0.25 / 2.0, 0.25));
         vec4 B = texture2D(uSampler, vec2(0.75 / 2.0, 0.25));
         vec4 C = texture2D(uSampler, vec2(0.75 / 2.0, 0.75));
-        vec4 D = texture2D(uSampler, vec2(0.75 / 2.0 + 0.5, 0.75));
+        vec4 D = texture2D(uSampler, vec2(0.75 / 2.0 + 0.25, 0.75));
 
         // Evaluate the cubic bezier curves at time t.
         // Paralelized since each one is in a different color channel.
@@ -172,11 +172,11 @@
         // The center of each pixel is technically where the pixel color is.
         // Doesn't really matter for NEAREST sampling, but doing it anyhow
         // note that since our texture is double wide on X axis, we need to divide by 2 to get the first sample
-        // and add 0.5 to that to get the second sample.
+        // and add 0.25 to that to get the second sample.
         vec4 A = texture2D(uSampler, vec2(0.25 / 2.0, 0.25));
         vec4 B = texture2D(uSampler, vec2(0.75 / 2.0, 0.25));
         vec4 C = texture2D(uSampler, vec2(0.75 / 2.0, 0.75));
-        vec4 D = texture2D(uSampler, vec2(0.75 / 2.0 + 0.5, 0.75));
+        vec4 D = texture2D(uSampler, vec2(0.75 / 2.0 + 0.25, 0.75));
 
         // Evaluate the cubic bezier curves at time t.
         // Paralelized since each one is in a different color channel.
@@ -375,18 +375,18 @@
         pointD[2] = document.getElementById("B3").value * 2.55;
         pointD[3] = document.getElementById("A3").value * 2.55;
 
-        //A B B C
-        //B C C D
+        //A B C 0
+        //B C D 0
         bezierTexture = createTexture(
             [pointA[0],pointA[1],pointA[2],pointA[3],
              pointB[0],pointB[1],pointB[2],pointB[3],
-             pointB[0],pointB[1],pointB[2],pointB[3],
              pointC[0],pointC[1],pointC[2],pointC[3],
+             0,0,0,0,
 
              pointB[0],pointB[1],pointB[2],pointB[3],
              pointC[0],pointC[1],pointC[2],pointC[3],
-             pointC[0],pointC[1],pointC[2],pointC[3],
              pointD[0],pointD[1],pointD[2],pointD[3],
+             0,0,0,0,
              ],
              4, 2
         );
@@ -529,7 +529,7 @@
 
 <body onload="DoOnLoad()">
     <h1>Cubic Bezier Curve</h1>
-    4 cubic Bezier curves encoded within a 4x2 RGBA 8BPP texture image. Curve points evaluated by linear interpolating two quadratic bezier curves generated  using bilinear texture filtering.  If WebGL supported volumetric textures, one could be used to evaluate the curve points with trilinear texture filtering like the C++ demo does.  Cubic bezier equation evaluated curve also presented for comparison.<br>
+    4 cubic Bezier curves encoded within a 3x2 RGBA 8BPP texture image that was rounded up to 4x2 due to platform constraints. Curve points evaluated by linear interpolating two quadratic bezier curves generated using bilinear texture filtering.  If WebGL supported volumetric textures, one could be used to evaluate the curve points with trilinear texture filtering like the C++ demo does.  Cubic bezier equation evaluated curve also presented for comparison.<br>
     <a href="index.html">Back to Index</a><br><br>    
     <table>
 	    <tr>

@@ -1,4 +1,5 @@
 Next:
+ * finish cubic4.html demo
  * N-cubic curves end to end
  * Higher order curve via more lerps & equation
  * equation only quadratic curve N-points (3 pixels per curve.  maybe loop the curve to show that trick?)
@@ -9,6 +10,10 @@ Next:
  * compare to 1x16 curve bake out lerp version somehow (and any other competing methods you can find?)
   * could make a "1x16 baked" version for the demos?
   * search for other ways people do curves on GPU these days (ask game dev places?)
+ * instead of "quadratic bezier equation" etc in the drop downs, mention that it does 3 texture lookups + that (as an example). make the drop downs explain what is being done.
+ * call "4 cubic curves"   "4 cubic curves end to end" instead? same w/ quadratic
+
+* read papers in paper notes section
 
 * do 2d curve rendering for quadratic bezier curves?
  * http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html?m=1
@@ -20,6 +25,8 @@ Next:
  * make sure cubic curve uses volume textures!
  * need to do perf analasys between methods.
  ! use glfw library? whats the standard way to provide c++ source for OpenGL these days?
+
+? texture wrap looping demo?
 
 * show rick details when you have perf info.
 
@@ -40,6 +47,12 @@ compare speed vs sending control points in a constant buffer.  also vs hard code
 * could possibly have draggable control points, and have them adjust the sliders values at the same time (or maybe, that's how the dragging actually works!)
 
  =====Paper Notes=====
+
+* read these... possibly related and maybe reference-able?
+ * http://research.microsoft.com/en-us/um/people/cloop/loopblinn05.pdf
+ * http://http.developer.nvidia.com/GPUGems3/gpugems3_ch25.html
+ * http://commaexcess.com/articles/6/vector-graphics-on-the-gpu
+
 
 * if not (much) more efficient could call it "efficient texture encoding / decoding" instead of gpu efficient
 
@@ -81,6 +94,10 @@ G->H->A
  * less computation to evaluate
  * can have discontinuities (dont share tangents) if desired (sometimes desired, more flexibility)
  * technically, could also make it not even share control points!
+
+! cubic. don't need 4x2 image... it has the same coordinates next to eachother! 3x2 does it!
+
+! can put the same upper right value as lower left and use texture wrap to make it looping?
 
 =====OTHER=====
 
