@@ -1,9 +1,12 @@
 Next:
-  * N-cubic curves end to end
+ * N-cubic curves end to end
  * Higher order curve via more lerps & equation
  * equation only quadratic curve N-points (3 pixels per curve.  maybe loop the curve to show that trick?)
  * make control points into circles via "discard".
  * OpenGL after webgl cleaned up? 
+ * make a better starting curve for the "4 quadratic bezier curves" demo
+ * put descriptions on the index page
+ * pluralize title and heading in demos
 
 ! need to do perf analasys between methods somehow! (might need to wait til OpenGL C++ version)
 
@@ -51,6 +54,9 @@ compare speed vs sending control points in a constant buffer.  also vs hard code
 * smoothstep distance should use screen resolution or something. or make it "true" antialiasing somehow? read that one paper about aa of procedular shapes
 
  =====Paper Notes=====
+
+* if not (much) more efficient could call it "efficient texture encoding / decoding" instead of gpu efficient
+
 * doing manual lerp, you only need 1 pixel per control point.
  * can do this pattern with vertical texture repeat on to make a looping curve!
 
@@ -82,6 +88,13 @@ G->H->A
 * Explicitly say that bilinear texture filtering can evaluate the equation of bilin interp (quadratic bezier)
 
 * could sneak in that smoothstep is 0,0,1,1 cubic curve!
+
+! mention that the "multi tear" approach is de casteljeaus algorithm
+
+* benefits of end to end curves vs a higher degree curve
+ * less computation to evaluate
+ * can have discontinuities (dont share tangents) if desired (sometimes desired, more flexibility)
+ * technically, could also make it not even share control points!
 
 =====OTHER=====
 
