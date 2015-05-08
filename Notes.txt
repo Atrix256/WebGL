@@ -1,4 +1,5 @@
 Next:
+ * combine all into a single demo.  choose order of curve, and how many curves end to end.  show fragment shader code on the page and texture size etc.
  * finish cubic4.html demo
  * N-cubic curves end to end
  * Higher order curve via more lerps & equation
@@ -14,6 +15,7 @@ Next:
  * call "4 cubic curves"   "4 cubic curves end to end" instead? same w/ quadratic
 
 ? does the "cubic needs 3x2 not 4x2" thing have play with higher dimensionality curves?
+ ! yes it does!
 
 * do the "all web curve demos" items
 
@@ -45,14 +47,21 @@ Next:
 * smoothstep distance should use screen resolution or something. or make it "true" antialiasing somehow? read that one paper about aa of procedular shapes
 
 * could possibly have draggable control points, and have them adjust the sliders values at the same time (or maybe, that's how the dragging actually works!)
+ * or just get rid of sliders if control point dragging works
 
-* make a "all zeros" or "clear" button to make all control points zero.  maybe underneath the control point sliders?
+* make a "all zeros" or "clear" button to make all control points zero.  maybe underneath the control point sliders? maybe an "all ones" button too?
 
-=== perf info===
+=== comparison info===
 
 compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
 
+compare quality (and speed?) vs baking curve as 1x16?
+
  =====Paper Notes=====
+
+* read other papers from http://jcgt.org/ to get an idea of the average published paper
+
+? maybe josh grass can answer questions for you about writing the paper
 
 * read these... possibly related and maybe reference-able?
  * http://research.microsoft.com/en-us/um/people/cloop/loopblinn05.pdf
@@ -104,10 +113,6 @@ G->H->A
 ! cubic. don't need 4x2 image... it has the same coordinates next to eachother! 3x2 does it!
 
 ! can put the same upper right value as lower left and use texture wrap to make it looping?
-
-=====OTHER=====
-
-! note that you changed the webgl-utils.js to update more requently!
 
 =====DEMO NOTES=====
 * chrome disable vsync
