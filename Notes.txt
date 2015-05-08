@@ -14,6 +14,8 @@ Next:
  * instead of "quadratic bezier equation" etc in the drop downs, mention that it does 3 texture lookups + that (as an example). make the drop downs explain what is being done.
  * call "4 cubic curves"   "4 cubic curves end to end" instead? same w/ quadratic
 
+! set up curves such that you can lerp the R,G,B,A curve points to get a higher order curve with a single read
+
 ? does the "cubic needs 3x2 not 4x2" thing have play with higher dimensionality curves?
  ! yes it does!
 
@@ -35,6 +37,22 @@ Next:
 ? texture wrap looping demo?
 
 * show rick details when you have perf info.
+
+? does this have play with bezier surfaces and pascals pyramid etc?
+
+! rendering generic curves:
+ * can render any 1d curve!  already can do it on a quad, could just teselate quad to make it conform to a surface (do a demo?)
+ * might be able to render a 2d quadratic curve.
+ ? other ways to render these curves? higher order 2d curves possible?
+ * works great if you already know time "t" somehow.
+
+* L1 norm of pascal triangle row is 2^N where N is the row number: https://math.stackexchange.com/questions/1272085/is-this-sequence-significant
+* calculating Nth row of pascal triangle: http://stackoverflow.com/questions/15580291/how-to-efficiently-calculate-a-row-in-pascals-triangle
+
+* pascals triangle: http://en.wikipedia.org/wiki/Pascal%27s_triangle
+* binomial coefficients: https://en.wikipedia.org/wiki/Binomial_coefficient
+
+? how does the # of taps change when using bilinear vs trilinear, quadrilinear and beyond?
 
 === all web curve demos ===
 
@@ -64,7 +82,7 @@ compare quality (and speed?) vs baking curve as 1x16?
 ? maybe josh grass can answer questions for you about writing the paper
 
 * read these... possibly related and maybe reference-able?
- * http://research.microsoft.com/en-us/um/people/cloop/loopblinn05.pdf
+ * http://research.microsoft.com/en-us/um/people/cloop/loopblinn05.pdf   <--- similar but different. uses bilinear texture coordinate interpolation.
  * http://http.developer.nvidia.com/GPUGems3/gpugems3_ch25.html
  * http://commaexcess.com/articles/6/vector-graphics-on-the-gpu
 
@@ -97,6 +115,8 @@ G->H->A
 * usage case: particle properties over time
  * could possibly use R,G,B and encode this in A maybe?
 
+* usage case: specular maps, etc? no more "single value", could put things on curves. parametrized by what though? viewing angle and other things?
+
 * comapre volume texture cubic curve vs not volume texture (c++ opengl)
 
 * Explicitly say that bilinear texture filtering can evaluate the equation of bilin interp (quadratic bezier)
@@ -109,10 +129,18 @@ G->H->A
  * less computation to evaluate
  * can have discontinuities (dont share tangents) if desired (sometimes desired, more flexibility)
  * technically, could also make it not even share control points!
+ * higher degree curves = more texture sampels needed.  End to end curves = fewer.
 
 ! cubic. don't need 4x2 image... it has the same coordinates next to eachother! 3x2 does it!
 
 ! can put the same upper right value as lower left and use texture wrap to make it looping?
+
+! future quadrilinear (and beyond?) texture sampling means fewer texture lookups for this technique.
+
+! size of bezier needed = M*2, N-1
+ * M = # of curves end to end you want
+ * N = # of control points you want on your curve (degree)
+ * this is with bilinear sampling only, what about trilinear and beyond? (step up the pascal triangle. one less texture lookup)
 
 =====DEMO NOTES=====
 * chrome disable vsync
