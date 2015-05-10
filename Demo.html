@@ -199,8 +199,11 @@
     attribute vec2 aVertexPosition;
     uniform vec2 uOffset;
 
+    varying vec2 vPosition;
+
     void main(void) {
         gl_Position = vec4(aVertexPosition+uOffset, 1.0, 1.0);
+        vPosition = aVertexPosition;
     }
 </script>
 
@@ -208,7 +211,11 @@
     precision mediump float;
     uniform vec3 uColor;
 
+    varying vec2 vPosition;
+
     void main(void) {
+        if (length(vPosition) > 0.024)
+            discard;
         gl_FragColor = vec4(uColor,1.0);   
     }
 </script>
@@ -496,11 +503,10 @@
     	* choose order of curve (Y axis resolution)
     	* choose how many curves there are end to end (X axis resolution)
     	* somehow work in # of curves per 2x2 square (so could get 2 cubics from 1 read instead of 4 quadratics.  Could also get 1 5th order curve from 1 read!)
-    	* make it use interpolated texture coordinates instead of gl_fragCoord
         * dynamically generate pixel shaders
         * dynamically generate HTML elements if there are any (unless we move to dragging control points)
         * show text of what it's doing above, and the size of the texture.
-        * show the pixel shader below.
+        * show the pixel shader text below or to the side
         * clean up and organize code?
         * tooltips on options?
 
