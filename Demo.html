@@ -82,18 +82,6 @@
     }
 </script>
 
-<script id="shader-fs-bilinear-texture" type="x-shader/x-fragment">
-    precision mediump float;
-
-    uniform sampler2D uSampler;
-    
-    varying vec2 vTextureCoord;
-
-    void main(void) {
-        gl_FragColor = texture2D(uSampler, vTextureCoord);
-    }
-</script>
-
 <script id="shader-fs-equation-halfspace" type="x-shader/x-fragment">
     precision mediump float;
 
@@ -172,17 +160,6 @@
     }
 </script>
 
-<script id="shader-fs-equation-texture" type="x-shader/x-fragment">
-    precision mediump float;
-    uniform sampler2D uSampler;
-    
-    varying vec2 vTextureCoord;
-
-    void main(void) {
-        gl_FragColor = texture2D(uSampler, vTextureCoord);
-    }
-</script>
-
 <script id="shader-vs" type="x-shader/x-vertex">
     attribute vec2 aVertexPosition;
     attribute vec2 aTextureCoord;
@@ -257,8 +234,8 @@
         return shader;
     }
 
-    function compileShader(gl, source, type) {
-        var shader = gl.createShader(type);
+    function createFragmentShader(gl, source) {
+        var shader = gl.createShader(gl.FRAGMENT_SHADER);
         gl.shaderSource(shader, source);
         gl.compileShader(shader);
         if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
@@ -268,9 +245,44 @@
         return shader;
     }
 
-    function createFragmentShader () {
+    var g_fragmentShaderHeader = 
+        "precision mediump float;\n" + 
+        "uniform sampler2D uSampler;\n" + 
+        "varying vec2 vTextureCoord;\n" + 
+        "void main(void) {\n";
+
+    var g_fragmentShaderFooter = "}";
+
+    function buildFragmentShader_texture () {
+        return createFragmentShader(gl,
+            g_fragmentShaderHeader +
+            "   gl_FragColor = texture2D(uSampler, vTextureCoord);\n" + 
+            g_fragmentShaderFooter
+        );
+    }
+
+    function buildFragmentShader_bilinear_halfspace () {
+
+    }
+
+    function buildFragmentShader () {
         var evaluationMode = document.getElementById("EvaluationMode").value;
         var renderMode = document.getElementById("RenderMode").value;
+
+        if (renderMode == "texture")
+        {
+            return buildFragmentShader_texture ();
+        }
+
+        /*
+        if (evaluationMode == "bilinear")
+        {
+            if (renderMode == "halfspace")
+            {
+                return buildFragmentShader_bilinear_halfspace();
+            }
+        }*/
+
         return getShader(gl, "shader-fs-"+evaluationMode+"-"+renderMode);
         // TODO: make shader strings and then compile them!
     }
@@ -280,7 +292,7 @@
 
     function initShaders() {
     	// make the full screen shader program
-        var fragmentShader = createFragmentShader();
+        var fragmentShader = buildFragmentShader();
         var vertexShader = getShader(gl, "shader-vs");
 
         FSshaderProgram = gl.createProgram();
