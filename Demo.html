@@ -15,28 +15,26 @@
     precision mediump float;
 
     uniform sampler2D uSampler;
-    uniform vec2 uResolution;
+
+    varying vec2 vTextureCoord;
 
     void main(void) {
-        // Calculate normalized coordinates: 0 to 1 on each axis.
-        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
-
         // Calculate our sample value.
         // The center of each pixel is where the value starts, not the edge, so our interpolation
         // goes from 0.25 -> 0.75, not from 0 to 1.
-        float sample = 0.25 + normCoord.x / 2.0;
+        float sample = 0.25 + vTextureCoord.x / 2.0;
 
         // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.
         vec4 curveValues = texture2D(uSampler, vec2(sample));
 
         // R,G,B curves add 0.5 to their color channels respectively
 		vec3 outColor;
-        outColor.x = step(normCoord.y, curveValues.x) * 0.5;
-        outColor.y = step(normCoord.y, curveValues.y) * 0.5;
-        outColor.z = step(normCoord.y, curveValues.z) * 0.5;
+        outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;
+        outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;
+        outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;
 
         // alpha curve adds 0.5 to each color channel
-        float v = step(normCoord.y, curveValues.w) * 0.5;
+        float v = step(vTextureCoord.y, curveValues.w) * 0.5;
         outColor.x += v;
         outColor.y += v;
         outColor.z += v;
@@ -50,16 +48,14 @@
     precision mediump float;
 
     uniform sampler2D uSampler;
-    uniform vec2 uResolution;
+
+    varying vec2 vTextureCoord;
 
     void main(void) {
-        // calculate normalized coordinates: 0 to 1 on each axis.
-        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
-
         // Calculate our sample value.
         // The center of each pixel is where the value starts, not the edge, so our interpolation
         // goes from 0.25 -> 0.75, not from 0 to 1.
-        float sample = 0.25 + normCoord.x / 2.0;
+        float sample = 0.25 + vTextureCoord.x / 2.0;
 
         // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.
         vec4 curveValues = texture2D(uSampler, vec2(sample));
@@ -71,12 +67,12 @@
         // Use the slope to get the gradient, and use the gradient to get a distance estimation to the curves
         // R,G,B curves add 1.0 to their color channels respectively.
         vec3 outColor;
-        outColor.x = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
-        outColor.y = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
-        outColor.z = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
+        outColor.x = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
+        outColor.y = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
+        outColor.z = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
 
         // alpha curve adds 1.0 to each color channel
-        float value = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
+        float value = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
         outColor.x += value;
         outColor.y += value;
         outColor.z += value;
@@ -90,12 +86,11 @@
     precision mediump float;
 
     uniform sampler2D uSampler;
-    uniform vec2 uResolution;
+    
+    varying vec2 vTextureCoord;
 
     void main(void) {
-    	// show the texture
-        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
-        gl_FragColor = texture2D(uSampler, normCoord);
+        gl_FragColor = texture2D(uSampler, vTextureCoord);
     }
 </script>
 
@@ -103,12 +98,10 @@
     precision mediump float;
 
     uniform sampler2D uSampler;
-    uniform vec2 uResolution;
+
+    varying vec2 vTextureCoord;
 
     void main(void) {
-        // calculate normalized coordinates: 0 to 1 on each axis.
-        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
-
         // Get our control points
         // The center of each pixel is technically where the pixel color is.
         // Doesn't really matter for NEAREST sampling, but doing it anyhow
@@ -118,17 +111,17 @@
 
         // Evaluate the quadratic bezier curves at time t.
         // Paralelized since each one is in a different color channel.
-		float t = normCoord.x;
+		float t = vTextureCoord.x;
         vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;
 
         // R,G,B curves add 0.5 to their color channels respectively
 		vec3 outColor;
-        outColor.x = step(normCoord.y, curveValues.x) * 0.5;
-        outColor.y = step(normCoord.y, curveValues.y) * 0.5;
-        outColor.z = step(normCoord.y, curveValues.z) * 0.5;
+        outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;
+        outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;
+        outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;
 
 		// alpha curve adds 0.5 to each color channel
-        float v = step(normCoord.y, curveValues.w) * 0.5;
+        float v = step(vTextureCoord.y, curveValues.w) * 0.5;
         outColor.x += v;
         outColor.y += v;
         outColor.z += v;        
@@ -143,12 +136,9 @@
 
     uniform sampler2D uSampler;
 
-    uniform vec2 uResolution;
+    varying vec2 vTextureCoord;
 
     void main(void) {
-        // calculate normalized coordinates: 0 to 1 on each axis.
-        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
-
         // Get our control points
         // The center of each pixel is technically where the pixel color is.
         // Doesn't really matter for NEAREST sampling, but doing it anyhow
@@ -158,7 +148,7 @@
 
         // Evaluate the quadratic bezier curves at time t.
         // Paralelized since each one is in a different color channel.
-		float t = normCoord.x;
+		float t = vTextureCoord.x;
         vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;
 
         // use the derivative of the quadratic bezier function to calculate the slope at this point
@@ -167,12 +157,12 @@
 		// Use the slope to get the gradient, and use the gradient to get a distance estimation to the curves
 		// R,G,B curves add 1.0 to their color channels respectively
 		vec3 outColor;
-        outColor.x = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
-        outColor.y = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
-        outColor.z = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
+        outColor.x = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));
+        outColor.y = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));
+        outColor.z = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));
 
         // alpha curve adds 1.0 to each color channel
-        float value = smoothstep(0.01,0.0,abs(normCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
+        float value = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));
         outColor.x += value;
         outColor.y += value;
         outColor.z += value;
@@ -185,20 +175,23 @@
 <script id="shader-fs-equation-texture" type="x-shader/x-fragment">
     precision mediump float;
     uniform sampler2D uSampler;
-    uniform vec2 uResolution;
+    
+    varying vec2 vTextureCoord;
 
     void main(void) {
-    	// show the texture
-        vec2 normCoord = vec2(gl_FragCoord.x / uResolution.x, gl_FragCoord.y / uResolution.y);
-        gl_FragColor = texture2D(uSampler, normCoord);
+        gl_FragColor = texture2D(uSampler, vTextureCoord);
     }
 </script>
 
 <script id="shader-vs" type="x-shader/x-vertex">
     attribute vec2 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    varying vec2 vTextureCoord;
 
     void main(void) {
         gl_Position = vec4(aVertexPosition, 1.0, 1.0);
+        vTextureCoord = aTextureCoord;
     }
 </script>
 
@@ -280,10 +273,11 @@
 
         FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
         gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
-        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
 
-        var resolutionLocation = gl.getUniformLocation(FSshaderProgram, "uResolution");
-        gl.uniform2f(resolutionLocation, gl.viewportWidth, gl.viewportHeight);
+        FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
+        gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
+
+        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
 
         // make the control point shader program
         fragmentShader = getShader(gl, "shader-fs-cp");
@@ -355,6 +349,7 @@
     }
 
     var screenQuadBuffer;
+    var screenQuadTextureCoordinateBuffer;
     var controlPointBuffer;
 
     function initBuffers() {
@@ -373,6 +368,21 @@
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
         screenQuadBuffer.itemSize = 2;
         screenQuadBuffer.numItems = 6;
+
+        // make the full screen quad texture coordinate buffer
+        screenQuadTextureCoordinateBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        vertices = [
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 0,
+            1, 1,
+            0, 1,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        screenQuadTextureCoordinateBuffer.itemSize = 2;
+        screenQuadTextureCoordinateBuffer.numItems = 6;
 
         // make the control point quad vertex buffer
         controlPointBuffer = gl.createBuffer();
@@ -400,6 +410,8 @@
 		gl.useProgram(FSshaderProgram);
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
         gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.textureCoordinateAttribute, screenQuadTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, bezierTexture);
         gl.uniform1i(FSshaderProgram.samplerUniform, 0);
@@ -480,6 +492,7 @@
     }
     /*
     TODO:
+        * choose X axis, then Y axis, and then curves per pixel and make the last one the order modifier
     	* choose order of curve (Y axis resolution)
     	* choose how many curves there are end to end (X axis resolution)
     	* somehow work in # of curves per 2x2 square (so could get 2 cubics from 1 read instead of 4 quadratics.  Could also get 1 5th order curve from 1 read!)
@@ -508,34 +521,24 @@
 		    <td>
 			    <table>
 				    <tr>
-				    	<td>Curves Per Texture Sample:</td>
+				    	<td>Texture Size Y Axis (Order):</td>
 				    	<td>
-						    <select id="CurvesPerSample">
-						    	<option value="4">4 Quadratic Curves (2nd order) [R] [G] [B] [A]</option>
-						    	<option value="2">2 Cubic Curves (3rd order) [R&amp;G], [B&amp;A]</option>
-						    	<option value="1">1 Quartic Curve (4th order) [R&amp;G&amp;B&amp;A]</option>
-						    </select>	    	
-				    	</td>
-					</tr>
-				    <tr>
-				    	<td>Texture Size Y Axis:</td>
-				    	<td>
-						    <select id="CurvesPerSample">
-						    	<option value="1">1 : -1 Order   [1 texture sample]</option>
-						    	<option value="2" selected="selected">2 : +0 Order   [1 texture sample]</option>
-						    	<option value="3">3 : +1 Order   [2 texture samples]</option>
-						    	<option value="4">4 : +2 Order   [3 texture samples]</option>
-						    	<option value="5">5 : +3 Order   [4 texture samples]</option>
-						    	<option value="5">6 : +4 Order   [5 texture samples]</option>
-						    	<option value="5">7 : +5 Order   [6 texture samples]</option>
-						    	<option value="5">8 : +6 Order   [7 texture samples]</option>
+						    <select id="TextureSizeY">
+						    	<option value="1">1: Linear (Order 1)</option>
+						    	<option value="2" selected="selected">2: Quadratic (Order 2)</option>
+						    	<option value="3">3: Cubic (Order 3)</option>
+						    	<option value="4">4: Quartic (Order 4)</option>
+						    	<option value="5">5: Quintic (Order 5)</option>
+						    	<option value="5">6: Sextic (Order 6)</option>
+						    	<option value="5">7: Septic (Order 7)</option>
+						    	<option value="5">8: Octic (Order 8)</option>
 						    </select>	    	
 				    	</td>
 					</tr>		
 				    <tr>
-				    	<td>Texture Size X axis:</td>
+				    	<td>Texture Size X axis (# Curves):</td>
 				    	<td>
-						    <select id="CurvesPerSample">
+						    <select id="TextureSizeX">
 						    	<option value="2">2: 1 curve  [T=0..1]</option>
 						    	<option value="4">4: 2 curves [T=0..2]</option>
 						    	<option value="6">6: 3 curves [T=0..3]</option>
@@ -544,6 +547,16 @@
 						    </select>	    	
 				    	</td>
 					</tr>
+                    <tr>
+                        <td>Curves Per Pixel (Order Boost):</td>
+                        <td>
+                            <select id="CurvesPerPixel">
+                                <option value="4">4: +0 order [R] [G] [B] [A]</option>
+                                <option value="2">2: +1 order [R&amp;G], [B&amp;A]</option>
+                                <option value="1">1: +2 order [R&amp;G&amp;B&amp;A]</option>
+                            </select>           
+                        </td>
+                    </tr>
 				</table>
 			</td>
 			<td>
