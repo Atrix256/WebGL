@@ -11,39 +11,6 @@
 
 <script type="text/javascript" src="webgl-utils.js"></script>
 
-<script id="shader-fs-bilinear-halfspace" type="x-shader/x-fragment">
-    precision mediump float;
-
-    uniform sampler2D uSampler;
-
-    varying vec2 vTextureCoord;
-
-    void main(void) {
-        // Calculate our sample value.
-        // The center of each pixel is where the value starts, not the edge, so our interpolation
-        // goes from 0.25 -> 0.75, not from 0 to 1.
-        float sample = 0.25 + vTextureCoord.x / 2.0;
-
-        // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.
-        vec4 curveValues = texture2D(uSampler, vec2(sample));
-
-        // R,G,B curves add 0.5 to their color channels respectively
-		vec3 outColor;
-        outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;
-        outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;
-        outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;
-
-        // alpha curve adds 0.5 to each color channel
-        float v = step(vTextureCoord.y, curveValues.w) * 0.5;
-        outColor.x += v;
-        outColor.y += v;
-        outColor.z += v;
-
-        // make the output color
-        gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
-    }
-</script>
-
 <script id="shader-fs-bilinear-curves" type="x-shader/x-fragment">
     precision mediump float;
 
@@ -78,43 +45,6 @@
         outColor.z += value;
 
         // make the output color
-        gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
-    }
-</script>
-
-<script id="shader-fs-equation-halfspace" type="x-shader/x-fragment">
-    precision mediump float;
-
-    uniform sampler2D uSampler;
-
-    varying vec2 vTextureCoord;
-
-    void main(void) {
-        // Get our control points
-        // The center of each pixel is technically where the pixel color is.
-        // Doesn't really matter for NEAREST sampling, but doing it anyhow
-        vec4 A = texture2D(uSampler, vec2(0.25,0.25));
-        vec4 B = texture2D(uSampler, vec2(0.75,0.25));
-        vec4 C = texture2D(uSampler, vec2(0.75,0.75));
-
-        // Evaluate the quadratic bezier curves at time t.
-        // Paralelized since each one is in a different color channel.
-		float t = vTextureCoord.x;
-        vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;
-
-        // R,G,B curves add 0.5 to their color channels respectively
-		vec3 outColor;
-        outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;
-        outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;
-        outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;
-
-		// alpha curve adds 0.5 to each color channel
-        float v = step(vTextureCoord.y, curveValues.w) * 0.5;
-        outColor.x += v;
-        outColor.y += v;
-        outColor.z += v;        
-
-		// make the output color
         gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
     }
 </script>
@@ -248,7 +178,7 @@
     var g_fragmentShaderHeader = 
         "precision mediump float;\n" + 
         "uniform sampler2D uSampler;\n" + 
-        "varying vec2 vTextureCoord;\n" + 
+        "varying vec2 vTextureCoord;\n\n" + 
         "void main(void) {\n";
 
     var g_fragmentShaderFooter = "}";
@@ -262,7 +192,57 @@
     }
 
     function buildFragmentShader_bilinear_halfspace () {
+        return createFragmentShader(gl,
+            g_fragmentShaderHeader +
+            "   // Calculate our sample value.\n" + 
+            "   // The center of each pixel is where the value starts, not the edge, so our interpolation\n" +
+            "   // goes from 0.25 -> 0.75, not from 0 to 1.\n" +
+            "   float sample = 0.25 + vTextureCoord.x / 2.0;\n\n" + 
+            "   // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.\n" + 
+            "   vec4 curveValues = texture2D(uSampler, vec2(sample));\n\n" +
+            "   // R,G,B curves add 0.5 to their color channels respectively.\n" + 
+            "   vec3 outColor;\n" +
+            "   outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;\n" +
+            "   outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;\n" +
+            "   outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;\n\n" +
+            "   // alpha curve adds 0.5 to each color channel\n" +
+            "   float v = step(vTextureCoord.y, curveValues.w) * 0.5;\n" +
+            "   outColor.x += v;\n" +
+            "   outColor.y += v;\n" +
+            "   outColor.z += v;\n\n" +
+            "   // make the output color\n" +
+            "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
+            g_fragmentShaderFooter
+        );
+    }
 
+    function buildFragmentShader_equation_halfspace () {
+        return createFragmentShader(gl,
+            g_fragmentShaderHeader +
+            "   // Get our control points\n" +
+            "   // The center of each pixel is technically where the pixel color is.\n" +
+            "   // Doesn't really matter for NEAREST sampling, but doing it anyhow\n" +
+            "   vec4 A = texture2D(uSampler, vec2(0.25,0.25));\n" +
+            "   vec4 B = texture2D(uSampler, vec2(0.75,0.25));\n" +
+            "   vec4 C = texture2D(uSampler, vec2(0.75,0.75));\n\n" +
+            "   // Evaluate the quadratic bezier curves at time t.\n" +
+            "   // Paralelized since each one is in a different color channel.\n" +
+            "   float t = vTextureCoord.x;\n" +
+            "   vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;\n\n" +
+            "   // R,G,B curves add 0.5 to their color channels respectively.\n" + 
+            "   vec3 outColor;\n" +
+            "   outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;\n" +
+            "   outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;\n" +
+            "   outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;\n\n" +
+            "   // alpha curve adds 0.5 to each color channel\n" +
+            "   float v = step(vTextureCoord.y, curveValues.w) * 0.5;\n" +
+            "   outColor.x += v;\n" +
+            "   outColor.y += v;\n" +
+            "   outColor.z += v;\n\n" +
+            "   // make the output color\n" +
+            "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
+            g_fragmentShaderFooter
+        );
     }
 
     function buildFragmentShader () {
@@ -271,20 +251,27 @@
 
         if (renderMode == "texture")
         {
-            return buildFragmentShader_texture ();
+            return buildFragmentShader_texture();
         }
 
-        /*
         if (evaluationMode == "bilinear")
         {
             if (renderMode == "halfspace")
             {
                 return buildFragmentShader_bilinear_halfspace();
             }
-        }*/
+        }
+        else if (evaluationMode == "equation")
+        {
+            if (renderMode == "halfspace")
+            {
+                return buildFragmentShader_equation_halfspace();
+            }
+        }
 
         return getShader(gl, "shader-fs-"+evaluationMode+"-"+renderMode);
-        // TODO: make shader strings and then compile them!
+        // TODO: finish this!
+        // TODO: assert / message box if we got here, and no appropriate shader found!
     }
 
     var FSshaderProgram;
@@ -542,6 +529,7 @@
         * make the "Texture Size X axis" feature work
 
         * test all variations of params, especially the weird (degenerate) cases like texture size Y axis of 1 making a lerp.
+        * in the "equation" ones, make OneMinusT a variable that's re-used
     */
 </script>
 </head>
