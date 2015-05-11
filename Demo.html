@@ -326,7 +326,8 @@
     var g_controlPoints = [[]];
 
     function initTexture() {
-        for (i = 0; i <= g_settings.m_textureSizeY; ++i)
+    	// Get the control point data from our sliders
+        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
         {
         	g_controlPoints[i] = [
 				document.getElementById("R"+i.toString()).value * 2.55,
@@ -343,9 +344,10 @@
             textureData = textureData.concat(g_controlPoints[i+1]);
         }
 
+        // create the texture
         bezierTexture = createTexture(
             textureData,
-            g_settings.m_textureSizeX, g_settings.m_textureSizeY
+            g_settings.m_actualTextureSizeX, g_settings.m_actualTextureSizeY
         );
     }
 
@@ -463,8 +465,26 @@
     }
 
     function initSettings() {
-        g_settings.m_textureSizeX = 2;
-        g_settings.m_textureSizeY = parseFloat(document.getElementById("TextureSizeY").value);
+    	// calculate the texture size we need
+        g_settings.m_desiredTextureSizeX = 2;
+        g_settings.m_desiredTextureSizeY = parseInt(document.getElementById("TextureSizeY").value);
+
+        // round the texture size up to the next even number
+        g_settings.m_actualTextureSizeX = g_settings.m_desiredTextureSizeX + ((g_settings.m_desiredTextureSizeX % 2 == 1) ? 1 : 0);
+        g_settings.m_actualTextureSizeY = g_settings.m_desiredTextureSizeY + ((g_settings.m_desiredTextureSizeY % 2 == 1) ? 1 : 0);
+
+        // create the control points
+		document.getElementById("RedControlPoints").innerHTML = "";
+		document.getElementById("GreenControlPoints").innerHTML = "";
+		document.getElementById("BlueControlPoints").innerHTML = "";
+		document.getElementById("AlphaControlPoints").innerHTML = "";
+		for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
+		{
+			document.getElementById("RedControlPoints").innerHTML += i.toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"R" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"0\"/><br/>";
+			document.getElementById("GreenControlPoints").innerHTML += i.toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"G" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"0\"/><br/>";
+			document.getElementById("BlueControlPoints").innerHTML += i.toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"B" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"0\"/><br/>";
+			document.getElementById("AlphaControlPoints").innerHTML += i.toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"A" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"0\"/><br/>";
+		}
     }
 
     function initGL() {
@@ -503,6 +523,7 @@
 
     /*
     TODO:
+     	* round up y resolution
         * choose X axis, then Y axis, and then curves per pixel and make the last one the order modifier
     	* choose order of curve (Y axis resolution)
     	* choose how many curves there are end to end (X axis resolution)
@@ -614,27 +635,19 @@
             </td>
             <td valign="top" style="border:2px solid red">
                 Red:<br>
-                1:<input type="range" min="0" max="100" id="R0" onInput="initTexture();" onChange="initTexture();" value="50"><br>
-                2:<input type="range" min="0" max="100" id="R1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                3:<input type="range" min="0" max="100" id="R2" onInput="initTexture();" onChange="initTexture();" value="75"><br>
+                <span id="RedControlPoints"></span>
             </td>
             <td valign="top" style="border:2px solid green">
                 Green:<br>
-                1:<input type="range" min="0" max="100" id="G0" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                2:<input type="range" min="0" max="100" id="G1" onInput="initTexture();" onChange="initTexture();" value="100"><br>
-                3:<input type="range" min="0" max="100" id="G2" onInput="initTexture();" onChange="initTexture();" value="25"><br>
+                <span id="GreenControlPoints"></span>
             </td>
             <td valign="top" style="border:2px solid blue">                
                 Blue:<br>
-                1:<input type="range" min="0" max="100" id="B0" onInput="initTexture();" onChange="initTexture();" value="20"><br>
-                2:<input type="range" min="0" max="100" id="B1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                3:<input type="range" min="0" max="100" id="B2" onInput="initTexture();" onChange="initTexture();" value="100"><br>
+                <span id="BlueControlPoints"></span>
             </td>
             <td valign="top" style="border:2px solid black">                
                 Alpha:<br>
-                1:<input type="range" min="0" max="100" id="A0" onInput="initTexture();" onChange="initTexture();" value="75"><br>
-                2:<input type="range" min="0" max="100" id="A1" onInput="initTexture();" onChange="initTexture();" value="0"><br>
-                3:<input type="range" min="0" max="100" id="A2" onInput="initTexture();" onChange="initTexture();" value="30"><br>
+                <span id="AlphaControlPoints"></span>
             </td>
         </tr>
     </table>
