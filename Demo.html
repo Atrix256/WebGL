@@ -323,48 +323,25 @@
     }
 
     var bezierTexture;
-    var pointA = [0,0,0,0];
-    var pointB = [0,0,0,0];
-    var pointC = [0,0,0,0];
+    var g_controlPoints = [[]];
 
     function initTexture() {
-        pointA[0] = document.getElementById("R0").value * 2.55;
-        pointA[1] = document.getElementById("G0").value * 2.55;
-        pointA[2] = document.getElementById("B0").value * 2.55;
-        pointA[3] = document.getElementById("A0").value * 2.55;
-
-        pointB[0] = document.getElementById("R1").value * 2.55;
-        pointB[1] = document.getElementById("G1").value * 2.55;
-        pointB[2] = document.getElementById("B1").value * 2.55;
-        pointB[3] = document.getElementById("A1").value * 2.55;
-
-        pointC[0] = document.getElementById("R2").value * 2.55;
-        pointC[1] = document.getElementById("G2").value * 2.55;
-        pointC[2] = document.getElementById("B2").value * 2.55;
-        pointC[3] = document.getElementById("A2").value * 2.55;
-
-        var controlPoints = new Array;
-
-        for (i = 0; i < g_settings.m_numControlPoints; ++i)
+        for (i = 0; i <= g_settings.m_textureSizeY; ++i)
         {
-            controlPoints[i] = [i,i,i,i];
+        	g_controlPoints[i] = [
+				document.getElementById("R"+i.toString()).value * 2.55,
+				document.getElementById("G"+i.toString()).value * 2.55,
+				document.getElementById("B"+i.toString()).value * 2.55,
+				document.getElementById("A"+i.toString()).value * 2.55,
+			];
         }
-
-        alert(controlPoints);
 
         var textureData = new Array;
-
         for (i = 0; i < g_settings.m_textureSizeY; ++i)
         {
-            textureData.concat(controlPoints[i]);
-            textureData.concat(controlPoints[i+1]);
+            textureData = textureData.concat(g_controlPoints[i]);
+            textureData = textureData.concat(g_controlPoints[i+1]);
         }
-
-        //alert(g_settings.m_textureSizeX + "," + g_settings.m_textureSizeY);
-
-        alert(textureData[5]);
-
-        // ? is the problem that it's a 2d array?
 
         bezierTexture = createTexture(
             textureData,
@@ -446,41 +423,37 @@
         gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
         gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, controlPointBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-        // Draw Red curve control points
-        gl.uniform3f(CPshaderProgram.uColorLocation, 0.75, 0, 0);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[0]/255.0 - 0.5));
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[0]/255.0 - 0.5));        
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, 1, 2.0 * (pointC[0]/255.0 - 0.5));        
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		// Draw Red curve control points
+        for (i = 0; i < g_controlPoints.length; ++i)
+        {
+        	gl.uniform3f(CPshaderProgram.uColorLocation, 0.75, 0, 0);
+        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.length-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
+        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+        }
 
-        // Draw Green curve control points
-        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0.75, 0);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[1]/255.0 - 0.5));
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[1]/255.0 - 0.5));        
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, 1, 2.0 * (pointC[1]/255.0 - 0.5));        
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		// Draw Green curve control points
+        for (i = 0; i < g_controlPoints.length; ++i)
+        {
+        	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0.75, 0);
+        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.length-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
+        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+        }        
 
-        // Draw Blue curve control points
-        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 0.75);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[2]/255.0 - 0.5));
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[2]/255.0 - 0.5));        
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, 1, 2.0 * (pointC[2]/255.0 - 0.5));        
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		// Draw Blue curve control points
+        for (i = 0; i < g_controlPoints.length; ++i)
+        {
+        	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 0.75);
+        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.length-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
+        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+        }           
 
-        // Draw Alpha curve control points
-        gl.uniform3f(CPshaderProgram.uColorLocation, 0.75, 0.75, 0.75);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, -1, 2.0 * (pointA[3]/255.0 - 0.5));
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 2.0 * (pointB[3]/255.0 - 0.5));        
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-		gl.uniform2f(CPshaderProgram.uOffsetLocation, 1, 2.0 * (pointC[3]/255.0 - 0.5));        
-        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+		// Draw Alpha curve control points
+        for (i = 0; i < g_controlPoints.length; ++i)
+        {
+        	gl.uniform3f(CPshaderProgram.uColorLocation, 0.75, 0.75, 0.75);
+        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.length-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
+        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+        }             
     }
 
     function tick() {
@@ -492,7 +465,6 @@
     function initSettings() {
         g_settings.m_textureSizeX = 2;
         g_settings.m_textureSizeY = parseFloat(document.getElementById("TextureSizeY").value);
-        g_settings.m_numControlPoints = g_settings.m_textureSizeY + 1;
     }
 
     function initGL() {
