@@ -96,6 +96,8 @@
         return shader;
     }
 
+    var g_settings = {};
+
     var g_fragmentShaderHeader = 
         "precision mediump float;\n" + 
         "uniform sampler2D uSampler;\n" + 
@@ -341,12 +343,32 @@
         pointC[2] = document.getElementById("B2").value * 2.55;
         pointC[3] = document.getElementById("A2").value * 2.55;
 
+        var controlPoints = new Array;
+
+        for (i = 0; i < g_settings.m_numControlPoints; ++i)
+        {
+            controlPoints[i] = [i,i,i,i];
+        }
+
+        alert(controlPoints);
+
+        var textureData = new Array;
+
+        for (i = 0; i < g_settings.m_textureSizeY; ++i)
+        {
+            textureData.concat(controlPoints[i]);
+            textureData.concat(controlPoints[i+1]);
+        }
+
+        //alert(g_settings.m_textureSizeX + "," + g_settings.m_textureSizeY);
+
+        alert(textureData[5]);
+
+        // ? is the problem that it's a 2d array?
+
         bezierTexture = createTexture(
-            [pointA[0],pointA[1],pointA[2],pointA[3],
-             pointB[0],pointB[1],pointB[2],pointB[3],
-             pointB[0],pointB[1],pointB[2],pointB[3],
-             pointC[0],pointC[1],pointC[2],pointC[3]],
-             2, 2
+            textureData,
+            g_settings.m_textureSizeX, g_settings.m_textureSizeY
         );
     }
 
@@ -467,7 +489,13 @@
         g_frameCounter++;
     }
 
-    function webGLStart() {
+    function initSettings() {
+        g_settings.m_textureSizeX = 2;
+        g_settings.m_textureSizeY = parseFloat(document.getElementById("TextureSizeY").value);
+        g_settings.m_numControlPoints = g_settings.m_textureSizeY + 1;
+    }
+
+    function initGL() {
         var canvas = document.getElementById("webglcanvas");
         var canvassize = document.getElementById("CanvasSize").value;
         canvas.width = canvassize;
@@ -476,6 +504,7 @@
         gl = WebGLUtils.setupWebGL(canvas, {alpha:true, depth: false, stencil: false, antialias: false, premultipliedAlpha:false, preserveDrawingBuffer: false});
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
+        initSettings();
         initShaders();
         initBuffers();
         initTexture();
@@ -484,14 +513,22 @@
     }
 
     function DoOnLoad() {
-    	webGLStart();
+    	initGL();
     	setInterval(function(){ document.getElementById("fps").innerText = "FPS: " + g_frameCounter + " (" + Math.round(100 * 1000.0/g_frameCounter) / 100 + " ms)"; g_frameCounter = 0; }, 1000);
         tick();
     }
 
     function ResizeCanvas() {
-    	webGLStart();
+    	initGL();
     }
+
+    function OnChangeSettings()
+    {
+        initSettings();
+        initShaders();
+        initTexture();
+    }
+
     /*
     TODO:
         * choose X axis, then Y axis, and then curves per pixel and make the last one the order modifier
@@ -511,6 +548,8 @@
 
         * test all variations of params, especially the weird (degenerate) cases like texture size Y axis of 1 making a lerp.
         * in the "equation" ones, make OneMinusT a variable that's re-used
+
+        * make it copy the control point data when re-creating the array (textuire)
     */
 </script>
 </head>
@@ -525,7 +564,7 @@
 				    <tr>
 				    	<td>Texture Size Y Axis (Order):</td>
 				    	<td>
-						    <select id="TextureSizeY">
+						    <select id="TextureSizeY" OnChange="OnChangeSettings();">
 						    	<option value="1">1: Linear (Order 1)</option>
 						    	<option value="2" selected="selected">2: Quadratic (Order 2)</option>
 						    	<option value="3">3: Cubic (Order 3)</option>
@@ -540,7 +579,7 @@
 				    <tr>
 				    	<td>Texture Size X axis (# Curves):</td>
 				    	<td>
-						    <select id="TextureSizeX">
+						    <select id="TextureSizeX" OnChange="OnChangeSettings();">
 						    	<option value="2">2: 1 curve  [T=0..1]</option>
 						    	<option value="4">4: 2 curves [T=0..2]</option>
 						    	<option value="6">6: 3 curves [T=0..3]</option>
@@ -552,7 +591,7 @@
                     <tr>
                         <td>Curves Per Pixel (Order Boost):</td>
                         <td>
-                            <select id="CurvesPerPixel">
+                            <select id="CurvesPerPixel" OnChange="OnChangeSettings();">
                                 <option value="4">4: +0 order [R] [G] [B] [A]</option>
                                 <option value="2">2: +1 order [R&amp;G], [B&amp;A]</option>
                                 <option value="1">1: +2 order [R&amp;G&amp;B&amp;A]</option>
@@ -566,7 +605,7 @@
 					<tr>
 					    <td>Evaluation:</td>
 					    <td>
-						    <select id="EvaluationMode" onChange="initShaders();initTexture();">
+						    <select id="EvaluationMode" onChange="OnChangeSettings();">
 						    	<option value="bilinear">Weighted Sum of Texture Samples</option>
 						    	<option value="equation">Bezier Equation</option>
 						    </select>
@@ -575,7 +614,7 @@
 				    <tr>
 					    <td>Render:</td>
 					    <td>
-						    <select id="RenderMode" onChange="initShaders();initTexture();">
+						    <select id="RenderMode" onChange="OnChangeSettings();">
 						    	<option value="halfspace">HalfSpace</option>
 						    	<option value="curves">Curves</option>
 			                    <option value="texture">Texture</option>
