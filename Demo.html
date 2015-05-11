@@ -115,14 +115,35 @@
     }
 
     function buildFragmentShader_bilinear_halfspace () {
-        return createFragmentShader(gl,
-            g_fragmentShaderHeader +
+    	var shaderSource = 
+        	g_fragmentShaderHeader +
             "   // Calculate our sample value.\n" + 
             "   // The center of each pixel is where the value starts, not the edge, so our interpolation\n" +
             "   // goes from 0.25 -> 0.75, not from 0 to 1.\n" +
-            "   float sample = 0.25 + vTextureCoord.x / 2.0;\n\n" + 
-            "   // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.\n" + 
-            "   vec4 curveValues = texture2D(uSampler, vec2(sample));\n\n" +
+            "   float sample = 0.25 + vTextureCoord.x / 2.0;\n\n" +
+			"   // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.\n";
+
+        if (g_settings.m_desiredTextureSizeY > 2)
+        {
+        	shaderSource += "   vec4 curveValues = \n";
+
+        	// TODO: add more comments to shader explaining we are taking more texture samples for higher degree curve
+        	// TODO: make the float format more reliable. may not make it a whole integer on all platforms all of the time!
+        	for (i = 1; i < g_settings.m_desiredTextureSizeY; ++i)
+        	{
+        		// TODO: calculate proper weights, based on pascal's triangle!
+        		// TODO: i don't think weighting is enough, we need to do a mix of time t. need to figure that out. maybe go back to having a temporary per texture lookup and doing whatever the right thing is to combine them.
+        		var weight = 0.5;
+        		shaderSource += "      texture2D(uSampler, vec2(sample, sample / " + (g_settings.m_actualTextureSizeY.toString() / 2) + ".0 + " + (i-1).toString() + ".0 / " + g_settings.m_actualTextureSizeY.toString() + ".0)) * " + weight.toString() + ((i < g_settings.m_desiredTextureSizeY-1) ? " +\n" : ";\n\n");
+        	}
+        }
+        else
+        {
+        	shaderSource += 
+        		"   vec4 curveValues = texture2D(uSampler, vec2(sample));\n\n";
+        }
+
+		shaderSource += 
             "   // R,G,B curves add 0.5 to their color channels respectively.\n" + 
             "   vec3 outColor;\n" +
             "   outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;\n" +
@@ -135,8 +156,10 @@
             "   outColor.z += v;\n\n" +
             "   // make the output color\n" +
             "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
-            g_fragmentShaderFooter
-        );
+            g_fragmentShaderFooter;
+
+        document.getElementById("ShaderSource").innerText = shaderSource;
+		return createFragmentShader(gl,shaderSource);
     }
 
     function buildFragmentShader_equation_halfspace () {
@@ -337,12 +360,18 @@
 			];
         }
 
+		// make our texture data
         var textureData = new Array;
-        for (i = 0; i < g_settings.m_textureSizeY; ++i)
+        for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
         {
             textureData = textureData.concat(g_controlPoints[i]);
             textureData = textureData.concat(g_controlPoints[i+1]);
         }
+
+        // fill in the rest of the texture we had to allocate with opaque black.
+        // we have to round up to the next even numbered texture size, which can cause this needing to happen.
+        for (i = g_settings.m_desiredTextureSizeY; i <= g_settings.m_actualTextureSizeY; ++i)
+        	textureData = textureData.concat([1,1,1,1]);
 
         // create the texture
         bezierTexture = createTexture(
@@ -426,34 +455,34 @@
         gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, controlPointBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
 		// Draw Red curve control points
-        for (i = 0; i < g_controlPoints.length; ++i)
+        for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
         {
         	gl.uniform3f(CPshaderProgram.uColorLocation, 0.75, 0, 0);
-        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.length-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
+        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.m_desiredTextureSizeY-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
         	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
         }
 
 		// Draw Green curve control points
-        for (i = 0; i < g_controlPoints.length; ++i)
+        for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
         {
         	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0.75, 0);
-        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.length-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
+        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.m_desiredTextureSizeY-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
         	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
         }        
 
 		// Draw Blue curve control points
-        for (i = 0; i < g_controlPoints.length; ++i)
+        for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
         {
         	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 0.75);
-        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.length-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
+        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.m_desiredTextureSizeY-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
         	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
         }           
 
 		// Draw Alpha curve control points
-        for (i = 0; i < g_controlPoints.length; ++i)
+        for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
         {
         	gl.uniform3f(CPshaderProgram.uColorLocation, 0.75, 0.75, 0.75);
-        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.length-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
+        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_controlPoints.m_desiredTextureSizeY-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
         	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
         }             
     }
@@ -523,6 +552,8 @@
 
     /*
     TODO:
+    	? where the heck did the control point circles go to?!
+    	* make the curve values more persistent, and make them have good initial values!
      	* round up y resolution
         * choose X axis, then Y axis, and then curves per pixel and make the last one the order modifier
     	* choose order of curve (Y axis resolution)
@@ -651,8 +682,9 @@
             </td>
         </tr>
     </table>
-    <br>
-    <a href="index.html">Back to Index</a>
+	<a href="index.html">Back to Index</a><br><br>
+    <b>Fragment Shader Source:</b>
+    <pre id="ShaderSource" style="border:1px solid black"></pre>
 </body>
 
 </html>
