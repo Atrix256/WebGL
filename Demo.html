@@ -134,36 +134,45 @@
         return createFragmentShader(gl,shaderSource);
     }
 
-    function buildFragmentShader_bilinear_halfspace () {
+    function buildFragmentShader_halfspace (bilinear) {
     	var shaderSource = 
         	g_fragmentShaderHeader +
             "   // Calculate our sample value.\n" + 
             "   // The center of each pixel is where the value starts, not the edge, so our interpolation\n" +
             "   // goes from 0.25 -> 0.75, not from 0 to 1.\n" +
             "   float t1 = vTextureCoord.x;\n" +
-            "   float sample = 0.25 + t1 / 2.0;\n\n" +
-			"   // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.\n";
+            "   float sample = 0.25 + t1 / 2.0;\n\n";
+			
 
+            // TODO: add the bilinear = false version. somehow make it work with the below in a clean way.
+            // TODO: could easily have complex javascript logic isolated at top that graps P0..PN (whether blended or not), and sets a variable that says how high to raise things. then share more complex code below.
+
+        // if we are doing cubic or higher, we need to do some work
         if (g_settings.m_desiredTextureSizeY > 2)
         {
-            coefficients = pascalsTriangle(g_settings.m_desiredTextureSizeY-2);
+            shaderSource += 
+                "   // Calculate the powers of s and t that we will need.\n" +
+                "   float s1 = (1.0 - t1);\n";
 
-            // precalculate some values that we'll need
-            for (i = 2; i < g_settings.m_desiredTextureSizeY - 1; ++i)
+            for (i = 2; i < g_settings.m_desiredTextureSizeY - 1; ++i) 
+            {
                 shaderSource += "   float t" + i.toString() + " = t" + (i-1).toString() + " * t1;\n";
+                shaderSource += "   float s" + i.toString() + " = s" + (i-1).toString() + " * s1;\n";
+            }
 
-            shaderSource += "   float OneMinusT1 = (1.0 - t1);\n";
-            for (i = 2; i < g_settings.m_desiredTextureSizeY - 1; ++i)
-                shaderSource += "   float OneMinusT" + i.toString() + " = OneMinusT" + (i-1).toString() + " * OneMinusT1;\n";
-
-        	// TODO: add more comments to shader explaining we are taking more texture samples for higher degree curve
-        	// TODO: make the float format more reliable. may not make it a whole integer on all platforms all of the time!
+            shaderSource += 
+                "\n" +
+                "   // Get all the texture samples we will need.\n";
         	for (i = 1; i < g_settings.m_desiredTextureSizeY; ++i)
         	{
         		shaderSource += "   vec4 P" + i.toString() + " = texture2D(uSampler, vec2(sample, sample / " + (g_settings.m_actualTextureSizeY / 2).toFixed(1) + " + " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
         	}
 
-            // todo: better comments here and in the shader source. here and above!
+            shaderSource += 
+                "\n" +
+                "   // Calculate the desired bezier curve by putting the points we have through the appropriate bezier curve equation.\n" +
+                "   // Bezier curve equations are the result of binomial expansion, so we are going to use pascal's triangle to get us our equation co-efficients.\n";
+            coefficients = pascalsTriangle(g_settings.m_desiredTextureSizeY-2);
             shaderSource += "   vec4 curveValues = \n";
             for (i = 1; i < g_settings.m_desiredTextureSizeY; ++i)
             {
@@ -173,7 +182,7 @@
 
                 var j = g_settings.m_desiredTextureSizeY - i;
                 if (j > 1)
-                    shaderSource += " * OneMinusT" + (j-1).toString();
+                    shaderSource += " * s" + (j-1).toString();
 
                 if ( i < (g_settings.m_desiredTextureSizeY-1))
                     shaderSource += " +\n";
@@ -181,9 +190,11 @@
                     shaderSource += ";\n\n";
             }
         }
+        // if we are doing quadratic or linear curves, just take the sample directly
         else
         {
         	shaderSource += 
+                "   // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.\n" +
         		"   vec4 curveValues = texture2D(uSampler, vec2(sample));\n\n";
         }
 
@@ -204,35 +215,6 @@
 
         document.getElementById("ShaderSource").innerText = shaderSource;
 		return createFragmentShader(gl,shaderSource);
-    }
-
-    function buildFragmentShader_equation_halfspace () {
-        return createFragmentShader(gl,
-            g_fragmentShaderHeader +
-            "   // Get our control points\n" +
-            "   // The center of each pixel is technically where the pixel color is.\n" +
-            "   // Doesn't really matter for NEAREST sampling, but doing it anyhow\n" +
-            "   vec4 A = texture2D(uSampler, vec2(0.25,0.25));\n" +
-            "   vec4 B = texture2D(uSampler, vec2(0.75,0.25));\n" +
-            "   vec4 C = texture2D(uSampler, vec2(0.75,0.75));\n\n" +
-            "   // Evaluate the quadratic bezier curves at time t.\n" +
-            "   // Paralelized since each one is in a different color channel.\n" +
-            "   float t = vTextureCoord.x;\n" +
-            "   vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;\n\n" +
-            "   // R,G,B curves add 0.5 to their color channels respectively.\n" + 
-            "   vec3 outColor;\n" +
-            "   outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;\n" +
-            "   outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;\n" +
-            "   outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;\n\n" +
-            "   // alpha curve adds 0.5 to each color channel\n" +
-            "   float v = step(vTextureCoord.y, curveValues.w) * 0.5;\n" +
-            "   outColor.x += v;\n" +
-            "   outColor.y += v;\n" +
-            "   outColor.z += v;\n\n" +
-            "   // make the output color\n" +
-            "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
-            g_fragmentShaderFooter
-        );
     }
 
     function buildFragmentShader_bilinear_curves () {
@@ -308,14 +290,14 @@
         if (evaluationMode == "bilinear")
         {
             if (renderMode == "halfspace")
-                return buildFragmentShader_bilinear_halfspace();
+                return buildFragmentShader_halfspace(true);
             else if (renderMode == "curves")
                 return buildFragmentShader_bilinear_curves();
         }
         else if (evaluationMode == "equation")
         {
             if (renderMode == "halfspace")
-                return buildFragmentShader_equation_halfspace();
+                return buildFragmentShader_halfspace(false);
             else if (renderMode == "curves")
                 return buildFragmentShader_equation_curves();
         }
@@ -623,7 +605,6 @@
         * make the "Texture Size X axis" feature work
 
         * test all variations of params, especially the weird (degenerate) cases like texture size Y axis of 1 making a lerp.
-        * in the "equation" ones, make OneMinusT a variable that's re-used
 
         * maybe combine the equation and texture code more.  basically textures just remove one layer of blending vs equations
 
