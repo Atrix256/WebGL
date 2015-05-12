@@ -63,6 +63,14 @@
         return v+1;
     }
 
+    function pascalsTriangle(n)
+    {
+        var ret = [1];
+        for (i = 0; i < n; ++i)
+            ret.push(ret[i] * (n - i) / (i + 1));
+        return ret;
+    }
+
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript)
@@ -117,11 +125,13 @@
     var g_fragmentShaderFooter = "}";
 
     function buildFragmentShader_texture () {
-        return createFragmentShader(gl,
+        var shaderSource = 
             g_fragmentShaderHeader +
             "   gl_FragColor = texture2D(uSampler, vTextureCoord);\n" + 
-            g_fragmentShaderFooter
-        );
+            g_fragmentShaderFooter;
+
+        document.getElementById("ShaderSource").innerText = shaderSource;
+        return createFragmentShader(gl,shaderSource);
     }
 
     function buildFragmentShader_bilinear_halfspace () {
@@ -136,6 +146,8 @@
 
         if (g_settings.m_desiredTextureSizeY > 2)
         {
+            coefficients = pascalsTriangle(g_settings.m_desiredTextureSizeY-2);
+
             // precalculate some values that we'll need
             for (i = 2; i < g_settings.m_desiredTextureSizeY - 1; ++i)
                 shaderSource += "   float t" + i.toString() + " = t" + (i-1).toString() + " * t1;\n";
@@ -155,7 +167,7 @@
             shaderSource += "   vec4 curveValues = \n";
             for (i = 1; i < g_settings.m_desiredTextureSizeY; ++i)
             {
-                shaderSource += "      P" + i.toString();
+                shaderSource += "      P" + i.toString() + " * " + coefficients[i-1].toFixed(1);
                 if (i > 1)
                     shaderSource += " * t" + (i-1).toString();
 
@@ -593,7 +605,11 @@
 
     /*
     TODO:
-        * need to multiply by pascal triangle values!
+        * make the equation half space shader work. 
+        * make the curve shaders work
+
+        * rename "evaluation" to "blending mode" and have "nearest" and "bilinear".  C++ version will also have trilinear!
+
     	* make the curve values more persistent, and make them have good initial values!
         * choose X axis, then Y axis, and then curves per pixel and make the last one the order modifier
     	* choose order of curve (Y axis resolution)
@@ -611,8 +627,8 @@
 
         * maybe combine the equation and texture code more.  basically textures just remove one layer of blending vs equations
 
-        * make it copy the control point data when re-creating the array (textuire)
-        * make sure all render modes show shader source!
+        * make it copy the control point data when re-creating the array (texture)
+        * make sure all render modes show shader source! (like... texture even!)
         * make control points not show up in texture mode
     */
 </script>
