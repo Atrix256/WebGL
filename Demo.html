@@ -372,7 +372,11 @@
     }
 
     var bezierTexture;
-    var g_controlPoints = [[]];
+    var g_controlPoints = [
+    	[128,   0,  50, 190],
+    	[  0, 255,   0,   0],
+    	[190,  64, 255,  75]
+	];
 
     function initTexture() {
     	// Get the control point data from our sliders
@@ -484,42 +488,45 @@
         gl.uniform1i(FSshaderProgram.samplerUniform, 0);
         gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
 
-        // draw the control points
-        gl.useProgram(CPshaderProgram);        
-        gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
-        gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, controlPointBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-		// Draw Red curve control points
-        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
+	    // draw the control points if we aren't in texture rendering mode
+        if (document.getElementById("RenderMode").value != "texture")
         {
-        	gl.uniform3f(CPshaderProgram.uColorLocation, 1, 0, 0);
-        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
-        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-        }
+	        gl.useProgram(CPshaderProgram);        
+	        gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
+	        gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, controlPointBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-		// Draw Green curve control points
-        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
-        {
-        	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 1, 0);
-        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
-        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-        }        
+			// Draw Red curve control points
+	        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
+	        {
+	        	gl.uniform3f(CPshaderProgram.uColorLocation, 1, 0, 0);
+	        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
+	        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+	        }
 
-		// Draw Blue curve control points
-        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
-        {
-        	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 1);
-        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
-        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-        }           
+			// Draw Green curve control points
+	        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
+	        {
+	        	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 1, 0);
+	        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
+	        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+	        }        
 
-		// Draw Alpha curve control points
-        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
-        {
-        	gl.uniform3f(CPshaderProgram.uColorLocation, 1, 1, 1);
-        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
-        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-        }             
+			// Draw Blue curve control points
+	        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
+	        {
+	        	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 1);
+	        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
+	        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+	        }           
+
+			// Draw Alpha curve control points
+	        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
+	        {
+	        	gl.uniform3f(CPshaderProgram.uColorLocation, 1, 1, 1);
+	        	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
+	        	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+	        }            
+		} 
     }
 
     function tick() {
@@ -544,10 +551,14 @@
 		document.getElementById("AlphaControlPoints").innerHTML = "";
 		for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
 		{
-			document.getElementById("RedControlPoints").innerHTML += i.toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"R" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"0\"/><br/>";
-			document.getElementById("GreenControlPoints").innerHTML += i.toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"G" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"0\"/><br/>";
-			document.getElementById("BlueControlPoints").innerHTML += i.toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"B" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"0\"/><br/>";
-			document.getElementById("AlphaControlPoints").innerHTML += i.toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"A" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"0\"/><br/>";
+			var value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][0] == 'undefined') ? 0 : g_controlPoints[i][0] / 2.55;
+			document.getElementById("RedControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"R" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+			value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][1] == 'undefined') ? 0 : g_controlPoints[i][1] / 2.55;
+			document.getElementById("GreenControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"G" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+			value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[2] == 'undefined') ? 0 : g_controlPoints[i][2] / 2.55;
+			document.getElementById("BlueControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"B" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+			value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][3] == 'undefined') ? 0 : g_controlPoints[i][3] / 2.55;
+			document.getElementById("AlphaControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"A" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
 		}
     }
 
@@ -592,12 +603,12 @@
 
         * rename "evaluation" to "blending mode" and have "nearest" and "bilinear".  C++ version will also have trilinear!
 
-    	* make the curve values more persistent, and make them have good initial values!
         * choose X axis, then Y axis, and then curves per pixel and make the last one the order modifier
     	* choose order of curve (Y axis resolution)
     	* choose how many curves there are end to end (X axis resolution)
     	* somehow work in # of curves per 2x2 square (so could get 2 cubics from 1 read instead of 4 quadratics.  Could also get 1 5th order curve from 1 read!)
         * show text of what it's doing above, and the size of the texture.
+        * show the size and layout of texture in fragment shader source comments
         * clean up and organize code?
 
         * make the "curves per texture sample" feature work
@@ -608,9 +619,7 @@
 
         * maybe combine the equation and texture code more.  basically textures just remove one layer of blending vs equations
 
-        * make it copy the control point data when re-creating the array (texture)
         * make sure all render modes show shader source! (like... texture even!)
-        * make control points not show up in texture mode
     */
 </script>
 </head>
@@ -720,7 +729,7 @@
         </tr>
     </table>
 	<a href="index.html">Back to Index</a><br><br>
-    <b>Fragment Shader Source:</b>
+    <b>Fragment Shader Source (GLSL):</b>
     <pre id="ShaderSource" style="border:1px solid black"></pre>
 </body>
 
