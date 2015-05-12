@@ -53,6 +53,16 @@
     var gl;
     var g_frameCounter = 0;
 
+    function nextPowerOfTwo(v) {
+        v = v-1;
+        v|=v>>1;
+        v|=v>>2;
+        v|=v>>4;
+        v|=v>>8;
+        v|=v>>16;
+        return v+1;
+    }
+
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript)
@@ -386,14 +396,23 @@
         var textureData = new Array;
         for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
         {
-            textureData = textureData.concat(g_controlPoints[i]);
-            textureData = textureData.concat(g_controlPoints[i+1]);
+            textureData.push(g_controlPoints[i][0]);
+            textureData.push(g_controlPoints[i][1]);
+            textureData.push(g_controlPoints[i][2]);
+            textureData.push(g_controlPoints[i][3]);
+            textureData.push(g_controlPoints[i+1][0]);
+            textureData.push(g_controlPoints[i+1][1]);
+            textureData.push(g_controlPoints[i+1][2]);
+            textureData.push(g_controlPoints[i+1][3]);
         }
 
         // fill in the rest of the texture we had to allocate with opaque black.
         // we have to round up to the next even numbered texture size, which can cause this needing to happen.
-        for (i = g_settings.m_desiredTextureSizeY; i <= g_settings.m_actualTextureSizeY; ++i)
+        for (i = g_settings.m_desiredTextureSizeY; i < g_settings.m_actualTextureSizeY; ++i)
+        {
         	textureData = textureData.concat([1,1,1,1]);
+            textureData = textureData.concat([1,1,1,1]);
+        }
 
         // create the texture
         bezierTexture = createTexture(
@@ -479,7 +498,7 @@
 		// Draw Red curve control points
         for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
         {
-        	gl.uniform3f(CPshaderProgram.uColorLocation, 0.75, 0, 0);
+        	gl.uniform3f(CPshaderProgram.uColorLocation, 1, 0, 0);
         	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
         	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
         }
@@ -487,7 +506,7 @@
 		// Draw Green curve control points
         for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
         {
-        	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0.75, 0);
+        	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 1, 0);
         	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
         	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
         }        
@@ -495,7 +514,7 @@
 		// Draw Blue curve control points
         for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
         {
-        	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 0.75);
+        	gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 1);
         	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
         	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
         }           
@@ -503,7 +522,7 @@
 		// Draw Alpha curve control points
         for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
         {
-        	gl.uniform3f(CPshaderProgram.uColorLocation, 0.75, 0.75, 0.75);
+        	gl.uniform3f(CPshaderProgram.uColorLocation, 1, 1, 1);
         	gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
         	gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
         }             
@@ -520,9 +539,9 @@
         g_settings.m_desiredTextureSizeX = 2;
         g_settings.m_desiredTextureSizeY = parseInt(document.getElementById("TextureSizeY").value);
 
-        // round the texture size up to the next even number
-        g_settings.m_actualTextureSizeX = g_settings.m_desiredTextureSizeX + ((g_settings.m_desiredTextureSizeX % 2 == 1) ? 1 : 0);
-        g_settings.m_actualTextureSizeY = g_settings.m_desiredTextureSizeY + ((g_settings.m_desiredTextureSizeY % 2 == 1) ? 1 : 0);
+        // round the texture size up to the next power of 2
+        g_settings.m_actualTextureSizeX = nextPowerOfTwo(g_settings.m_desiredTextureSizeX);
+        g_settings.m_actualTextureSizeY = nextPowerOfTwo(g_settings.m_desiredTextureSizeY);
 
         // create the control points
 		document.getElementById("RedControlPoints").innerHTML = "";
@@ -574,9 +593,8 @@
 
     /*
     TODO:
-        * quartic curves don't work.  i think i am not taking enough texture samples maybe?
+        * need to multiply by pascal triangle values!
     	* make the curve values more persistent, and make them have good initial values!
-     	* round up x and y resolution to power of 2 not jus make them even numbers
         * choose X axis, then Y axis, and then curves per pixel and make the last one the order modifier
     	* choose order of curve (Y axis resolution)
     	* choose how many curves there are end to end (X axis resolution)
@@ -594,6 +612,8 @@
         * maybe combine the equation and texture code more.  basically textures just remove one layer of blending vs equations
 
         * make it copy the control point data when re-creating the array (textuire)
+        * make sure all render modes show shader source!
+        * make control points not show up in texture mode
     */
 </script>
 </head>
@@ -614,9 +634,9 @@
 						    	<option value="3">3: Cubic (Order 3)</option>
 						    	<option value="4">4: Quartic (Order 4)</option>
 						    	<option value="5">5: Quintic (Order 5)</option>
-						    	<option value="5">6: Sextic (Order 6)</option>
-						    	<option value="5">7: Septic (Order 7)</option>
-						    	<option value="5">8: Octic (Order 8)</option>
+						    	<option value="6">6: Sextic (Order 6)</option>
+						    	<option value="7">7: Septic (Order 7)</option>
+						    	<option value="8">8: Octic (Order 8)</option>
 						    </select>	    	
 				    	</td>
 					</tr>		
