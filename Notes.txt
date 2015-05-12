@@ -14,6 +14,8 @@ Next:
  * instead of "quadratic bezier equation" etc in the drop downs, mention that it does 3 texture lookups + that (as an example). make the drop downs explain what is being done.
  * call "4 cubic curves"   "4 cubic curves end to end" instead? same w/ quadratic
 
+* make sure that C++ version also has "trilinear" sampling mode, with volume textures
+
 ! set up curves such that you can lerp the R,G,B,A curve points to get a higher order curve with a single read
 
 ? does the "cubic needs 3x2 not 4x2" thing have play with higher dimensionality curves?

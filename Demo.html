@@ -279,7 +279,7 @@
     }
 
     function buildFragmentShader () {
-        var evaluationMode = document.getElementById("EvaluationMode").value;
+        var samplingMode = document.getElementById("SamplingMode").value;
         var renderMode = document.getElementById("RenderMode").value;
 
         if (renderMode == "texture")
@@ -287,14 +287,14 @@
             return buildFragmentShader_texture();
         }
 
-        if (evaluationMode == "bilinear")
+        if (samplingMode == "bilinear")
         {
             if (renderMode == "halfspace")
                 return buildFragmentShader_halfspace(true);
             else if (renderMode == "curves")
                 return buildFragmentShader_bilinear_curves();
         }
-        else if (evaluationMode == "equation")
+        else if (samplingMode == "nearest")
         {
             if (renderMode == "halfspace")
                 return buildFragmentShader_halfspace(false);
@@ -357,7 +357,7 @@
     }
 
     function createTexture(byteArrayWithRGBAData, width, height) {
-    	var filter = (document.getElementById("EvaluationMode").value == "bilinear")
+    	var filter = (document.getElementById("SamplingMode").value == "bilinear")
     		? gl.LINEAR
     		: gl.NEAREST;
 
@@ -601,8 +601,6 @@
         * make the equation half space shader work. 
         * make the curve shaders work
 
-        * rename "evaluation" to "blending mode" and have "nearest" and "bilinear".  C++ version will also have trilinear!
-
         * choose X axis, then Y axis, and then curves per pixel and make the last one the order modifier
     	* choose order of curve (Y axis resolution)
     	* choose how many curves there are end to end (X axis resolution)
@@ -673,11 +671,11 @@
 			<td>
 				<table>
 					<tr>
-					    <td>Evaluation:</td>
+					    <td>Sampling:</td>
 					    <td>
-						    <select id="EvaluationMode" onChange="OnChangeSettings();">
-						    	<option value="bilinear">Weighted Sum of Texture Samples</option>
-						    	<option value="equation">Bezier Equation</option>
+						    <select id="SamplingMode" onChange="OnChangeSettings();">
+						    	<option value="bilinear">Bilinear</option>
+						    	<option value="nearest">Nearest (More Texture Reads)</option>
 						    </select>
 					    </td>
 				    </tr>
