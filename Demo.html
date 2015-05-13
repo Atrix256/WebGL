@@ -117,6 +117,7 @@
     var g_settings = {};
 
     var g_fragmentShaderHeader = 
+    	"#extension GL_OES_standard_derivatives : enable\n"+
         "precision mediump float;\n" + 
         "uniform sampler2D uSampler;\n" + 
         "varying vec2 vTextureCoord;\n\n" + 
@@ -163,7 +164,7 @@
         {
             shaderSource +=
                 "   // Calculate our sample value.\n" + 
-                "   // The center of each pixel is where the value is, not the edge.\n"+
+                "   // The center of each pixel is where the color is.\n"+
                 "   float sample = 0.25 + t1 / 2.0;\n\n";
 
         	// do the texture sample(s)
@@ -268,7 +269,7 @@
         {
             shaderSource +=
                 "   // Calculate our sample value.\n" + 
-                "   // The center of each pixel is where the value is, not the edge.\n"+
+                "   // The center of each pixel is where the color is.\n"+
                 "   float sample = 0.25 + t1 / 2.0;\n\n";
 
             // do the texture sample(s)
@@ -325,14 +326,18 @@
             }
         }
 
+        shaderSource +=
+        	"   // Calculate slope using dfdx so we can use the gradient to aproximate distance\n" +
+        	"   vec4 slopeX = dFdx(curveValues) / dFdx(vTextureCoord.x);\n\n";
+
         shaderSource += 
             "   // R,G,B curves add 0.5 to their color channels respectively.\n" + 
             "   vec3 outColor;\n" +
-            "   outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;\n" +
-            "   outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;\n" +
-            "   outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;\n\n" +
+            "   outColor.x = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.x) / length(vec2(slopeX.x, -1.0)));\n" +
+            "   outColor.y = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.y) / length(vec2(slopeX.y, -1.0)));\n" +
+			"   outColor.z = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.z) / length(vec2(slopeX.z, -1.0)));\n" +
             "   // alpha curve adds 0.5 to each color channel\n" +
-            "   float v = step(vTextureCoord.y, curveValues.w) * 0.5;\n" +
+            "   float v = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.w) / length(vec2(slopeX.w, -1.0)));\n" +
             "   outColor.x += v;\n" +
             "   outColor.y += v;\n" +
             "   outColor.z += v;\n\n" +
@@ -344,71 +349,6 @@
         return createFragmentShader(gl,shaderSource);
     }
 
-    function buildFragmentShader_bilinear_curves () {
-        var shaderSource = 
-            g_fragmentShaderHeader +
-            "   // Calculate our sample value.\n" +
-            "   // The center of each pixel is where the value starts, not the edge, so our interpolation\n" +
-            "   // goes from 0.25 -> 0.75, not from 0 to 1.\n" +
-            "   float sample = 0.25 + vTextureCoord.x / 2.0;\n\n" +
-            "   // Evaluate the curve, using bilinear filtering to do bilinear interpolation to calculate our curve point.\n" +
-            "   vec4 curveValues = texture2D(uSampler, vec2(sample));\n\n" +
-            "   // use finite differences to get an aproximation of the slope of the curve at this point\n" +
-            "   float h = sample > 0.5 ? -0.01 : 0.01;\n" +
-            "   vec4 slope = (texture2D(uSampler, vec2(sample + h)) - curveValues) / h; \n\n" +
-            "   // Use the slope to get the gradient, and use the gradient to get a distance estimation to the curves\n" +
-            "   // R,G,B curves add 1.0 to their color channels respectively.\n" +
-            "   vec3 outColor;\n" +
-            "   outColor.x = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));\n" +
-            "   outColor.y = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));\n" +
-            "   outColor.z = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));\n\n" +
-            "   // alpha curve adds 1.0 to each color channel\n" +
-            "   float value = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));\n" +
-            "   outColor.x += value;\n" +
-            "   outColor.y += value;\n" +
-            "   outColor.z += value;\n\n" +
-            "   // make the output color\n" +
-            "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
-            g_fragmentShaderFooter;
-
-        document.getElementById("ShaderSource").innerText = shaderSource;
-        return createFragmentShader(gl, shaderSource);
-    }
-
-    function buildFragmentShader_equation_curves () {
-        var shaderSource = 
-            g_fragmentShaderHeader +
-            "   // Get our control points\n" +
-            "   // The center of each pixel is technically where the pixel color is.\n" +
-            "   // Doesn't really matter for NEAREST sampling, but doing it anyhow\n" +
-            "   vec4 A = texture2D(uSampler, vec2(0.25,0.25));\n" +
-            "   vec4 B = texture2D(uSampler, vec2(0.75,0.25));\n" +
-            "   vec4 C = texture2D(uSampler, vec2(0.75,0.75));\n\n" +
-            "   // Evaluate the quadratic bezier curves at time t.\n" +
-            "   // Paralelized since each one is in a different color channel.\n" +
-            "   float t = vTextureCoord.x;\n" +
-            "   vec4 curveValues = A * (1.0-t) * (1.0-t) + B * 2.0 * t * (1.0 - t) + C * t * t;\n\n" +
-            "   // use the derivative of the quadratic bezier function to calculate the slope at this point\n" +
-            "   vec4 slope = 2.0 * (B + A * (-1.0 + t) - 2.0 * B * t + C * t);\n\n" +
-            "   // Use the slope to get the gradient, and use the gradient to get a distance estimation to the curves\n" +
-            "   // R,G,B curves add 1.0 to their color channels respectively\n" +
-            "   vec3 outColor;\n" +
-            "   outColor.x = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));\n" +
-            "   outColor.y = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));\n" +
-            "   outColor.z = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));\n\n" +
-            "   // alpha curve adds 1.0 to each color channel\n" +
-            "   float value = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));\n" +
-            "   outColor.x += value;\n" +
-            "   outColor.y += value;\n" +
-            "   outColor.z += value;\n" +
-            "   // make the output color\n" +
-            "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
-            g_fragmentShaderFooter;
-
-        document.getElementById("ShaderSource").innerText = shaderSource;
-        return createFragmentShader(gl, shaderSource);
-    }
-
     function buildFragmentShader () {
         var samplingMode = document.getElementById("SamplingMode").value;
         var renderMode = document.getElementById("RenderMode").value;
@@ -418,8 +358,6 @@
             return buildFragmentShader_texture();
         }
 
-        // todo: remove buildFragmentShader_bilinear_curves / equation version after tdone
-        
         var bilinear = (samplingMode == "bilinear");
         if (renderMode == "halfspace")
             return buildFragmentShader_halfspace(bilinear);
@@ -693,6 +631,9 @@
         canvas.height = canvassize;
         // details of options below here: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
         gl = WebGLUtils.setupWebGL(canvas, {alpha:true, depth: false, stencil: false, antialias: false, premultipliedAlpha:false, preserveDrawingBuffer: false});
+
+		gl.getExtension("OES_standard_derivatives");
+
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
         initSettings();
@@ -722,7 +663,7 @@
 
     /*
     TODO:
-        * make the curve shaders work
+    	* combine halfspace and curve shaders. they look like they can do it
 
         * choose X axis, then Y axis, and then curves per pixel and make the last one the order modifier
     	* choose order of curve (Y axis resolution)
@@ -741,6 +682,8 @@
         * maybe combine the equation and texture code more.  basically textures just remove one layer of blending vs equations
 
         * make sure all render modes show shader source! (like... texture even!)
+
+        * make a "zero" (clear?), a "one" and "random" button under each set of control point sliders
     */
 </script>
 </head>
@@ -807,7 +750,7 @@
 					    <td>
 						    <select id="RenderMode" onChange="OnChangeSettings();">
 						    	<option value="halfspace">HalfSpace</option>
-						    	<option value="curves">Curves</option>
+						    	<option value="curves">Curves (dFdx for gradient distance)</option>
 			                    <option value="texture">Texture</option>
 						    </select>
 						</td>

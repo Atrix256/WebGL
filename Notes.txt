@@ -79,6 +79,10 @@ compare quality (and speed?) vs baking curve as 1x16?
 
  =====Paper Notes=====
 
+* could do a "pure math" derivatives in linear curves setup instead of using dFdx.  Could also do more texture reads in the bilinear setup.
+
+* when using this method, since the hardware does some of the interpolation for you, it makes it harder to do math that involves the control points (like derivative or integral)
+
 * read other papers from http://jcgt.org/ to get an idea of the average published paper
 
 ? maybe josh grass can answer questions for you about writing the paper
@@ -87,6 +91,9 @@ compare quality (and speed?) vs baking curve as 1x16?
  * http://research.microsoft.com/en-us/um/people/cloop/loopblinn05.pdf   <--- similar but different. uses bilinear texture coordinate interpolation.
  * http://http.developer.nvidia.com/GPUGems3/gpugems3_ch25.html
  * http://commaexcess.com/articles/6/vector-graphics-on-the-gpu
+
+* some references here:
+ * http://algorithmist.net/docs/subdivision.pdf
 
 
 * if not (much) more efficient could call it "efficient texture encoding / decoding" instead of gpu efficient
