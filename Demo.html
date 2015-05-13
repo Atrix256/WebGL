@@ -239,8 +239,113 @@
 		return createFragmentShader(gl,shaderSource);
     }
 
+    function buildFragmentShader_curves (bilinear) {
+        var shaderSource = g_fragmentShaderHeader;
+
+        // calculate how many texture samples there will be
+        var textureSampleCount = bilinear ? g_settings.m_desiredTextureSizeY - 1 : g_settings.m_desiredTextureSizeY + 1;
+        if (textureSampleCount < 1)
+            textureSampleCount = 1;
+
+        shaderSource += 
+            "   // Calculate the powers of s and t that we will need.\n" +
+            "   float t1 = vTextureCoord.x;\n";
+
+        if (textureSampleCount > 1)
+        {
+            shaderSource +=
+                "   float s1 = (1.0 - t1);\n";
+
+            for (i = 2; i < textureSampleCount; ++i) 
+            {
+                shaderSource += "   float t" + i.toString() + " = t" + (i-1).toString() + " * t1;\n";
+                shaderSource += "   float s" + i.toString() + " = s" + (i-1).toString() + " * s1;\n";
+            }
+        }
+        shaderSource += "\n";
+
+        if (bilinear)
+        {
+            shaderSource +=
+                "   // Calculate our sample value.\n" + 
+                "   // The center of each pixel is where the value is, not the edge.\n"+
+                "   float sample = 0.25 + t1 / 2.0;\n\n";
+
+            // do the texture sample(s)
+            if (textureSampleCount == 1)
+            {
+                shaderSource += "   // Do the texture sample\n";
+                shaderSource += "   vec4 curveValues = texture2D(uSampler, vec2(sample));\n\n";
+            }
+            else
+            {
+                shaderSource += "   // Do the texture samples\n";
+                for (i = 1; i <= textureSampleCount; ++i)
+                {
+                    shaderSource += "   vec4 P" + i.toString() + " = texture2D(uSampler, vec2(sample, sample / " + (g_settings.m_actualTextureSizeY / 2).toFixed(1) + " + " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
+                }
+                shaderSource += "\n";
+            }
+        }
+        else
+        {
+            shaderSource += "   // Do the texture samples\n";
+            for (i = 1; i < textureSampleCount; ++i)
+            {
+                shaderSource += "   vec4 P" + i.toString() + " = texture2D(uSampler, vec2(1.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
+            }
+            // TODO: that hard coded 3 / N is wrong.  it shouldn't be 3, what should it be? need to change it if having multiple textures in a row
+
+            shaderSource += "   vec4 P" + textureSampleCount.toString() + " = texture2D(uSampler, vec2(3.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (textureSampleCount-2).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n\n";
+        }
+
+        // combine texture samples if we have multiple.  Otherwise we've already done all the work we need to do
+        if (textureSampleCount > 1)
+        {
+
+            // Use the binomial theorem to generate the Nth order bezier curve function
+            shaderSource += 
+                "   // Calculate the desired bezier curve by putting the points we have through the appropriate bezier curve equation.\n";
+            coefficients = pascalsTriangle(textureSampleCount-1);
+            shaderSource += "   vec4 curveValues = \n";
+            for (i = 1; i <= textureSampleCount; ++i)
+            {
+                shaderSource += "      P" + i.toString() + " * " + coefficients[i-1].toFixed(1);
+                if (i > 1)
+                    shaderSource += " * t" + (i-1).toString();
+
+                var j = textureSampleCount - i + 1;
+                if (j > 1)
+                    shaderSource += " * s" + (j-1).toString();
+
+                if ( i < textureSampleCount)
+                    shaderSource += " +\n";
+                else
+                    shaderSource += ";\n\n";
+            }
+        }
+
+        shaderSource += 
+            "   // R,G,B curves add 0.5 to their color channels respectively.\n" + 
+            "   vec3 outColor;\n" +
+            "   outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;\n" +
+            "   outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;\n" +
+            "   outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;\n\n" +
+            "   // alpha curve adds 0.5 to each color channel\n" +
+            "   float v = step(vTextureCoord.y, curveValues.w) * 0.5;\n" +
+            "   outColor.x += v;\n" +
+            "   outColor.y += v;\n" +
+            "   outColor.z += v;\n\n" +
+            "   // make the output color\n" +
+            "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
+            g_fragmentShaderFooter;
+
+        document.getElementById("ShaderSource").innerText = shaderSource;
+        return createFragmentShader(gl,shaderSource);
+    }
+
     function buildFragmentShader_bilinear_curves () {
-        return createFragmentShader(gl,
+        var shaderSource = 
             g_fragmentShaderHeader +
             "   // Calculate our sample value.\n" +
             "   // The center of each pixel is where the value starts, not the edge, so our interpolation\n" +
@@ -264,12 +369,14 @@
             "   outColor.z += value;\n\n" +
             "   // make the output color\n" +
             "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
-            g_fragmentShaderFooter
-        );
+            g_fragmentShaderFooter;
+
+        document.getElementById("ShaderSource").innerText = shaderSource;
+        return createFragmentShader(gl, shaderSource);
     }
 
     function buildFragmentShader_equation_curves () {
-        return createFragmentShader(gl,
+        var shaderSource = 
             g_fragmentShaderHeader +
             "   // Get our control points\n" +
             "   // The center of each pixel is technically where the pixel color is.\n" +
@@ -296,8 +403,10 @@
             "   outColor.z += value;\n" +
             "   // make the output color\n" +
             "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
-            g_fragmentShaderFooter
-        );
+            g_fragmentShaderFooter;
+
+        document.getElementById("ShaderSource").innerText = shaderSource;
+        return createFragmentShader(gl, shaderSource);
     }
 
     function buildFragmentShader () {
@@ -309,20 +418,13 @@
             return buildFragmentShader_texture();
         }
 
-        if (samplingMode == "bilinear")
-        {
-            if (renderMode == "halfspace")
-                return buildFragmentShader_halfspace(true);
-            else if (renderMode == "curves")
-                return buildFragmentShader_bilinear_curves();
-        }
-        else if (samplingMode == "nearest")
-        {
-            if (renderMode == "halfspace")
-                return buildFragmentShader_halfspace(false);
-            else if (renderMode == "curves")
-                return buildFragmentShader_equation_curves();
-        }
+        // todo: remove buildFragmentShader_bilinear_curves / equation version after tdone
+        
+        var bilinear = (samplingMode == "bilinear");
+        if (renderMode == "halfspace")
+            return buildFragmentShader_halfspace(bilinear);
+        else if (renderMode == "curves")
+            return buildFragmentShader_curves(bilinear);
 
         alert("Could not find shader to generate");
         return null;
@@ -620,7 +722,6 @@
 
     /*
     TODO:
-        * make the equation half space shader work. 
         * make the curve shaders work
 
         * choose X axis, then Y axis, and then curves per pixel and make the last one the order modifier
