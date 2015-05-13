@@ -135,29 +135,36 @@
     }
 
     function buildFragmentShader_halfspace (bilinear) {
-    	var shaderSource = 
-        	g_fragmentShaderHeader +
-            "   // Calculate our sample value.\n" + 
-            "   // The center of each pixel is where the value is, not the edge.\n";
+    	var shaderSource = g_fragmentShaderHeader;
 
-        if (bilinear)
-        	shaderSource += "   // Our interpolation goes from 0.25 -> 0.75, not from 0 to 1.\n";
+        // calculate how many texture samples there will be
+        var textureSampleCount = bilinear ? g_settings.m_desiredTextureSizeY - 1 : g_settings.m_desiredTextureSizeY + 1;
+        if (textureSampleCount < 1)
+            textureSampleCount = 1;
 
-		shaderSource +=
-            "   float t1 = vTextureCoord.x;\n" +
-            "   float sample = 0.25 + t1 / 2.0;\n\n";
+        shaderSource += 
+            "   // Calculate the powers of s and t that we will need.\n" +
+            "   float t1 = vTextureCoord.x;\n";
 
-        // TODO: combine this code better.  maybe move the s and t powers up. break things into multiple sections.  it's ok if we have multiple bilinear / non bilinear blocks.
-        // TODO: make sure the comments in the output source code make sense.
-        // TODO: handle special cases like linear still doing math on the sample, or adding 0/2 etc.  Make it not spit out dumb math that isn't needed.
+        if (textureSampleCount > 1)
+        {
+            shaderSource +=
+                "   float s1 = (1.0 - t1);\n";
 
-        var textureSampleCount;
+            for (i = 2; i < textureSampleCount; ++i) 
+            {
+                shaderSource += "   float t" + i.toString() + " = t" + (i-1).toString() + " * t1;\n";
+                shaderSource += "   float s" + i.toString() + " = s" + (i-1).toString() + " * s1;\n";
+            }
+        }
+        shaderSource += "\n";
+
         if (bilinear)
         {
-        	// calculate how many texture samples there will be
-        	textureSampleCount = g_settings.m_desiredTextureSizeY - 1;
-        	if (textureSampleCount < 1)
-        		textureSampleCount = 1;
+            shaderSource +=
+                "   // Calculate our sample value.\n" + 
+                "   // The center of each pixel is where the value is, not the edge.\n"+
+                "   float sample = 0.25 + t1 / 2.0;\n\n";
 
         	// do the texture sample(s)
         	if (textureSampleCount == 1)
@@ -177,44 +184,19 @@
         }
         else
         {
-        	// calculate how many texture samples there will be
-        	textureSampleCount = g_settings.m_desiredTextureSizeY + 1;
-
-        	// do the texture sample(s)
-        	if (textureSampleCount == 1)
-        	{
-        		shaderSource += "   // Do the texture sample\n";
-				shaderSource += "   vec4 curveValues = texture2D(uSampler, vec2(sample));\n\n";
+    		shaderSource += "   // Do the texture samples\n";
+        	for (i = 1; i < textureSampleCount; ++i)
+            {
+				shaderSource += "   vec4 P" + i.toString() + " = texture2D(uSampler, vec2(1.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
         	}
-        	else
-        	{
-        		shaderSource += "   // Do the texture samples\n";
-	        	for (i = 1; i < textureSampleCount; ++i)
-	        	{
-					shaderSource += "   vec4 P" + i.toString() + " = texture2D(uSampler, vec2(1.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
-	        	}
-				// TODO: non bilinear case doesn't need the "sample" variables
-				// TODO: that hard coded 3 / N is wrong.  it shouldn't be 3, what should it be? need to change it if having multiple textures in a row
+			// TODO: that hard coded 3 / N is wrong.  it shouldn't be 3, what should it be? need to change it if having multiple textures in a row
 
-				shaderSource += "   vec4 P" + textureSampleCount.toString() + " = texture2D(uSampler, vec2(3.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (textureSampleCount-2).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
-
-	        	shaderSource += "\n";
-	        }        	
+			shaderSource += "   vec4 P" + textureSampleCount.toString() + " = texture2D(uSampler, vec2(3.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (textureSampleCount-2).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n\n";
         }
 
         // combine texture samples if we have multiple.  Otherwise we've already done all the work we need to do
         if (textureSampleCount > 1)
         {
-            shaderSource += 
-                "   // Calculate the powers of s and t that we will need.\n" +
-                "   float s1 = (1.0 - t1);\n";
-
-            for (i = 2; i < textureSampleCount; ++i) 
-            {
-                shaderSource += "   float t" + i.toString() + " = t" + (i-1).toString() + " * t1;\n";
-                shaderSource += "   float s" + i.toString() + " = s" + (i-1).toString() + " * s1;\n";
-            }
-            shaderSource += "\n"
 
             // Use the binomial theorem to generate the Nth order bezier curve function
             shaderSource += 
