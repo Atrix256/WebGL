@@ -118,7 +118,7 @@
 
     function GetNumUIControlPoints ()
     {
-        return g_settings.m_desiredTextureSizeY + g_settings.m_orderBoost;
+        return (g_settings.m_desiredTextureSizeY + g_settings.m_orderBoost) * (g_settings.m_desiredTextureSizeX/2);
     }
 
     var g_fragmentShaderHeader = 
@@ -617,7 +617,7 @@
 
     function initSettings() {
         // calculate the texture size we need
-        g_settings.m_desiredTextureSizeX = 2;
+        g_settings.m_desiredTextureSizeX = parseInt(document.getElementById("TextureSizeX").value);
         g_settings.m_desiredTextureSizeY = parseInt(document.getElementById("TextureSizeY").value);
 
         // round the texture size up to the next power of 2
@@ -650,7 +650,6 @@
         document.getElementById("BlueControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 0) ? "hidden" : "visible";
         document.getElementById("AlphaControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 0) ? "hidden" : "visible";
     }
-
 
 
     function initGL() {
@@ -687,6 +686,20 @@
     {
         initSettings();
         initShaders();
+        initTexture();
+    }
+
+    function SetCPs (color, value)
+    {
+        for (i = 0; i <= GetNumUIControlPoints(); ++i)
+            document.getElementById(color+i.toString()).value = value;
+        initTexture();
+    }
+
+    function SetCPsRandom (color)
+    {
+        for (i = 0; i <= GetNumUIControlPoints(); ++i)
+            document.getElementById(color+i.toString()).value = Math.random() * 100;
         initTexture();
     }
 
@@ -797,18 +810,30 @@
             <td valign="top" style="border:2px solid red" id="RedControlPointsContainer">
                 Red:<br>
                 <span id="RedControlPoints"></span>
+                <input type="button" onClick="SetCPs('R',0)" value="Zero"/>
+                <input type="button" onClick="SetCPs('R',100)" value="One"/>
+                <input type="button" onClick="SetCPsRandom('R')" value="Random"/>
             </td>
             <td valign="top" style="border:2px solid green" id="GreenControlPointsContainer">
                 Green:<br>
                 <span id="GreenControlPoints"></span>
+                <input type="button" onClick="SetCPs('G',0)" value="Zero"/>
+                <input type="button" onClick="SetCPs('G',100)" value="One"/>
+                <input type="button" onClick="SetCPsRandom('G')" value="Random"/>
             </td>
             <td valign="top" style="border:2px solid blue" id="BlueControlPointsContainer">                
                 Blue:<br>
                 <span id="BlueControlPoints"></span>
+                <input type="button" onClick="SetCPs('B',0)" value="Zero"/>
+                <input type="button" onClick="SetCPs('B',100)" value="One"/>
+                <input type="button" onClick="SetCPsRandom('B')" value="Random"/>
             </td>
             <td valign="top" style="border:2px solid black" id="AlphaControlPointsContainer">                
                 Alpha:<br>
                 <span id="AlphaControlPoints"></span>
+                <input type="button" onClick="SetCPs('A',0)" value="Zero"/>
+                <input type="button" onClick="SetCPs('A',100)" value="One"/>
+                <input type="button" onClick="SetCPsRandom('A')" value="Random"/>
             </td>
         </tr>
     </table>
