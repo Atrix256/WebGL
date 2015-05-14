@@ -116,6 +116,11 @@
 
     var g_settings = {};
 
+    function GetNumUIControlPoints ()
+    {
+        return g_settings.m_desiredTextureSizeY + g_settings.m_orderBoost;
+    }
+
     var g_fragmentShaderHeader = 
         "#extension GL_OES_standard_derivatives : enable\n"+
         "precision mediump float;\n" + 
@@ -147,12 +152,18 @@
             "   // Calculate the powers of s and t that we will need.\n" +
             "   float t1 = vTextureCoord.x;\n";
 
-        if (textureSampleCount > 1)
+        var powersNeeded = textureSampleCount;
+        if (g_settings.m_orderBoost == 1 && powersNeeded < 2)
+            powersNeeded = 2;
+        else if (g_settings.m_orderBoost == 2 && powersNeeded < 4)
+            powersNeeded = 4;
+
+        if (powersNeeded > 1)
         {
             shaderSource +=
                 "   float s1 = (1.0 - t1);\n";
 
-            for (i = 2; i < textureSampleCount; ++i) 
+            for (i = 2; i < powersNeeded; ++i) 
             {
                 shaderSource += "   float t" + i.toString() + " = t" + (i-1).toString() + " * t1;\n";
                 shaderSource += "   float s" + i.toString() + " = s" + (i-1).toString() + " * s1;\n";
@@ -220,34 +231,104 @@
             }
         }
 
+        // TODO: do we need the "pixels per curve" setting, or can we always use order boost? maybe make the drop down use these values then too.
+
+        // combine color channels for order boost
+        if (g_settings.m_orderBoost == 1) {
+            shaderSource +=
+                "   // Combine resulting pixels for +1 order boost\n" +
+                "   curveValues.x = \n" +
+                "       curveValues.x * 1.0 * s1 +\n" +
+                "       curveValues.y * 1.0 * t1;\n" +
+                "   curveValues.y = \n" +
+                "       curveValues.z * 1.0 * s1 +\n" +
+                "       curveValues.w * 1.0 * t1;\n\n";
+        }
+        else if (g_settings.m_orderBoost == 2) {
+            shaderSource +=
+                "   // Combine resulting pixels for +2 order boost\n" +
+                "   curveValues.x = \n" +
+                "       curveValues.x * 1.0 * s3 +\n" +
+                "       curveValues.y * 3.0 * t1 * s2 +\n" +
+                "       curveValues.z * 3.0 * t2 * s1 +\n" +
+                "       curveValues.w * 1.0 * t3;\n\n";
+        }
+
+       if (curves) {
+            shaderSource +=
+                "   // Calculate slope using dfdx so we can use the gradient to aproximate distance\n" +
+                "   vec4 slope = dFdx(curveValues) / dFdx(vTextureCoord.x);\n\n";
+        }
+
+        shaderSource +=
+            "   // R,G,B curves add to their color channels respectively, alpha adds to all.\n" + 
+            "   vec3 outColor;\n";
+
 		if (curves) {
 			shaderSource +=
-            	"   // Calculate slope using dfdx so we can use the gradient to aproximate distance\n" +
-            	"   vec4 slope = dFdx(curveValues) / dFdx(vTextureCoord.x);\n\n" +
-	            "   // R,G,B curves add 0.5 to their color channels respectively, alpha adds 0.5 to all.\n" + 
-    	        "   vec3 outColor;\n" +
-            	"   outColor.x = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));\n" +
-            	"   outColor.y = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));\n" +
-            	"   outColor.z = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));\n" +
-            	"   float v = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));\n" +
-            	"   outColor.x += v;\n" +
-            	"   outColor.y += v;\n" +
-            	"   outColor.z += v;\n\n";	            	
+            	"   outColor.x = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));\n";
+
+            if (g_settings.m_orderBoost < 2)
+            {
+                shaderSource +=
+                	"   outColor.y = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));\n";
+
+                if (g_settings.m_orderBoost < 1)
+                {
+                    shaderSource +=
+                    	"   outColor.z = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));\n" +
+                    	"   float v = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));\n" +
+                    	"   outColor.x += v;\n" +
+                    	"   outColor.y += v;\n" +
+                    	"   outColor.z += v;\n";
+                }
+                else
+                {
+                    shaderSource +=
+                        "   outColor.z = 0.0;\n";
+                }
+            }
+            else
+            {
+                shaderSource +=
+                    "   outColor.y = 0.0;\n" +
+                    "   outColor.z = 0.0;\n";
+            }  	
 		}
 		else {
 	        shaderSource += 
-	            "   // R,G,B curves add 0.5 to their color channels respectively, alpha adds 0.5 to all.\n" + 
-	            "   vec3 outColor;\n" +
-	            "   outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;\n" +
-	            "   outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;\n" +
-	            "   outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;\n" +
-	            "   float v = step(vTextureCoord.y, curveValues.w) * 0.5;\n" +
-	            "   outColor.x += v;\n" +
-	            "   outColor.y += v;\n" +
-	            "   outColor.z += v;\n\n";			
+	            "   outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;\n";
+
+            if (g_settings.m_orderBoost < 2)
+            {
+                shaderSource += 
+    	            "   outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;\n";
+
+                if (g_settings.m_orderBoost < 1)
+                {
+                    shaderSource +=
+        	            "   outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;\n" +
+        	            "   float v = step(vTextureCoord.y, curveValues.w) * 0.5;\n" +
+        	            "   outColor.x += v;\n" +
+        	            "   outColor.y += v;\n" +
+        	            "   outColor.z += v;\n";
+                }
+                else
+                {
+                    shaderSource +=
+                        "   outColor.z = 0.0;\n";
+                }
+            }
+            else
+            {
+                shaderSource +=
+                    "   outColor.y = 0.0;\n" +
+                    "   outColor.z = 0.0;\n";
+            }
 		}
 
         shaderSource += 
+            "\n" +
             "   // make the output color\n" +
             "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
             g_fragmentShaderFooter;
@@ -345,7 +426,7 @@
 
     function initTexture() {
         // Get the control point data from our sliders
-        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
+        for (i = 0; i <= GetNumUIControlPoints(); ++i)
         {
             g_controlPoints[i] = [
                 document.getElementById("R"+i.toString()).value * 2.55,
@@ -461,36 +542,42 @@
             gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, controlPointBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
             // Draw Red curve control points
-            for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
+            for (i = 0; i <= GetNumUIControlPoints(); ++i)
             {
                 gl.uniform3f(CPshaderProgram.uColorLocation, 1, 0, 0);
-                gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
+                gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / GetNumUIControlPoints()) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
                 gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
             }
 
-            // Draw Green curve control points
-            for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
+            if (g_settings.m_orderBoost < 2)
             {
-                gl.uniform3f(CPshaderProgram.uColorLocation, 0, 1, 0);
-                gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
-                gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-            }        
+                // Draw Green curve control points
+                for (i = 0; i <= GetNumUIControlPoints(); ++i)
+                {
+                    gl.uniform3f(CPshaderProgram.uColorLocation, 0, 1, 0);
+                    gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / GetNumUIControlPoints()) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
+                    gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+                } 
 
-            // Draw Blue curve control points
-            for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
-            {
-                gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 1);
-                gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
-                gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-            }           
+                if (g_settings.m_orderBoost < 1)
+                {
+                    // Draw Blue curve control points
+                    for (i = 0; i <= GetNumUIControlPoints(); ++i)
+                    {
+                        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 1);
+                        gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / GetNumUIControlPoints()) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
+                        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+                    }           
 
-            // Draw Alpha curve control points
-            for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
-            {
-                gl.uniform3f(CPshaderProgram.uColorLocation, 1, 1, 1);
-                gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (g_settings.m_desiredTextureSizeY)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
-                gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
-            }            
+                    // Draw Alpha curve control points
+                    for (i = 0; i <= GetNumUIControlPoints(); ++i)
+                    {
+                        gl.uniform3f(CPshaderProgram.uColorLocation, 1, 1, 1);
+                        gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / GetNumUIControlPoints()) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
+                        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+                    } 
+                }
+            }    
         } 
     }
 
@@ -509,23 +596,40 @@
         g_settings.m_actualTextureSizeX = nextPowerOfTwo(g_settings.m_desiredTextureSizeX);
         g_settings.m_actualTextureSizeY = nextPowerOfTwo(g_settings.m_desiredTextureSizeY);
 
+        // other settings
+        g_settings.m_curvesPerPixel = parseInt(document.getElementById("CurvesPerPixel").value);
+        if (g_settings.m_curvesPerPixel == 4)
+            g_settings.m_orderBoost = 0;
+        else if (g_settings.m_curvesPerPixel == 2)
+            g_settings.m_orderBoost = 1;
+        else if (g_settings.m_curvesPerPixel == 1)
+            g_settings.m_orderBoost = 2;
+
         // create the control points
         document.getElementById("RedControlPoints").innerHTML = "";
         document.getElementById("GreenControlPoints").innerHTML = "";
         document.getElementById("BlueControlPoints").innerHTML = "";
         document.getElementById("AlphaControlPoints").innerHTML = "";
-        for (i = 0; i <= g_settings.m_desiredTextureSizeY; ++i)
+        for (i = 0; i <= GetNumUIControlPoints(); ++i)
         {
             var value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][0] == 'undefined') ? 0 : g_controlPoints[i][0] / 2.55;
             document.getElementById("RedControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"R" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][1] == 'undefined') ? 0 : g_controlPoints[i][1] / 2.55;
             document.getElementById("GreenControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"G" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[2] == 'undefined') ? 0 : g_controlPoints[i][2] / 2.55;
             document.getElementById("BlueControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"B" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][3] == 'undefined') ? 0 : g_controlPoints[i][3] / 2.55;
             document.getElementById("AlphaControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"A" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
         }
+
+        document.getElementById("GreenControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 1) ? "hidden" : "visible";
+        document.getElementById("BlueControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 0) ? "hidden" : "visible";
+        document.getElementById("AlphaControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 0) ? "hidden" : "visible";
     }
+
+
 
     function initGL() {
         var canvas = document.getElementById("webglcanvas");
@@ -566,12 +670,14 @@
 
     /*
     TODO:
-    	* make X axis setting work
-    	* make order boost setting work
+        * encode the texture correctly for order boost
+
+        * make X axis setting work
 
         * show text of what it's doing above, and the size of the texture involved
         * show the size and layout of texture in fragment shader source comments
-        * clean up and organize code. make bracket spacing (newline or not) consistent
+        * clean up and organize code. make bracket spacing (newline or not) consistent. make functions start with capital letter.
+        * fix the index page to point to this page and remove the other pages
 
         * test all variations of params, especially the weird (degenerate) cases like texture size Y axis of 1 making a lerp.
 
@@ -666,19 +772,19 @@
             <td valign="top">
                 <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas>
             </td>
-            <td valign="top" style="border:2px solid red">
+            <td valign="top" style="border:2px solid red" id="RedControlPointsContainer">
                 Red:<br>
                 <span id="RedControlPoints"></span>
             </td>
-            <td valign="top" style="border:2px solid green">
+            <td valign="top" style="border:2px solid green" id="GreenControlPointsContainer">
                 Green:<br>
                 <span id="GreenControlPoints"></span>
             </td>
-            <td valign="top" style="border:2px solid blue">                
+            <td valign="top" style="border:2px solid blue" id="BlueControlPointsContainer">                
                 Blue:<br>
                 <span id="BlueControlPoints"></span>
             </td>
-            <td valign="top" style="border:2px solid black">                
+            <td valign="top" style="border:2px solid black" id="AlphaControlPointsContainer">                
                 Alpha:<br>
                 <span id="AlphaControlPoints"></span>
             </td>
