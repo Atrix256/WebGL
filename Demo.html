@@ -148,9 +148,21 @@
         if (textureSampleCount < 1)
             textureSampleCount = 1;
 
-        shaderSource += 
-            "   // Calculate the powers of s and t that we will need.\n" +
-            "   float t1 = vTextureCoord.x;\n";
+        shaderSource += "   // Calculate the powers of s and t that we will need.\n";
+
+        if (g_settings.m_desiredTextureSizeX > 2)
+        {
+        	// todo: calculate correct xOffset
+        	shaderSource +=
+        		"   float xOffset = floor(vTextureCoord.x * " + (g_settings.m_desiredTextureSizeX/2).toFixed(1) + ") * 2.0 / " + g_settings.m_actualTextureSizeX.toFixed(1) + ";\n" +
+            	"   float t1 = fract(vTextureCoord.x * " + (g_settings.m_desiredTextureSizeX/2).toFixed(1) + ");\n";
+        }
+        else
+        {
+        	shaderSource +=
+        		"   float xOffset = 0.0;\n" +
+            	"   float t1 = vTextureCoord.x;\n";
+        }
 
         var powersNeeded = textureSampleCount;
         if (powersNeeded < g_settings.m_orderBoost + 1)
@@ -174,20 +186,23 @@
             shaderSource +=
                 "   // Calculate our sample value.\n" + 
                 "   // The center of each pixel is where the color is.\n"+
-                "   float sample = 0.25 + t1 / 2.0;\n\n";
+                "   float sampleX = (0.25 + t1 / 2.0) / " + (g_settings.m_actualTextureSizeX / 2).toFixed(1) + " + xOffset;\n" +
+                "   float sampleY = (0.25 + t1 / 2.0);\n\n";
+
+            // TODO: make sampleY do division above, if it's needed? or put it in the if statements below
 
             // do the texture sample(s)
             if (textureSampleCount == 1)
             {
                 shaderSource += "   // Do the texture sample\n";
-                shaderSource += "   vec4 curveValues = texture2D(uSampler, vec2(sample));\n\n";
+                shaderSource += "   vec4 curveValues = texture2D(uSampler, vec2(sampleX, sampleY));\n\n";
             }
             else
             {
                 shaderSource += "   // Do the texture samples\n";
                 for (i = 1; i <= textureSampleCount; ++i)
                 {
-                    shaderSource += "   vec4 P" + i.toString() + " = texture2D(uSampler, vec2(sample, sample / " + (g_settings.m_actualTextureSizeY / 2).toFixed(1) + " + " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
+                    shaderSource += "   vec4 P" + i.toString() + " = texture2D(uSampler, vec2(sampleX, sampleY / " + (g_settings.m_actualTextureSizeY / 2).toFixed(1) + " + " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
                 }
                 shaderSource += "\n";
             }
@@ -197,11 +212,9 @@
             shaderSource += "   // Do the texture samples\n";
             for (i = 1; i < textureSampleCount; ++i)
             {
-                shaderSource += "   vec4 P" + i.toString() + " = texture2D(uSampler, vec2(1.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
+                shaderSource += "   vec4 P" + i.toString() + " = texture2D(uSampler, vec2(xOffset + 1.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
             }
-            // TODO: that hard coded 3 / N is wrong.  it shouldn't be 3, what should it be? need to change it if having multiple textures in a row
-
-            shaderSource += "   vec4 P" + textureSampleCount.toString() + " = texture2D(uSampler, vec2(3.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (textureSampleCount-2).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n\n";
+            shaderSource += "   vec4 P" + textureSampleCount.toString() + " = texture2D(uSampler, vec2(xOffset + 3.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (textureSampleCount-2).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n\n";
         }
 
         // combine texture samples if we have multiple.  Otherwise we've already done all the work we need to do
@@ -441,12 +454,18 @@
         {
             for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
             {
-                for (j = 0; j < g_settings.m_desiredTextureSizeX; ++j)
+                for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
                 {
-                    textureData.push(g_controlPoints[i+j][0]);
-                    textureData.push(g_controlPoints[i+j][1]);
-                    textureData.push(g_controlPoints[i+j][2]);
-                    textureData.push(g_controlPoints[i+j][3]);
+                	var offset = j * g_settings.m_desiredTextureSizeY;
+                    textureData.push(g_controlPoints[i+offset][0]);
+                    textureData.push(g_controlPoints[i+offset][1]);
+                    textureData.push(g_controlPoints[i+offset][2]);
+                    textureData.push(g_controlPoints[i+offset][3]);
+
+                    textureData.push(g_controlPoints[i+offset+1][0]);
+                    textureData.push(g_controlPoints[i+offset+1][1]);
+                    textureData.push(g_controlPoints[i+offset+1][2]);
+                    textureData.push(g_controlPoints[i+offset+1][3]);                    
                 }
 
                 for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
@@ -709,6 +728,10 @@
     TODO:
         * make X axis setting work
 
+        * option to hide control points, so you can see peaks more easily etc (checkbox)
+
+        * ui num control points should be +1, and callers shouldn't do <=
+
         * show text of what it's doing above, and the size of the texture involved
         * show the size and layout of texture in fragment shader source comments
         * clean up and organize code. make bracket spacing (newline or not) consistent. make functions start with capital letter.
@@ -752,6 +775,9 @@
                                 <option value="6">6: 3 curves [T=0..3]</option>
                                 <option value="8">8: 4 curves [T=0..4]</option>
                                 <option value="10">10: 5 curves [T=0..5]</option>
+                                <option value="12">12: 6 curves [T=0..6]</option>
+                                <option value="14">14: 7 curves [T=0..7]</option>
+                                <option value="16">16: 8 curves [T=0..8]</option>                                                                                                
                             </select>            
                         </td>
                     </tr>
