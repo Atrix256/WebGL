@@ -448,16 +448,13 @@
         // make our texture data
         var textureData = new Array;
 
-        // TODO: order boost doesnt quite work with x axis texture stuff yet
-        // TODO: why is the below not equivelant to what it used to be even? (not even order boost == 0 case!)
-        // TODO: seems like the problem might not be here, since restoring this code to the old way makes it not work still
         if (g_settings.m_orderBoost == 0)
         {
             for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
             {
                 for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
                 {
-                	var offset = j * g_settings.m_desiredTextureSizeY;
+                	var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
                     textureData.push(g_controlPoints[i+offset][0]);
                     textureData.push(g_controlPoints[i+offset][1]);
                     textureData.push(g_controlPoints[i+offset][2]);
@@ -472,19 +469,6 @@
                 for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
                     textureData = textureData.concat([1,1,1,1]);
             }
-            /*
-            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
-            {
-                textureData.push(g_controlPoints[i  ][0]);
-                textureData.push(g_controlPoints[i  ][1]);
-                textureData.push(g_controlPoints[i  ][2]);
-                textureData.push(g_controlPoints[i  ][3]);
-                textureData.push(g_controlPoints[i+1][0]);
-                textureData.push(g_controlPoints[i+1][1]);
-                textureData.push(g_controlPoints[i+1][2]);
-                textureData.push(g_controlPoints[i+1][3]);
-            }
-            */
         }
         else if (g_settings.m_orderBoost == 1)
         {
@@ -492,7 +476,7 @@
             {
                 for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
                 {
-                    var offset = j * g_settings.m_desiredTextureSizeY;
+                    var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
                     textureData.push(g_controlPoints[i+offset  ][0]);
                     textureData.push(g_controlPoints[i+offset+1][0]);
                     textureData.push(g_controlPoints[i+offset  ][1]);
@@ -507,19 +491,6 @@
                 for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
                     textureData = textureData.concat([1,1,1,1]);
             }
-            /*
-            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
-            {
-                textureData.push(g_controlPoints[i  ][0]);
-                textureData.push(g_controlPoints[i+1][0]);
-                textureData.push(g_controlPoints[i  ][1]);
-                textureData.push(g_controlPoints[i+1][1]);
-                textureData.push(g_controlPoints[i+1][0]);
-                textureData.push(g_controlPoints[i+2][0]);
-                textureData.push(g_controlPoints[i+1][1]);
-                textureData.push(g_controlPoints[i+2][1]);
-            }
-            */
         }
         else if (g_settings.m_orderBoost == 3)
         {
@@ -527,7 +498,7 @@
             {
                 for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
                 {
-                    var offset = j * g_settings.m_desiredTextureSizeY;
+                    var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
                     textureData.push(g_controlPoints[i+offset  ][0]);
                     textureData.push(g_controlPoints[i+offset+1][0]);
                     textureData.push(g_controlPoints[i+offset+2][0]);
@@ -542,19 +513,6 @@
                 for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
                     textureData = textureData.concat([1,1,1,1]);
             }
-            /*
-            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
-            {
-                textureData.push(g_controlPoints[i  ][0]);
-                textureData.push(g_controlPoints[i+1][0]);
-                textureData.push(g_controlPoints[i+2][0]);
-                textureData.push(g_controlPoints[i+3][0]);
-                textureData.push(g_controlPoints[i+1][0]);
-                textureData.push(g_controlPoints[i+2][0]);
-                textureData.push(g_controlPoints[i+3][0]);
-                textureData.push(g_controlPoints[i+4][0]);
-            }
-            */
         }
 
         // fill in the rest of the texture we had to allocate with opaque black.
@@ -640,7 +598,7 @@
         gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
 
         // draw the control points if we aren't in texture rendering mode
-        if (document.getElementById("RenderMode").value != "texture")
+        if (document.getElementById("RenderMode").value != "texture" && g_settings.m_drawControlPoints == true)
         {
             gl.useProgram(CPshaderProgram);        
             gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
@@ -703,6 +661,7 @@
 
         // other settings
         g_settings.m_orderBoost = parseInt(document.getElementById("OrderBoost").value);
+        g_settings.m_drawControlPoints = document.getElementById("DrawControlPoints").checked;
 
         // create the control points
         document.getElementById("RedControlPoints").innerHTML = "";
@@ -782,10 +741,6 @@
 
     /*
     TODO:
-        * make X axis setting work
-
-        * option to hide control points, so you can see peaks more easily etc (checkbox)
-
         * ui num control points should be +1, and callers shouldn't do <=
 
         * show text of what it's doing above, and the size of the texture involved
@@ -881,6 +836,14 @@
                     </tr>
                 </table>
             </td>
+            <td>
+                <table>
+                    <tr>
+                        <td>Show Control Points</td>
+                        <td><input id="DrawControlPoints" type="checkbox"  checked="true" onChange="OnChangeSettings();"></td>
+                    </tr>
+                </table>
+            </td>
         </tr>
     </table>
     <div id="fps">FPS: --</div>
@@ -891,31 +854,31 @@
             </td>
             <td valign="top" style="border:2px solid red" id="RedControlPointsContainer">
                 Red:<br>
-                <span id="RedControlPoints"></span>
                 <input type="button" onClick="SetCPs('R',0)" value="Zero"/>
                 <input type="button" onClick="SetCPs('R',100)" value="One"/>
-                <input type="button" onClick="SetCPsRandom('R')" value="Random"/>
+                <input type="button" onClick="SetCPsRandom('R')" value="Random"/><br>
+                <span id="RedControlPoints"></span>
             </td>
             <td valign="top" style="border:2px solid green" id="GreenControlPointsContainer">
                 Green:<br>
-                <span id="GreenControlPoints"></span>
                 <input type="button" onClick="SetCPs('G',0)" value="Zero"/>
                 <input type="button" onClick="SetCPs('G',100)" value="One"/>
-                <input type="button" onClick="SetCPsRandom('G')" value="Random"/>
+                <input type="button" onClick="SetCPsRandom('G')" value="Random"/><br>
+                <span id="GreenControlPoints"></span>
             </td>
             <td valign="top" style="border:2px solid blue" id="BlueControlPointsContainer">                
                 Blue:<br>
-                <span id="BlueControlPoints"></span>
                 <input type="button" onClick="SetCPs('B',0)" value="Zero"/>
                 <input type="button" onClick="SetCPs('B',100)" value="One"/>
-                <input type="button" onClick="SetCPsRandom('B')" value="Random"/>
+                <input type="button" onClick="SetCPsRandom('B')" value="Random"/><br>
+                <span id="BlueControlPoints"></span>
             </td>
             <td valign="top" style="border:2px solid black" id="AlphaControlPointsContainer">                
                 Alpha:<br>
-                <span id="AlphaControlPoints"></span>
                 <input type="button" onClick="SetCPs('A',0)" value="Zero"/>
                 <input type="button" onClick="SetCPs('A',100)" value="One"/>
-                <input type="button" onClick="SetCPsRandom('A')" value="Random"/>
+                <input type="button" onClick="SetCPsRandom('A')" value="Random"/><br>
+                <span id="AlphaControlPoints"></span>
             </td>
         </tr>
     </table>
