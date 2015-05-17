@@ -118,7 +118,7 @@
 
     function GetNumUIControlPoints ()
     {
-        return (g_settings.m_desiredTextureSizeY + g_settings.m_orderBoost) * (g_settings.m_desiredTextureSizeX/2);
+        return (g_settings.m_desiredTextureSizeY + g_settings.m_orderBoost) * (g_settings.m_desiredTextureSizeX/2) + 1;
     }
 
     var g_fragmentShaderHeader = 
@@ -141,7 +141,7 @@
     }
 
     function buildFragmentShader_visual (bilinear, curves) {
-        var shaderSource = g_fragmentShaderHeader;
+        var shaderSource = "/*\n   Description:\n   " + g_settings.m_shaderDescription + "\n*/\n\n" + g_fragmentShaderHeader;
 
         // calculate how many texture samples there will be
         var textureSampleCount = bilinear ? g_settings.m_desiredTextureSizeY - 1 : g_settings.m_desiredTextureSizeY + 1;
@@ -435,7 +435,7 @@
 
     function initTexture() {
         // Get the control point data from our sliders
-        for (i = 0; i <= GetNumUIControlPoints(); ++i)
+        for (i = 0; i < GetNumUIControlPoints(); ++i)
         {
             g_controlPoints[i] = [
                 document.getElementById("R"+i.toString()).value * 2.55,
@@ -604,39 +604,41 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
             gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, controlPointBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
+            var numUIControlPoints = GetNumUIControlPoints();
+
             // Draw Red curve control points
-            for (i = 0; i <= GetNumUIControlPoints(); ++i)
+            for (i = 0; i < numUIControlPoints; ++i)
             {
                 gl.uniform3f(CPshaderProgram.uColorLocation, 1, 0, 0);
-                gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / GetNumUIControlPoints()) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
+                gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
                 gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
             }
 
             if (g_settings.m_orderBoost < 3)
             {
                 // Draw Green curve control points
-                for (i = 0; i <= GetNumUIControlPoints(); ++i)
+                for (i = 0; i < numUIControlPoints; ++i)
                 {
                     gl.uniform3f(CPshaderProgram.uColorLocation, 0, 1, 0);
-                    gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / GetNumUIControlPoints()) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
+                    gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
                     gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
                 } 
 
                 if (g_settings.m_orderBoost < 1)
                 {
                     // Draw Blue curve control points
-                    for (i = 0; i <= GetNumUIControlPoints(); ++i)
+                    for (i = 0; i < numUIControlPoints; ++i)
                     {
                         gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 1);
-                        gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / GetNumUIControlPoints()) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
+                        gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
                         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
                     }           
 
                     // Draw Alpha curve control points
-                    for (i = 0; i <= GetNumUIControlPoints(); ++i)
+                    for (i = 0; i < numUIControlPoints; ++i)
                     {
                         gl.uniform3f(CPshaderProgram.uColorLocation, 1, 1, 1);
-                        gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / GetNumUIControlPoints()) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
+                        gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
                         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
                     } 
                 }
@@ -663,12 +665,12 @@
         g_settings.m_orderBoost = parseInt(document.getElementById("OrderBoost").value);
         g_settings.m_drawControlPoints = document.getElementById("DrawControlPoints").checked;
 
-        // create the control points
+        // create the control points that don't yet exist
         document.getElementById("RedControlPoints").innerHTML = "";
         document.getElementById("GreenControlPoints").innerHTML = "";
         document.getElementById("BlueControlPoints").innerHTML = "";
         document.getElementById("AlphaControlPoints").innerHTML = "";
-        for (i = 0; i <= GetNumUIControlPoints(); ++i)
+        for (i = 0; i < GetNumUIControlPoints(); ++i)
         {
             var value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][0] == 'undefined') ? 0 : g_controlPoints[i][0] / 2.55;
             document.getElementById("RedControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"R" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
@@ -685,6 +687,41 @@
         document.getElementById("GreenControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 1) ? "hidden" : "visible";
         document.getElementById("BlueControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 0) ? "hidden" : "visible";
         document.getElementById("AlphaControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 0) ? "hidden" : "visible";
+
+        // show the shader description
+        var numCurves = g_settings.m_desiredTextureSizeX / 2;
+        var bilinear = (document.getElementById("SamplingMode").value == "bilinear");
+        var textureSampleCount = bilinear ? g_settings.m_desiredTextureSizeY - 1 : g_settings.m_desiredTextureSizeY + 1;
+        if (textureSampleCount < 1)
+            textureSampleCount = 1;
+
+        g_settings.m_shaderDescription = textureSampleCount.toString() + " texture sample" + ((textureSampleCount > 1) ? "s" : "") + " taken to make " + numCurves.toString() + " curve";
+
+        if (numCurves > 1)
+            g_settings.m_shaderDescription += "s end to end";
+
+        g_settings.m_shaderDescription +=
+            " for each color channel, where each curve is order " + g_settings.m_desiredTextureSizeY.toString() + ".";
+
+        if (g_settings.m_orderBoost == 1)
+        {
+            g_settings.m_shaderDescription +=
+                "  Then the R,G curves and also the B,A curves are combined with the linear bezier curve function (lerp), to end up with two curves that are each of order " + (g_settings.m_desiredTextureSizeY + g_settings.m_orderBoost).toString() + ".";
+        }
+        else if (g_settings.m_orderBoost == 3)
+        {
+            g_settings.m_shaderDescription +=
+                "  Then the R,G,B,A curves are combined with the cubic bezier curve function, to end up with one curve that is order " + (g_settings.m_desiredTextureSizeY + g_settings.m_orderBoost).toString() + ".";
+        }
+
+        g_settings.m_shaderDescription += "  The source texture dimensions are " + g_settings.m_actualTextureSizeX + "x" + g_settings.m_actualTextureSizeY;
+
+        if (g_settings.m_actualTextureSizeX != g_settings.m_desiredTextureSizeX || g_settings.m_actualTextureSizeY != g_settings.m_desiredTextureSizeY)
+            g_settings.m_shaderDescription += ", but that was rounded up to the next powers of two and really only needed to be " + g_settings.m_desiredTextureSizeX + "x" + g_settings.m_desiredTextureSizeY;
+
+        g_settings.m_shaderDescription += "."
+
+        document.getElementById("ShaderDesc").innerHTML = g_settings.m_shaderDescription;
     }
 
 
@@ -727,28 +764,26 @@
 
     function SetCPs (color, value)
     {
-        for (i = 0; i <= GetNumUIControlPoints(); ++i)
+        for (i = 0; i < GetNumUIControlPoints(); ++i)
             document.getElementById(color+i.toString()).value = value;
         initTexture();
     }
 
     function SetCPsRandom (color)
     {
-        for (i = 0; i <= GetNumUIControlPoints(); ++i)
+        for (i = 0; i < GetNumUIControlPoints(); ++i)
             document.getElementById(color+i.toString()).value = Math.random() * 100;
         initTexture();
     }
 
     /*
     TODO:
-        * ui num control points should be +1, and callers shouldn't do <=
+        * optimize settings change when large number of control points.
+          * don't re-create the sliders... hide and show them if they exist, else create them
 
-        * show text of what it's doing above, and the size of the texture involved
         * show the size and layout of texture in fragment shader source comments
         * clean up and organize code. make bracket spacing (newline or not) consistent. make functions start with capital letter.
         
-        * test all variations of params, especially the weird (degenerate) cases like texture size Y axis of 1 making a lerp.
-
         * fix the index page to point to this page and remove the other pages
         * THEN: c++ opengl version, OR webGL vector graphics on geometry
     */
@@ -881,10 +916,11 @@
                 <span id="AlphaControlPoints"></span>
             </td>
         </tr>
-    </table>
-    <a href="index.html">Back to Index</a><br><br>
+    </table><br>
+    <b>Description: </b><span id="ShaderDesc"></span><br><br>
     <b>Fragment Shader Source (GLSL):</b>
     <pre id="ShaderSource" style="border:1px solid black"></pre>
+    <a href="index.html">Back to Index</a><br><br>
 </body>
 
 </html>
