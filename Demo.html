@@ -6,7 +6,7 @@
 -->
 <html>
 <head>
-<title>GPU Efficient Texture Based Bezier Curve Evaluation</title>
+<title>GPU Efficient Texture Based Bezier Curve Evaluation - Curves Feature Demo</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="webgl-utils.js"></script>
@@ -652,6 +652,8 @@
         g_frameCounter++;
     }
 
+    var g_maxControlPoints = 0;
+
     function initSettings() {
         // calculate the texture size we need
         g_settings.m_desiredTextureSizeX = parseInt(document.getElementById("TextureSizeX").value);
@@ -665,23 +667,41 @@
         g_settings.m_orderBoost = parseInt(document.getElementById("OrderBoost").value);
         g_settings.m_drawControlPoints = document.getElementById("DrawControlPoints").checked;
 
-        // create the control points that don't yet exist
-        document.getElementById("RedControlPoints").innerHTML = "";
-        document.getElementById("GreenControlPoints").innerHTML = "";
-        document.getElementById("BlueControlPoints").innerHTML = "";
-        document.getElementById("AlphaControlPoints").innerHTML = "";
-        for (i = 0; i < GetNumUIControlPoints(); ++i)
+        // show or hide sliders for control points, as needed
+        var numUIControlPoints = GetNumUIControlPoints();
+        var maxNumber = numUIControlPoints;
+        if (maxNumber < g_maxControlPoints)
+            maxNumber = g_maxControlPoints;
+        g_maxControlPoints = maxNumber;
+
+        for (i = 0; i < maxNumber; ++i)
         {
             var value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][0] == 'undefined') ? 0 : g_controlPoints[i][0] / 2.55;
-            document.getElementById("RedControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"R" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            if (!document.getElementById("R"+i.toString()))
+                document.getElementById("RedControlPoints").innerHTML += "<span id=\"LR"+i.toString()+"\">" + (i+1).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"R" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            var invisible = (i >= numUIControlPoints);
+            document.getElementById("R" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+            document.getElementById("LR" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
 
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][1] == 'undefined') ? 0 : g_controlPoints[i][1] / 2.55;
-            document.getElementById("GreenControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"G" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            if (!document.getElementById("G"+i.toString()))
+                document.getElementById("GreenControlPoints").innerHTML += "<span id=\"LG"+i.toString()+"\">" + (i+1).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"G" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            invisible = (i >= numUIControlPoints || g_settings.m_orderBoost > 1);
+            document.getElementById("G" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+            document.getElementById("LG" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
 
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[2] == 'undefined') ? 0 : g_controlPoints[i][2] / 2.55;
-            document.getElementById("BlueControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"B" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            if (!document.getElementById("B"+i.toString()))
+                document.getElementById("BlueControlPoints").innerHTML += "<span id=\"LB"+i.toString()+"\">" + (i+1).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"B" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            invisible = (i >= numUIControlPoints || g_settings.m_orderBoost > 0);
+            document.getElementById("B" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+            document.getElementById("LB" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][3] == 'undefined') ? 0 : g_controlPoints[i][3] / 2.55;
-            document.getElementById("AlphaControlPoints").innerHTML += (i+1).toString() + ":<input type=\"range\" min=\"0\" max=\"100\" id=\"A" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            if (!document.getElementById("A"+i.toString()))
+                document.getElementById("AlphaControlPoints").innerHTML += "<span id=\"LA"+i.toString()+"\">" + (i+1).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"A" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            document.getElementById("A" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+            document.getElementById("LA" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
         }
 
         document.getElementById("GreenControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 1) ? "hidden" : "visible";
@@ -778,20 +798,16 @@
 
     /*
     TODO:
-        * optimize settings change when large number of control points.
-          * don't re-create the sliders... hide and show them if they exist, else create them
-
         * show the size and layout of texture in fragment shader source comments
         * clean up and organize code. make bracket spacing (newline or not) consistent. make functions start with capital letter.
         
-        * fix the index page to point to this page and remove the other pages
         * THEN: c++ opengl version, OR webGL vector graphics on geometry
     */
 </script>
 </head>
 
 <body onload="DoOnLoad()">
-    <h1>GPU Efficient Texture Based Bezier Curve Evaluation</h1>
+    <h1>GPU Efficient Texture Based Bezier Curve Evaluation - Curves Feature Demo</h1>
     <a href="index.html">Back to Index</a><br><br>
     <table>
         <tr>
