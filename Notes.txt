@@ -1,3 +1,5 @@
+* clean up / organize curve demo code
+* shadertoy 2d curve experiments?
 * THEN: c++ opengl version, OR webGL vector graphics on geometry
 
 Next:
