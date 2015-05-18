@@ -141,7 +141,7 @@
     }
 
     function buildFragmentShader_visual (bilinear, curves) {
-        var shaderSource = "/*\n   Description:\n   " + g_settings.m_shaderDescription + "\n*/\n\n" + g_fragmentShaderHeader;
+        var shaderSource = "/*\n   Description:\n   " + g_settings.m_shaderDescription + "\n\n   Texture Layout:\n   " + g_settings.m_textureLayout + "\n*/\n\n" + g_fragmentShaderHeader;
 
         // calculate how many texture samples there will be
         var textureSampleCount = bilinear ? g_settings.m_desiredTextureSizeY - 1 : g_settings.m_desiredTextureSizeY + 1;
@@ -678,28 +678,28 @@
         {
             var value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][0] == 'undefined') ? 0 : g_controlPoints[i][0] / 2.55;
             if (!document.getElementById("R"+i.toString()))
-                document.getElementById("RedControlPoints").innerHTML += "<span id=\"LR"+i.toString()+"\">" + (i+1).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"R" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+                document.getElementById("RedControlPoints").innerHTML += "<span id=\"LR"+i.toString()+"\">" + (i).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"R" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
             var invisible = (i >= numUIControlPoints);
             document.getElementById("R" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
             document.getElementById("LR" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
 
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][1] == 'undefined') ? 0 : g_controlPoints[i][1] / 2.55;
             if (!document.getElementById("G"+i.toString()))
-                document.getElementById("GreenControlPoints").innerHTML += "<span id=\"LG"+i.toString()+"\">" + (i+1).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"G" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+                document.getElementById("GreenControlPoints").innerHTML += "<span id=\"LG"+i.toString()+"\">" + (i).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"G" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
             invisible = (i >= numUIControlPoints || g_settings.m_orderBoost > 1);
             document.getElementById("G" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
             document.getElementById("LG" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
 
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[2] == 'undefined') ? 0 : g_controlPoints[i][2] / 2.55;
             if (!document.getElementById("B"+i.toString()))
-                document.getElementById("BlueControlPoints").innerHTML += "<span id=\"LB"+i.toString()+"\">" + (i+1).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"B" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+                document.getElementById("BlueControlPoints").innerHTML += "<span id=\"LB"+i.toString()+"\">" + (i).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"B" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
             invisible = (i >= numUIControlPoints || g_settings.m_orderBoost > 0);
             document.getElementById("B" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
             document.getElementById("LB" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
 
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][3] == 'undefined') ? 0 : g_controlPoints[i][3] / 2.55;
             if (!document.getElementById("A"+i.toString()))
-                document.getElementById("AlphaControlPoints").innerHTML += "<span id=\"LA"+i.toString()+"\">" + (i+1).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"A" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+                document.getElementById("AlphaControlPoints").innerHTML += "<span id=\"LA"+i.toString()+"\">" + (i).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"A" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
             document.getElementById("A" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
             document.getElementById("LA" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
         }
@@ -742,6 +742,78 @@
         g_settings.m_shaderDescription += "."
 
         document.getElementById("ShaderDesc").innerHTML = g_settings.m_shaderDescription;
+
+        // make the texture layout description
+        g_settings.m_textureLayout = "";
+        if (g_settings.m_orderBoost == 0)
+        {
+            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
+            {
+                for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
+                {
+                    var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
+                    g_settings.m_textureLayout += "[R" + (i+offset).toString() + ",G" + (i+offset).toString() + ",B" + (i+offset).toString() + ",A" + (i+offset).toString() + "],";
+                    g_settings.m_textureLayout += "[R" + (i+offset+1).toString() + ",G" + (i+offset+1).toString() + ",B" + (i+offset+1).toString() + ",A" + (i+offset+1).toString() + "],";                  
+                }
+
+                for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
+                {
+                    g_settings.m_textureLayout += "[x,x,x,x],";
+                }
+
+                g_settings.m_textureLayout += "\n   ";
+            }
+        }
+        else if (g_settings.m_orderBoost == 1)
+        {
+            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
+            {
+                for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
+                {
+                    var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
+                    g_settings.m_textureLayout += "[R" + (i+offset).toString() + ",R" + (i+offset+1).toString() + ",G" + (i+offset).toString() + ",G" + (i+offset+1).toString() + "],";
+                    g_settings.m_textureLayout += "[R" + (i+offset+1).toString() + ",R" + (i+offset+2).toString() + ",G" + (i+offset+1).toString() + ",G" + (i+offset+2).toString() + "],";                
+                }
+
+                for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
+                {
+                    g_settings.m_textureLayout += "[x,x,x,x],";
+                }
+
+                g_settings.m_textureLayout += "\n   ";
+            }
+        }
+        else if (g_settings.m_orderBoost == 3)
+        {
+            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
+            {
+                for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
+                {
+                    var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
+                    g_settings.m_textureLayout += "[R" + (i+offset).toString() + ",R" + (i+offset+1).toString() + ",R" + (i+offset+2).toString() + ",R" + (i+offset+3).toString() + "],";
+                    g_settings.m_textureLayout += "[R" + (i+offset+1).toString() + ",R" + (i+offset+2).toString() + ",R" + (i+offset+3).toString() + ",R" + (i+offset+4).toString() + "],";                  
+                }
+
+                for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
+                {
+                    g_settings.m_textureLayout += "[x,x,x,x],";
+                }
+
+                g_settings.m_textureLayout += "\n   ";
+            }
+        }
+
+        // fill in the rest of the texture we had to allocate with opaque black.
+        // we have to round up to the next even numbered texture size, which can cause this needing to happen.
+        for (i = g_settings.m_desiredTextureSizeY; i < g_settings.m_actualTextureSizeY; ++i)
+        {
+            for (j = 0; j < g_settings.m_actualTextureSizeX; ++j)
+            {
+                g_settings.m_textureLayout += "[x,x,x,x],";
+            }
+            g_settings.m_textureLayout += "\n   ";
+        }
+
     }
 
 
@@ -798,10 +870,7 @@
 
     /*
     TODO:
-        * show the size and layout of texture in fragment shader source comments
         * clean up and organize code. make bracket spacing (newline or not) consistent. make functions start with capital letter.
-        
-        * THEN: c++ opengl version, OR webGL vector graphics on geometry
     */
 </script>
 </head>

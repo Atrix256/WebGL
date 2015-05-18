@@ -1,3 +1,5 @@
+* THEN: c++ opengl version, OR webGL vector graphics on geometry
+
 Next:
  * combine all into a single demo.  choose order of curve, and how many curves end to end.  show fragment shader code on the page and texture size etc.
  * finish cubic4.html demo
