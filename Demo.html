@@ -3,6 +3,12 @@
     http://learningwebgl.com/blog/?page_id=1217
 
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
+
+    TODO:
+     * when switching texture size y, the control points get set to wrong values! look into it
+     * test all combo of params in and outside of polar mode
+     * use constants for pi in the shaders or something
+     * why do i have to invert the x and y axis in the shader for polar mode?
 -->
 <html>
 <head>
@@ -140,8 +146,23 @@
         return createFragmentShader(gl,shaderSource);
     }
 
-    function buildFragmentShader_visual (bilinear, curves) {
+    function buildFragmentShader_visual (bilinear, curves, polar) {
         var shaderSource = "/*\n   Description:\n   " + g_settings.m_shaderDescription + "\n\n   Texture Layout:\n   " + g_settings.m_textureLayout + "\n*/\n\n" + g_fragmentShaderHeader;
+
+        // convert to polar coordinates if we should
+        if (polar) {
+        	shaderSource +=
+        		"   // Convert the texture coordinares from cartesian to polar space.\n" +
+        		"   vec2 adjustedTextureCoord = (vTextureCoord - vec2(0.5)) * 2.0;\n" +
+        		"   adjustedTextureCoord.x *= -1.0;\n" +
+        		"   adjustedTextureCoord.y *= -1.0;\n" +
+        		"   vec2 textureCoord;\n" +
+        		"   textureCoord.x = (atan(adjustedTextureCoord.y, adjustedTextureCoord.x) + 3.14) / 6.28 ;\n" +
+        		"   textureCoord.y = length(adjustedTextureCoord);\n\n";  
+        }
+        else {
+        	shaderSource += "   vec2 textureCoord = vTextureCoord;\n\n";
+        }
 
         // calculate how many texture samples there will be
         var textureSampleCount = bilinear ? g_settings.m_desiredTextureSizeY - 1 : g_settings.m_desiredTextureSizeY + 1;
@@ -153,14 +174,14 @@
         if (g_settings.m_desiredTextureSizeX > 2)
         {
         	shaderSource +=
-        		"   float xOffset = floor(vTextureCoord.x * " + (g_settings.m_desiredTextureSizeX/2).toFixed(1) + ") * 2.0 / " + g_settings.m_actualTextureSizeX.toFixed(1) + ";\n" +
-            	"   float t1 = fract(vTextureCoord.x * " + (g_settings.m_desiredTextureSizeX/2).toFixed(1) + ");\n";
+        		"   float xOffset = floor(textureCoord.x * " + (g_settings.m_desiredTextureSizeX/2).toFixed(1) + ") * 2.0 / " + g_settings.m_actualTextureSizeX.toFixed(1) + ";\n" +
+            	"   float t1 = fract(textureCoord.x * " + (g_settings.m_desiredTextureSizeX/2).toFixed(1) + ");\n";
         }
         else
         {
         	shaderSource +=
         		"   float xOffset = 0.0;\n" +
-            	"   float t1 = vTextureCoord.x;\n";
+            	"   float t1 = textureCoord.x;\n";
         }
 
         var powersNeeded = textureSampleCount;
@@ -275,18 +296,18 @@
 
 		if (curves) {
 			shaderSource +=
-            	"   outColor.x = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));\n";
+            	"   outColor.x = smoothstep(0.01,0.0,abs(textureCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));\n";
 
             if (g_settings.m_orderBoost < 3)
             {
                 shaderSource +=
-                	"   outColor.y = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));\n";
+                	"   outColor.y = smoothstep(0.01,0.0,abs(textureCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));\n";
 
                 if (g_settings.m_orderBoost < 1)
                 {
                     shaderSource +=
-                    	"   outColor.z = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));\n" +
-                    	"   float v = smoothstep(0.01,0.0,abs(vTextureCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));\n" +
+                    	"   outColor.z = smoothstep(0.01,0.0,abs(textureCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));\n" +
+                    	"   float v = smoothstep(0.01,0.0,abs(textureCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));\n" +
                     	"   outColor.x += v;\n" +
                     	"   outColor.y += v;\n" +
                     	"   outColor.z += v;\n";
@@ -306,18 +327,18 @@
 		}
 		else {
 	        shaderSource += 
-	            "   outColor.x = step(vTextureCoord.y, curveValues.x) * 0.5;\n";
+	            "   outColor.x = step(textureCoord.y, curveValues.x) * 0.5;\n";
 
             if (g_settings.m_orderBoost < 3)
             {
                 shaderSource += 
-    	            "   outColor.y = step(vTextureCoord.y, curveValues.y) * 0.5;\n";
+    	            "   outColor.y = step(textureCoord.y, curveValues.y) * 0.5;\n";
 
                 if (g_settings.m_orderBoost < 1)
                 {
                     shaderSource +=
-        	            "   outColor.z = step(vTextureCoord.y, curveValues.z) * 0.5;\n" +
-        	            "   float v = step(vTextureCoord.y, curveValues.w) * 0.5;\n" +
+        	            "   outColor.z = step(textureCoord.y, curveValues.z) * 0.5;\n" +
+        	            "   float v = step(textureCoord.y, curveValues.w) * 0.5;\n" +
         	            "   outColor.x += v;\n" +
         	            "   outColor.y += v;\n" +
         	            "   outColor.z += v;\n";
@@ -347,15 +368,14 @@
     }
 
     function buildFragmentShader () {
-        var samplingMode = document.getElementById("SamplingMode").value;
         var renderMode = document.getElementById("RenderMode").value;
-
         if (renderMode == "texture")
             return buildFragmentShader_texture();
 
-        var bilinear = (samplingMode == "bilinear");
+        var bilinear = (document.getElementById("SamplingMode").value == "bilinear");
         var curves = (renderMode == "curves");
-        return buildFragmentShader_visual(bilinear, curves);
+        var polar = document.getElementById("RenderPolar").checked;
+        return buildFragmentShader_visual(bilinear, curves, polar);
 
         alert("Could not find shader to generate");
         return null;
@@ -582,6 +602,17 @@
         controlPointBuffer.numItems = 6;        
     }
 
+    function fromPolar(pos) {
+
+    	var anglePercent = (pos[0] * 0.5 + 0.5);
+    	var distancePercent = (pos[1] * 0.5 + 0.5);
+
+    	return [
+    		Math.cos(anglePercent * 2.0 * Math.PI) * distancePercent,
+    		Math.sin(anglePercent* 2.0 * Math.PI) * distancePercent
+		];
+    }
+
     function drawScene() {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT);
@@ -597,6 +628,8 @@
         gl.uniform1i(FSshaderProgram.samplerUniform, 0);
         gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
 
+        var polar = document.getElementById("RenderPolar").checked;
+
         // draw the control points if we aren't in texture rendering mode
         if (document.getElementById("RenderMode").value != "texture" && g_settings.m_drawControlPoints == true)
         {
@@ -610,7 +643,10 @@
             for (i = 0; i < numUIControlPoints; ++i)
             {
                 gl.uniform3f(CPshaderProgram.uColorLocation, 1, 0, 0);
-                gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5));
+                var pos = [(i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5)];
+                if (polar)
+                	pos = fromPolar(pos);
+                gl.uniform2f(CPshaderProgram.uOffsetLocation, pos[0], pos[1]);
                 gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
             }
 
@@ -620,7 +656,10 @@
                 for (i = 0; i < numUIControlPoints; ++i)
                 {
                     gl.uniform3f(CPshaderProgram.uColorLocation, 0, 1, 0);
-                    gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5));
+                    var pos = [(i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5)];
+                	if (polar)
+                		pos = fromPolar(pos);                    
+                    gl.uniform2f(CPshaderProgram.uOffsetLocation, pos[0], pos[1]);
                     gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
                 } 
 
@@ -630,7 +669,10 @@
                     for (i = 0; i < numUIControlPoints; ++i)
                     {
                         gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 1);
-                        gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5));
+                        var pos = [(i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5)];
+                		if (polar)
+                			pos = fromPolar(pos);                        
+                        gl.uniform2f(CPshaderProgram.uOffsetLocation, pos[0], pos[1]);
                         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
                     }           
 
@@ -638,7 +680,10 @@
                     for (i = 0; i < numUIControlPoints; ++i)
                     {
                         gl.uniform3f(CPshaderProgram.uColorLocation, 1, 1, 1);
-                        gl.uniform2f(CPshaderProgram.uOffsetLocation, (i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5));
+                        var pos = [(i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5)];
+                		if (polar)
+                			pos = fromPolar(pos);                        
+                        gl.uniform2f(CPshaderProgram.uOffsetLocation, pos[0], pos[1]);
                         gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
                     } 
                 }
@@ -953,6 +998,10 @@
             </td>
             <td>
                 <table>
+                    <tr>
+                        <td>Render Polar</td>
+                        <td><input id="RenderPolar" type="checkbox" onChange="OnChangeSettings();"></td>
+                    </tr>                
                     <tr>
                         <td>Show Control Points</td>
                         <td><input id="DrawControlPoints" type="checkbox"  checked="true" onChange="OnChangeSettings();"></td>
