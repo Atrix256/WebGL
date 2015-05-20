@@ -1,56 +1,24 @@
-* clean up / organize curve demo code
-* shadertoy 2d curve experiments?
-* THEN: c++ opengl version, OR webGL vector graphics on geometry
-
 Next:
- * combine all into a single demo.  choose order of curve, and how many curves end to end.  show fragment shader code on the page and texture size etc.
- * finish cubic4.html demo
- * N-cubic curves end to end
- * Higher order curve via more lerps & equation
- * equation only quadratic curve N-points (3 pixels per curve.  maybe loop the curve to show that trick?)
- * make control points into circles via "discard".
- * make a better starting curve for the "4 quadratic bezier curves" demo
- * put descriptions on the index page
- * pluralize title and heading in demos
- * compare to 1x16 curve bake out lerp version somehow (and any other competing methods you can find?)
-  * could make a "1x16 baked" version for the demos?
-  * search for other ways people do curves on GPU these days (ask game dev places?)
- * instead of "quadratic bezier equation" etc in the drop downs, mention that it does 3 texture lookups + that (as an example). make the drop downs explain what is being done.
- * call "4 cubic curves"   "4 cubic curves end to end" instead? same w/ quadratic
+ * vector graphics time! webgl first probably.
+ * then C++ opengl version of these demos
+
+* compare to 1x16 curve bake out lerp version somehow (and any other competing methods you can find?)
+ * could make a "1x16 baked" version for the demos? or the paper?
 
 * make sure that C++ version also has "trilinear" sampling mode, with volume textures
-
-! set up curves such that you can lerp the R,G,B,A curve points to get a higher order curve with a single read
-
-? does the "cubic needs 3x2 not 4x2" thing have play with higher dimensionality curves?
- ! yes it does!
-
-* do the "all web curve demos" items
 
 * read papers in paper notes section
 
 * do 2d curve rendering for quadratic bezier curves?
  * http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html?m=1
 
-* diff the html demos and make them as close as possible
-* make sure all spaces, no tabs, in all demo files
-
 * Make C++ opengl versions
- * make sure cubic curve uses volume textures!
  * need to do perf analasys between methods.
  ! use glfw library? whats the standard way to provide c++ source for OpenGL these days?
-
-? texture wrap looping demo?
 
 * show rick details when you have perf info.
 
 ? does this have play with bezier surfaces and pascals pyramid etc?
-
-! rendering generic curves:
- * can render any 1d curve!  already can do it on a quad, could just teselate quad to make it conform to a surface (do a demo?)
- * might be able to render a 2d quadratic curve.
- ? other ways to render these curves? higher order 2d curves possible?
- * works great if you already know time "t" somehow.
 
 * L1 norm of pascal triangle row is 2^N where N is the row number: https://math.stackexchange.com/questions/1272085/is-this-sequence-significant
 * calculating Nth row of pascal triangle: http://stackoverflow.com/questions/15580291/how-to-efficiently-calculate-a-row-in-pascals-triangle
@@ -59,21 +27,6 @@ Next:
 * binomial coefficients: https://en.wikipedia.org/wiki/Binomial_coefficient
 
 ? how does the # of taps change when using bilinear vs trilinear, quadrilinear and beyond?
-
-=== all web curve demos ===
-
-* normCoord.x, not sample, in: float h = sample > 0.5 ? -0.01 : 0.01;
-
-* don't show control points in "texture" render view
-
-* i think the finite difference implementation might be wrong, check it out by simulating it in shadertoy or something
- * make h be based on resolution or something
-* smoothstep distance should use screen resolution or something. or make it "true" antialiasing somehow? read that one paper about aa of procedular shapes
-
-* could possibly have draggable control points, and have them adjust the sliders values at the same time (or maybe, that's how the dragging actually works!)
- * or just get rid of sliders if control point dragging works
-
-* make a "all zeros" or "clear" button to make all control points zero.  maybe underneath the control point sliders? maybe an "all ones" button too?
 
 === comparison info===
 
@@ -122,6 +75,7 @@ G->H->A
 
 ? possibly related and reference-able
  * http://research.microsoft.com/en-us/um/people/cloop/loopblinn05.pdf
+ * http://research.microsoft.com/en-us/um/people/hoppe/ravg.pdf
 
 * can do 4 1d curves, 2 2d curves, a 3d curve and a 1d curve, or a 4d curve
 
