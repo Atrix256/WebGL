@@ -3,12 +3,6 @@
     http://learningwebgl.com/blog/?page_id=1217
 
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
-
-    TODO:
-     * when switching texture size y, the control points get set to wrong values! look into it
-      * create nodes with DHTML and set value, instead of doing HTML stuff. i think the html stuff is getting re-parsed each time or something
-     * test all combo of params in and outside of polar mode
-     * why do i have to invert the x and y axis in the shader for polar mode?
 -->
 <html>
 <head>
@@ -722,29 +716,93 @@
         for (i = 0; i < maxNumber; ++i)
         {
             var value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][0] == 'undefined') ? 0 : g_controlPoints[i][0] / 2.55;
-            if (!document.getElementById("R"+i.toString()))
-                document.getElementById("RedControlPoints").innerHTML += "<span id=\"LR"+i.toString()+"\">" + (i).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"R" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            if (!document.getElementById("R"+i.toString())) {
+            	var node = document.createElement("span");
+            	node.setAttribute("id", "LR"+i.toString());
+            	node.appendChild(document.createTextNode((i).toString()));
+            	document.getElementById("RedControlPoints").appendChild(node);
+
+            	node = document.createElement("input");
+            	node.setAttribute("id", "R"+i.toString());
+            	node.setAttribute("type", "range");
+            	node.setAttribute("min", "0");
+            	node.setAttribute("max", "100");
+            	node.setAttribute("onInput", "initTexture();");
+            	node.setAttribute("onChange", "initTexture();");
+            	node.setAttribute("value", value);
+				document.getElementById("RedControlPoints").appendChild(node);   
+
+				document.getElementById("RedControlPoints").appendChild(document.createElement("br"));
+            }
             var invisible = (i >= numUIControlPoints);
             document.getElementById("R" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
             document.getElementById("LR" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
 
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][1] == 'undefined') ? 0 : g_controlPoints[i][1] / 2.55;
-            if (!document.getElementById("G"+i.toString()))
-                document.getElementById("GreenControlPoints").innerHTML += "<span id=\"LG"+i.toString()+"\">" + (i).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"G" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            if (!document.getElementById("G"+i.toString())) {
+            	var node = document.createElement("span");
+            	node.setAttribute("id", "LG"+i.toString());
+            	node.appendChild(document.createTextNode((i).toString()));
+            	document.getElementById("GreenControlPoints").appendChild(node);
+
+            	node = document.createElement("input");
+            	node.setAttribute("id", "G"+i.toString());
+            	node.setAttribute("type", "range");
+            	node.setAttribute("min", "0");
+            	node.setAttribute("max", "100");
+            	node.setAttribute("onInput", "initTexture();");
+            	node.setAttribute("onChange", "initTexture();");
+            	node.setAttribute("value", value);
+				document.getElementById("GreenControlPoints").appendChild(node);   
+
+				document.getElementById("GreenControlPoints").appendChild(document.createElement("br"));            	
+            }
             invisible = (i >= numUIControlPoints || g_settings.m_orderBoost > 1);
             document.getElementById("G" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
             document.getElementById("LG" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
 
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[2] == 'undefined') ? 0 : g_controlPoints[i][2] / 2.55;
-            if (!document.getElementById("B"+i.toString()))
-                document.getElementById("BlueControlPoints").innerHTML += "<span id=\"LB"+i.toString()+"\">" + (i).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"B" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            if (!document.getElementById("B"+i.toString())) {
+            	var node = document.createElement("span");
+            	node.setAttribute("id", "LB"+i.toString());
+            	node.appendChild(document.createTextNode((i).toString()));
+            	document.getElementById("BlueControlPoints").appendChild(node);
+
+            	node = document.createElement("input");
+            	node.setAttribute("id", "B"+i.toString());
+            	node.setAttribute("type", "range");
+            	node.setAttribute("min", "0");
+            	node.setAttribute("max", "100");
+            	node.setAttribute("onInput", "initTexture();");
+            	node.setAttribute("onChange", "initTexture();");
+            	node.setAttribute("value", value);
+				document.getElementById("BlueControlPoints").appendChild(node);   
+
+				document.getElementById("BlueControlPoints").appendChild(document.createElement("br"));              	
+            }
             invisible = (i >= numUIControlPoints || g_settings.m_orderBoost > 0);
             document.getElementById("B" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
             document.getElementById("LB" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
 
             value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][3] == 'undefined') ? 0 : g_controlPoints[i][3] / 2.55;
-            if (!document.getElementById("A"+i.toString()))
-                document.getElementById("AlphaControlPoints").innerHTML += "<span id=\"LA"+i.toString()+"\">" + (i).toString() + ":</span><input type=\"range\" min=\"0\" max=\"100\" id=\"A" + i.toString() + "\" onInput=\"initTexture();\" onChange=\"initTexture();\" value=\"" + value + "\"/><br/>";
+            if (!document.getElementById("A"+i.toString())) {
+            	var node = document.createElement("span");
+            	node.setAttribute("id", "LA"+i.toString());
+            	node.appendChild(document.createTextNode((i).toString()));
+            	document.getElementById("AlphaControlPoints").appendChild(node);
+
+            	node = document.createElement("input");
+            	node.setAttribute("id", "A"+i.toString());
+            	node.setAttribute("type", "range");
+            	node.setAttribute("min", "0");
+            	node.setAttribute("max", "100");
+            	node.setAttribute("onInput", "initTexture();");
+            	node.setAttribute("onChange", "initTexture();");
+            	node.setAttribute("value", value);
+				document.getElementById("AlphaControlPoints").appendChild(node);   
+
+				document.getElementById("AlphaControlPoints").appendChild(document.createElement("br"));             	
+            }
             document.getElementById("A" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
             document.getElementById("LA" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
         }

@@ -8,6 +8,8 @@ Next:
  * mention this in the paper
  * see about animating some objects in the vector graphics demos
 
+* webgl demo.html -> in polar mode, i think we need to do something else to get distance than the dfdx setup i have.
+
 * compare to 1x16 curve bake out lerp version somehow (and any other competing methods you can find?)
  * could make a "1x16 baked" version for the demos? or the paper?
 
