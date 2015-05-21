@@ -3,6 +3,36 @@
     http://learningwebgl.com/blog/?page_id=1217
 
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
+
+    TODO:
+        * make a waving flag with vector art on it, that you can zoom in and out of and orbit around.
+          * maybe a polar encoded sun, over some green hills (close hill lighter, far hill darker) and a blue sky background? possibly ocean in BG too
+          * animate the sun?
+        * 3d lighting
+        * possibly make some areas shinier than others?
+        * make the flag move realistically and unpredictably
+        * any functionality needed to share w/ the demo.html -> put into a shared javascript file!
+         * like shader generation and initialization
+        * AA options: none, quincunx (render 2x), 4 rook (render 4x)
+         * should you reference quicunx or 4 rook anti aliasing?
+
+    TODO: flag.png description
+        * [1] 4 layers of background described by a single texture of multiple quadratic curves over time.
+         * light green, dark gree, blue, then gradient colored sky above.
+         * make the water shiny (higher specular)
+         * light green should be hilly, dark green should be more mountainy
+         * we have one more unused region! could add another hill, or could maybe add an island in the background
+          * yeah, island! poking up from behind the blue, with the blue dipping down a bit at that point to make it look like it's resting in the water.
+        * [2] polar encoded sun.
+         * inside = shiny yellow (higher specular), outside = clip
+         * animated geometry.
+        * [3] castle is potentially linear curves.
+         * under curve = dark grey, above curve = clip.
+         * see then about how to do black doorway.
+          * could make have multiple "dark grey" curves, and have a black one in the middle.
+          * this would let you put in windows too!
+        * each number in brackets represents one texture and one draw pass?
+
 -->
 <html>
 <head>

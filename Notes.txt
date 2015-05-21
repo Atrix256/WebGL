@@ -1,3 +1,5 @@
+* have Demo.html have control points as JSON at bottom (below shader!)
+
 Next:
  * vector graphics time! webgl first probably.
  * then C++ opengl version of these demos
@@ -7,6 +9,8 @@ Next:
  ? is this the same as lerping over control points?
  * mention this in the paper
  * see about animating some objects in the vector graphics demos
+
+* make something that uses the curves for non vector graphics -> like shinyness on an object or something? particle color over lifetime etc.
 
 * webgl demo.html -> in polar mode, i think we need to do something else to get distance than the dfdx setup i have.
 
