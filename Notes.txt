@@ -2,6 +2,12 @@ Next:
  * vector graphics time! webgl first probably.
  * then C++ opengl version of these demos
 
+* look into animating curves?
+ * lerp results over time (actual time, not t!)
+ ? is this the same as lerping over control points?
+ * mention this in the paper
+ * see about animating some objects in the vector graphics demos
+
 * compare to 1x16 curve bake out lerp version somehow (and any other competing methods you can find?)
  * could make a "1x16 baked" version for the demos? or the paper?
 
@@ -28,6 +34,8 @@ Next:
 
 ? how does the # of taps change when using bilinear vs trilinear, quadrilinear and beyond?
 
+? could we sample the texture in curve, vertex or geometry shader? if so, better vector / 3d graphics applications
+
 === comparison info===
 
 compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
@@ -35,6 +43,11 @@ compare speed vs sending control points in a constant buffer.  also vs hard code
 compare quality (and speed?) vs baking curve as 1x16?
 
  =====Paper Notes=====
+
+* 1d curve = explicit curve!
+
+* good only if you already have time t!  If you have a random x,y and want to do a 2d curve or something, no good for that.
+ * since the texture sampling calculates part of the curve for you, you don't have knowledge of the control points!
 
 * could do a "pure math" derivatives in linear curves setup instead of using dFdx.  Could also do more texture reads in the bilinear setup.
 

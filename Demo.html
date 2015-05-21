@@ -6,8 +6,8 @@
 
     TODO:
      * when switching texture size y, the control points get set to wrong values! look into it
+      * create nodes with DHTML and set value, instead of doing HTML stuff. i think the html stuff is getting re-parsed each time or something
      * test all combo of params in and outside of polar mode
-     * use constants for pi in the shaders or something
      * why do i have to invert the x and y axis in the shader for polar mode?
 -->
 <html>
@@ -157,7 +157,7 @@
         		"   adjustedTextureCoord.x *= -1.0;\n" +
         		"   adjustedTextureCoord.y *= -1.0;\n" +
         		"   vec2 textureCoord;\n" +
-        		"   textureCoord.x = (atan(adjustedTextureCoord.y, adjustedTextureCoord.x) + 3.14) / 6.28 ;\n" +
+        		"   textureCoord.x = (atan(adjustedTextureCoord.y, adjustedTextureCoord.x) + 3.14159265359) / 6.28318530718;\n" +
         		"   textureCoord.y = length(adjustedTextureCoord);\n\n";  
         }
         else {
@@ -785,6 +785,9 @@
             g_settings.m_shaderDescription += ", but that was rounded up to the next powers of two and really only needed to be " + g_settings.m_desiredTextureSizeX + "x" + g_settings.m_desiredTextureSizeY;
 
         g_settings.m_shaderDescription += "."
+
+        if (document.getElementById("RenderPolar").checked)
+        	g_settings.m_shaderDescription += "  Rendered Polar."
 
         document.getElementById("ShaderDesc").innerHTML = g_settings.m_shaderDescription;
 
