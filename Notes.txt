@@ -50,6 +50,9 @@ compare quality (and speed?) vs baking curve as 1x16?
 
  =====Paper Notes=====
 
+* another journal to publish to? send a query letter maybe?
+ * http://tog.acm.org/
+
 * 1d curve = explicit curve!
 
 * good only if you already have time t!  If you have a random x,y and want to do a 2d curve or something, no good for that.
