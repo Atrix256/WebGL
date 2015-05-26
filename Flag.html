@@ -6,9 +6,11 @@
 
     TODO:
         * make a flag mesh
+        * make flag mesh animate (z only?) over time
         * make 3d shapes work
         * remove control point rendering code
-        * remove the UI, we don't need it!
+        * remove the UI, we don't need it! (make keep resolution, maybe add wireframe render, maybe add flag subdivision count?)
+        * make a different aspect ratio for window, after UI is gone, so it fills more of the screen        
         * make a waving flag with vector art on it, that you can zoom in and out of and orbit around.
           * maybe a polar encoded sun, over some green hills (close hill lighter, far hill darker) and a blue sky background? possibly ocean in BG too
           * animate the sun?
@@ -21,6 +23,7 @@
          * should you reference quicunx or 4 rook anti aliasing?
         * with the curves constant (for those that are... hopefully all of them!), can make the usage more appropriate for "write once, read never, use many"
 		* probably don't need push / pop matrix stuff
+		? is back face culling on? i don't think so... maybe should be!
 
     TODO: flag.png description
         * [1] 4 layers of background described by a single texture of multiple quadratic curves over time.
@@ -544,7 +547,6 @@
 
     var screenQuadBuffer;
     var screenQuadTextureCoordinateBuffer;
-    var controlPointBuffer;
 
     var mvMatrix = mat4.create();
     var mvMatrixStack = [];
@@ -568,54 +570,59 @@
         gl.uniformMatrix4fv(FSshaderProgram.mvMatrixUniform, false, mvMatrix);
     }    
 
+    var flagNumCells = 1;
+
     function initBuffers() {
         // make the full screen quad vertex buffer
         screenQuadBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
-        vertices = [
-            // Front face
-            -1.0, -1.0, -5.0,
-             1.0, -1.0, -5.0,
-             1.0,  1.0, -5.0,
-            -1.0, -1.0, -5.0,
-             1.0,  1.0, -5.0,
-            -1.0,  1.0, -5.0,
-        ];
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-        screenQuadBuffer.itemSize = 3;
-        screenQuadBuffer.numItems = 6;
+        vertices = new Array;
+        textureCoords = new Array;
 
-        // make the full screen quad texture coordinate buffer
+        var z = -5.0;
+
+        // TODO: when setting flagNumCells to 2, it does something weird, investigate!
+	    // TODO: clean this up a bit! make this loop generate arrays, and make lower part generate gl buffers.
+	    // TODO: review usage (gl.STATIC_DRAW)
+        // todo: make it go from -1 to 1 so it's easy to center? i dunno...
+        // todo: create texture coordinates in same loop!
+        var delta = 1.0 / flagNumCells;
+		for (y = 0; y < flagNumCells; ++y)
+		{
+			var percenty = y / flagNumCells;
+	        for (x = 0; x < flagNumCells; ++x)
+	        {
+	        	var percentx = y / flagNumCells;
+
+				vertices.push(percentx, percenty, z);
+				vertices.push(percentx+delta, percenty, z);
+				vertices.push(percentx+delta, percenty+delta, z);
+
+				textureCoords.push(percentx, percenty);
+				textureCoords.push(percentx+delta, percenty);
+				textureCoords.push(percentx+delta, percenty+delta);
+
+				vertices.push(percentx, percenty, z);
+				vertices.push(percentx+delta, percenty+delta, z);
+				vertices.push(percentx, percenty+delta, z);
+
+				textureCoords.push(percentx, percenty);
+				textureCoords.push(percentx+delta, percenty+delta);
+				textureCoords.push(percentx, percenty+delta);
+	        }
+	    }
+
+	    // make the vertex buffer
+        screenQuadBuffer.itemSize = 3;
+        screenQuadBuffer.numItems = vertices.length / screenQuadBuffer.itemSize;
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);        
+
+        // make the texture coordinate buffer
         screenQuadTextureCoordinateBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
-        vertices = [
-            0, 0,
-            1, 0,
-            1, 1,
-            0, 0,
-            1, 1,
-            0, 1,
-        ];
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
         screenQuadTextureCoordinateBuffer.itemSize = 2;
-        screenQuadTextureCoordinateBuffer.numItems = 6;
-
-        // make the control point quad vertex buffer
-        controlPointBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
-        var size = 0.025;
-        vertices = [
-            // Front face
-            -size, -size,
-             size, -size,
-             size,  size,
-            -size, -size,
-             size,  size,
-            -size,  size,
-        ];
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-        controlPointBuffer.itemSize = 2;
-        controlPointBuffer.numItems = 6;        
+        screenQuadTextureCoordinateBuffer.numItems = textureCoords.length / screenQuadTextureCoordinateBuffer.itemSize;
     }
 
     function fromPolar(pos) {
@@ -808,12 +815,13 @@
 
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
+
         initSettings();
         initShaders();
         initBuffers();
         initTexture();
 
-        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        gl.clearColor(0.4, 0.5, 0.6, 1.0);
     }
 
     function DoOnLoad() {
