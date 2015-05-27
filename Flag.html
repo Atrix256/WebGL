@@ -5,18 +5,15 @@
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
 
     TODO:
-        * make a flag mesh
-        * make flag mesh animate (z only?) over time
-        * make 3d shapes work
-        * remove control point rendering code
+        * 3d lighting    
+        * be able to pan and zoom camera (polar orbit camera?)
+		* make the art, instead of the curves that are there!
         * remove the UI, we don't need it! (make keep resolution, maybe add wireframe render, maybe add flag subdivision count?)
         * make a different aspect ratio for window, after UI is gone, so it fills more of the screen        
         * make a waving flag with vector art on it, that you can zoom in and out of and orbit around.
           * maybe a polar encoded sun, over some green hills (close hill lighter, far hill darker) and a blue sky background? possibly ocean in BG too
           * animate the sun?
-        * 3d lighting
         * possibly make some areas shinier than others?
-        * make the flag move realistically and unpredictably
         * any functionality needed to share w/ the demo.html -> put into a shared javascript file!
          * like shader generation and initialization
         * AA options: none, quincunx (render 2x), 4 rook (render 4x)
@@ -24,6 +21,10 @@
         * with the curves constant (for those that are... hopefully all of them!), can make the usage more appropriate for "write once, read never, use many"
 		* probably don't need push / pop matrix stuff
 		? is back face culling on? i don't think so... maybe should be!
+		* fix weird viewing angle.  Too large fov maybe?!
+		* update text and tile on page etc		
+		* look through code for todos
+		* make a flag pole?
 
     TODO: flag.png description
         * [1] 4 layers of background described by a single texture of multiple quadratic curves over time.
@@ -570,12 +571,22 @@
         gl.uniformMatrix4fv(FSshaderProgram.mvMatrixUniform, false, mvMatrix);
     }    
 
-    var flagNumCells = 10;
+    var flagNumCells = 20;
 
     // todo: better flag waving
     function getZ (x, y)
     {
-        return Math.sin((x+g_timeMs / 100)) * x + Math.sin((y+g_timeMs / 789)) * x;
+    	var envelope = (1-x) / 0.25;
+    	if (envelope > 1)
+    		envelope = 1;
+
+    	if (g_timeMs < 1000)
+    		envelope *= g_timeMs / 1000;
+
+    	var xWave = Math.sin((x+g_timeMs / 500)*5) * envelope;
+    	var yWave = Math.sin((y+g_timeMs / 1376)*12) * 0.25 * envelope;
+
+        return xWave + yWave;
     }
 
     function PushVert (vertices,x,y)
@@ -640,9 +651,22 @@
     }
 
   	var g_timeMs = 0;
+  	var g_lastTimeMs = 0;
     function animate() {
-        g_timeMs = new Date().getTime();
-        initBuffers();
+
+        if (document.getElementById("Animate").checked)
+        {
+	        var timeMs = new Date().getTime();
+	        if (g_lastTimeMs != 0)
+	        	g_timeMs += timeMs - g_lastTimeMs;
+			g_lastTimeMs = timeMs;
+
+        	initBuffers();			
+		}
+		else
+		{
+			g_lastTimeMs = 0;
+		}
     }  
 
     function drawScene() {
@@ -672,7 +696,7 @@
     function tick() {
         requestAnimFrame(tick);
         drawScene();
-        animate();
+       	animate();
         g_frameCounter++;
     }
 
@@ -689,7 +713,6 @@
 
         // other settings
         g_settings.m_orderBoost = parseInt(document.getElementById("OrderBoost").value);
-        g_settings.m_drawControlPoints = document.getElementById("DrawControlPoints").checked;
 
         // show or hide sliders for control points, as needed
         var numUIControlPoints = GetNumUIControlPoints();
@@ -936,12 +959,15 @@
             <td>
                 <table>
                     <tr>
+                        <td>Animate</td>
+                        <td><input id="Animate" type="checkbox" checked="true"></td>
+                    </tr>                      
+                    <tr>
                         <td>Render Polar</td>
                         <td><input id="RenderPolar" type="checkbox" onChange="OnChangeSettings();"></td>
                     </tr>                
                     <tr>
-                        <td>Show Control Points</td>
-                        <td><input id="DrawControlPoints" type="checkbox"  checked="true" onChange="OnChangeSettings();"></td>
+                        <td colspan="2"><input type="button" value="Reset Time" onClick="g_timeMs = 0; initBuffers();"/></td>
                     </tr>
                 </table>
             </td>
