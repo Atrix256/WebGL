@@ -8,6 +8,7 @@
         * 3d lighting    
         * be able to pan and zoom camera (polar orbit camera?)
 		* make the art, instead of the curves that are there!
+		* make shader code constant, instead of being built in a string!
         * remove the UI, we don't need it! (make keep resolution, maybe add wireframe render, maybe add flag subdivision count?)
         * make a different aspect ratio for window, after UI is gone, so it fills more of the screen        
         * make a waving flag with vector art on it, that you can zoom in and out of and orbit around.
@@ -56,16 +57,26 @@
 
 <script id="shader-vs" type="x-shader/x-vertex">
     attribute vec3 aVertexPosition;
+    attribute vec3 aVertexNormal;
     attribute vec2 aTextureCoord;
 
     varying vec2 vTextureCoord;
+    varying vec3 vLightWeighting;
 
     uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;    
+    uniform mat3 uNMatrix;
 
     void main(void) {
         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
         vTextureCoord = aTextureCoord;
+
+        // calculate lighting
+        vec3 transformedNormal = uNMatrix * aVertexNormal;
+        // TODO: better light direction
+        float directionalLightWeighting = max(dot(transformedNormal, vec3(0,0,1)), 0.0);
+        // TODO: better ambient light color, and directional light color
+        vLightWeighting = vec3(0.1,0.1,0.1) + vec3(0.1,1.0,0.1) * directionalLightWeighting;
     }
 </script>
 
@@ -151,6 +162,7 @@
         "precision mediump float;\n" + 
         "uniform sampler2D uSampler;\n" + 
         "varying vec2 vTextureCoord;\n\n" + 
+        "varying vec3 vLightWeighting;\n\n" +
         "void main(void) {\n";
 
     var g_fragmentShaderFooter = "}";
@@ -378,7 +390,7 @@
         shaderSource += 
             "\n" +
             "   // make the output color\n" +
-            "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
+            "   gl_FragColor = vec4(clamp(outColor*vLightWeighting,0.0,1.0), 1.0);\n" +
             g_fragmentShaderFooter;
 
         return createFragmentShader(gl,shaderSource);
@@ -419,6 +431,9 @@
 	        FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
 	        gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
 
+        	FSshaderProgram.vertexNormalAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexNormal");
+        	gl.enableVertexAttribArray(FSshaderProgram.vertexNormalAttribute);
+
 	        FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
 	        gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
 
@@ -426,6 +441,7 @@
 
 	        FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
 	        FSshaderProgram.mvMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uMVMatrix");
+	        FSshaderProgram.nMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uNMatrix");
 	    }
     }
 
@@ -547,6 +563,7 @@
     }
 
     var screenQuadBuffer;
+    var screenQuadNormalBuffer;
     var screenQuadTextureCoordinateBuffer;
 
     var mvMatrix = mat4.create();
@@ -569,6 +586,11 @@
     function setMatrixUniforms() {
         gl.uniformMatrix4fv(FSshaderProgram.pMatrixUniform, false, pMatrix);
         gl.uniformMatrix4fv(FSshaderProgram.mvMatrixUniform, false, mvMatrix);
+
+        var normalMatrix = mat3.create();
+        mat4.toInverseMat3(mvMatrix, normalMatrix);
+        mat3.transpose(normalMatrix);
+        gl.uniformMatrix3fv(FSshaderProgram.nMatrixUniform, false, normalMatrix);        
     }    
 
     var flagNumCells = 20;
@@ -596,8 +618,10 @@
 
     function initBuffers() {
 	    // TODO: review usage (gl.STATIC_DRAW)
+	    // TODO: calculate normals
         vertices = new Array;
         textureCoords = new Array;
+        normals = new Array;
         var delta = 1.0 / flagNumCells;
 		for (y = 0; y < flagNumCells; ++y)
 		{
@@ -614,6 +638,10 @@
 				textureCoords.push(percentx+delta, percenty);
 				textureCoords.push(percentx+delta, percenty+delta);
 
+				normals.push(0,0,1);
+				normals.push(0,0,1);
+				normals.push(0,0,1);
+
 				PushVert(vertices, percentx, percenty);
 				PushVert(vertices, percentx + delta, percenty + delta);
 				PushVert(vertices, percentx, percenty + delta);
@@ -621,6 +649,10 @@
 				textureCoords.push(percentx, percenty);
 				textureCoords.push(percentx+delta, percenty+delta);
 				textureCoords.push(percentx, percenty+delta);
+
+				normals.push(0,0,1);
+				normals.push(0,0,1);
+				normals.push(0,0,1);
 	        }
 	    }
 
@@ -630,6 +662,13 @@
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);  
         screenQuadBuffer.itemSize = 3;
         screenQuadBuffer.numItems = vertices.length / screenQuadBuffer.itemSize;
+
+	    // make the normal buffer
+	    screenQuadNormalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadNormalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);  
+        screenQuadNormalBuffer.itemSize = 3;
+        screenQuadNormalBuffer.numItems = normals.length / screenQuadNormalBuffer.itemSize;        
               
         // make the texture coordinate buffer
         screenQuadTextureCoordinateBuffer = gl.createBuffer();
@@ -684,6 +723,8 @@
         gl.useProgram(FSshaderProgram);
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
         gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadNormalBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.vertexNormalAttribute, screenQuadNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
         gl.vertexAttribPointer(FSshaderProgram.textureCoordinateAttribute, screenQuadTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
         gl.activeTexture(gl.TEXTURE0);
