@@ -42,6 +42,35 @@ Next:
 
 ? could we sample the texture in curve, vertex or geometry shader? if so, better vector / 3d graphics applications
 
+? can we do different weighting besides u==v to get higher order curves?  like get a cubic curve where B==C, so it has 3 control points but is cubic?
+
+? is any of this stuff extendable to bsplines or nurbs? (possible future work).  or hermite / catmull rom etc?
+
+? how does this stuff work in DXT compressed textures?  does it work ok?
+
+? can we minimized unused pixel sections in trilinear?
+
+trilinear:
+ A B   B C
+ B C   C D
+ C D   D E
+ E F   E F
+ F G   F G
+* area between every other row is unused. can we fix that? i don't think so unfortunately ):
+ * if we could specify volume texture as "interlaced" (kind of) we could tell it...
+  1) "trilinear sample" the first 2 pixels
+  2) "trilinear sample" the 2nd and 3rd pixel
+  3) etc.  then we wouldn't need two slices!
+
+? in opengl, you might be able to do quadrilinear filtering??
+ * https://www.opengl.org/discussion_boards/showthread.php/141302-How-to-use-Bilinear-Trilinear-Filtering
+ * "GL_LINEAR is bilinear, and GL_LINEAR_MIPMAP_LINEAR is trilinear filtering."
+ ? what if you specify that for a volume texture?
+ ! i think yes, you can do quadrilinear filtering in opengl.
+  ? is it supported by hardware?!
+
+? how does mipmapping work? if it does bilinear / trilinear in advance, it might be a way to get higher order curves with fewer texture reads!
+
 === comparison info===
 
 compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
@@ -49,6 +78,11 @@ compare speed vs sending control points in a constant buffer.  also vs hard code
 compare quality (and speed?) vs baking curve as 1x16?
 
  =====Paper Notes=====
+
+* note that we could get smaller textures with cubic (trilinear) if we could choose whcih pixels in a 2d texture to sample.
+
+* yes, lerping between curve points is the same as lerping control points.
+ ? is there anything else that can be done to curve points that is equivelant to control points (future work?)
 
 * another journal to publish to? send a query letter maybe?
  * http://tog.acm.org/
