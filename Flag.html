@@ -570,41 +570,42 @@
         gl.uniformMatrix4fv(FSshaderProgram.mvMatrixUniform, false, mvMatrix);
     }    
 
-    var flagNumCells = 1;
+    var flagNumCells = 10;
+
+    // todo: better flag waving
+    function getZ (x, y)
+    {
+        return Math.sin((x+g_timeMs / 100)) * x + Math.sin((y+g_timeMs / 789)) * x;
+    }
+
+    function PushVert (vertices,x,y)
+    {
+        vertices.push((x - 0.5) * 5, (y - 0.5) * 5, getZ(x,y));
+    }
 
     function initBuffers() {
-        // make the full screen quad vertex buffer
-        screenQuadBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+	    // TODO: review usage (gl.STATIC_DRAW)
         vertices = new Array;
         textureCoords = new Array;
-
-        var z = -5.0;
-
-        // TODO: when setting flagNumCells to 2, it does something weird, investigate!
-	    // TODO: clean this up a bit! make this loop generate arrays, and make lower part generate gl buffers.
-	    // TODO: review usage (gl.STATIC_DRAW)
-        // todo: make it go from -1 to 1 so it's easy to center? i dunno...
-        // todo: create texture coordinates in same loop!
         var delta = 1.0 / flagNumCells;
 		for (y = 0; y < flagNumCells; ++y)
 		{
 			var percenty = y / flagNumCells;
 	        for (x = 0; x < flagNumCells; ++x)
 	        {
-	        	var percentx = y / flagNumCells;
+	        	var percentx = x / flagNumCells;
 
-				vertices.push(percentx, percenty, z);
-				vertices.push(percentx+delta, percenty, z);
-				vertices.push(percentx+delta, percenty+delta, z);
+                PushVert(vertices, percentx, percenty);
+				PushVert(vertices, percentx + delta, percenty);
+				PushVert(vertices, percentx + delta, percenty + delta);
 
 				textureCoords.push(percentx, percenty);
 				textureCoords.push(percentx+delta, percenty);
 				textureCoords.push(percentx+delta, percenty+delta);
 
-				vertices.push(percentx, percenty, z);
-				vertices.push(percentx+delta, percenty+delta, z);
-				vertices.push(percentx, percenty+delta, z);
+				PushVert(vertices, percentx, percenty);
+				PushVert(vertices, percentx + delta, percenty + delta);
+				PushVert(vertices, percentx, percenty + delta);
 
 				textureCoords.push(percentx, percenty);
 				textureCoords.push(percentx+delta, percenty+delta);
@@ -613,10 +614,12 @@
 	    }
 
 	    // make the vertex buffer
+        screenQuadBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);  
         screenQuadBuffer.itemSize = 3;
         screenQuadBuffer.numItems = vertices.length / screenQuadBuffer.itemSize;
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);        
-
+              
         // make the texture coordinate buffer
         screenQuadTextureCoordinateBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
@@ -636,18 +639,11 @@
 		];
     }
 
-  	var lastTime = 0;
+  	var g_timeMs = 0;
     function animate() {
-        var timeNow = new Date().getTime();
-        if (lastTime != 0) {
-            var elapsed = timeNow - lastTime;
-
-            rPyramid += (90 * elapsed) / 1000.0;
-        }
-        lastTime = timeNow;
-    }    
-
-    var rPyramid = 0;
+        g_timeMs = new Date().getTime();
+        initBuffers();
+    }  
 
     function drawScene() {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -655,11 +651,10 @@
 
         // perspective matrix
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+        mat4.translate(pMatrix, [0.0, 0.0, -10.0]);
 
         // model view matrix!
 		mat4.identity(mvMatrix);
-		mat4.translate(mvMatrix, [0.0, 0.0, -10.0]);
-		mat4.rotate(mvMatrix, degToRad(rPyramid), [0, 1, 0]);
 
         // draw the full screen quad
         gl.useProgram(FSshaderProgram);
