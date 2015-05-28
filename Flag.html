@@ -5,23 +5,22 @@
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
 
     TODO:
+        * use mvMatrix instead of pMatrix, for moving around object? or for lighting? dunno look into it.
 		* make the art, instead of the curves that are there!
 		* make shader code constant, instead of being built in a string!
         * remove the UI, we don't need it! (make keep resolution, maybe add wireframe render, maybe add flag subdivision count?)
-         * we might want to keep some UI options (like sampling!), since it could be interesting and useful to see.
-        * make a different aspect ratio for window, after UI is gone, so it fills more of the screen        
+         * we might want to keep some UI options (like sampling mode!), since it could be interesting and useful to see. also resolution is important
         * make a waving flag with vector art on it, that you can zoom in and out of and orbit around.
           * maybe a polar encoded sun, over some green hills (close hill lighter, far hill darker) and a blue sky background? possibly ocean in BG too
           * animate the sun?
         * possibly make some areas shinier than others?
          * specular
         * any functionality needed to share w/ the demo.html -> put into a shared javascript file!
-         * like shader generation and initialization
+         * like shader generation and initialization?
         * AA options: none, quincunx (render 2x), 4 rook (render 4x)
          * should you reference quicunx or 4 rook anti aliasing?
         * with the curves constant (for those that are... hopefully all of them!), can make the usage more appropriate for "write once, read never, use many"
 		* probably don't need push / pop matrix stuff
-		? is back face culling on? i don't think so... maybe should be!
 		* fix weird viewing angle.  Too large fov maybe?!
 		* update text and tile on page etc		
 		* look through code for todos
@@ -388,8 +387,15 @@
         // TODO: better light direction, ambient light color, and directional light color
         shaderSource += 
             "\n" +
-            "   float directionalLightWeighting = min(max(dot(vNormal, normalize(vec3(0.3,0,1))), 0.0),1.0);\n" +
-            "   vec3 lightWeighting = vec3(0.5,0.5,0.5) + vec3(0.3,0.3,0.3) * directionalLightWeighting;\n" +            
+            /*
+            "   float directionalLightWeighting = dot(normalize(vNormal), normalize(vec3(0,0,1)));\n" +
+            "   if(directionalLightWeighting < 0.0)\n" +
+            "    gl_FragColor = vec4(1.0,0.0,0.0,1.0);\n" +
+            "   else\n" +
+            "    gl_FragColor = vec4(0.0,1.0,0.0,1.0);\n" +
+            */
+            "   float directionalLightWeighting = min(max(dot(normalize(vNormal), normalize(vec3(0.4,0.4,-1))), 0.0),1.0);\n" +
+            "   vec3 lightWeighting = vec3(0.2,0.2,0.2) + vec3(0.8,0.8,0.8) * directionalLightWeighting;\n" +            
             "   // make the output color\n" +
             "   gl_FragColor = vec4(clamp(outColor*lightWeighting,0.0,1.0), 1.0);\n" +
             g_fragmentShaderFooter;
@@ -589,12 +595,16 @@
         gl.uniformMatrix4fv(FSshaderProgram.mvMatrixUniform, false, mvMatrix);
 
         var normalMatrix = mat3.create();
-        mat4.toInverseMat3(mvMatrix, normalMatrix);
+        mat4.toInverseMat3(pMatrix, normalMatrix);
         mat3.transpose(normalMatrix);
         gl.uniformMatrix3fv(FSshaderProgram.nMatrixUniform, false, normalMatrix);        
     }    
 
-    // todo: better flag waving
+    function GetBias(time,bias)
+    {
+        return (time / ((((1.0/bias) - 2.0)*(1.0 - time))+1.0));
+    }  
+
     function getZ (x, y)
     {
     	var envelope = (1-x) / 0.25;
@@ -603,18 +613,23 @@
     	if (envelope > 1)
     		envelope = 1;
 
+        // make it a bit non linear to help hide the envelope seam
+        envelope = GetBias(envelope, 0.6);
+
     	if (g_timeMs < 1000)
     		envelope *= g_timeMs / 1000;
 
     	var xWave = Math.sin((x+g_timeMs / 500)*5) * envelope;
-    	var yWave = Math.sin((y+g_timeMs / 1376)*12) * 0.125 * envelope;
+    	var yWave = Math.sin((y+g_timeMs / 1376)*12) * 0.2 * envelope;
 
         return xWave + yWave;
     }
 
+    var scaleX = 10;
+    var scaleY = 5;
     function PushVert (vertices,x,y)
     {
-        vertices.push((x - 0.5) * 5, (y - 0.5) * 5, getZ(x,y));
+        vertices.push((x - 0.5) * scaleX, (y - 0.5) * scaleY, getZ(x,y));
     }
 
     function PushNormal (vertices,normals,x,y)
@@ -627,6 +642,13 @@
 		vright[2] = getZ(vright[0], vright[1]);
 		up[2]    = getZ(up[0], up[1]);
 		p[2]     = getZ(p[0], p[1]);
+
+        vright[0] *= scaleX;
+        vright[1] *= scaleY;
+        p[0] *= scaleX;
+        p[1] *= scaleY;
+        up[0] *= scaleX;
+        up[1] *= scaleY;
 
         var v1 = [0,0,0];
         var v2 = [0,0,0];
@@ -902,7 +924,7 @@
     function initGL() {
         var canvas = document.getElementById("webglcanvas");
         var canvassize = document.getElementById("CanvasSize").value;
-        canvas.width = canvassize;
+        canvas.width = canvassize*2;
         canvas.height = canvassize;
         // details of options below here: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
         gl = WebGLUtils.setupWebGL(canvas, {alpha:true, depth: true, stencil: false, antialias: false, premultipliedAlpha:false, preserveDrawingBuffer: false});
@@ -914,6 +936,9 @@
 
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LESS);
+
+        // TODO: do we want backface culling?
+        //gl.enable(gl.CULL_FACE) 
 
         initSettings();
         initShaders();
@@ -1029,9 +1054,9 @@
                     <tr>
                         <td>Resolution:</td>
                         <td><select id="CanvasSize" onChange="ResizeCanvas();">
-                            <option value="250">250x250</option>
-                            <option value="500" selected="selected">500x500</option>
-                            <option value="1000">1000x1000</option>
+                            <option value="250">500x250</option>
+                            <option value="500" selected="selected">1000x500</option>
+                            <option value="750">1500x750</option>
                         </select>
                         </td>
                     </tr>
