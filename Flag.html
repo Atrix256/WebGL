@@ -5,9 +5,6 @@
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
 
     TODO:
-        * maybe try per pixel lighting... that might be why it looks weird
-        * be able to pan and zoom camera (polar orbit camera?)
-        * slider for zooming
 		* make the art, instead of the curves that are there!
 		* make shader code constant, instead of being built in a string!
         * remove the UI, we don't need it! (make keep resolution, maybe add wireframe render, maybe add flag subdivision count?)
@@ -29,7 +26,8 @@
 		* update text and tile on page etc		
 		* look through code for todos
 		* make a flag pole?
-        ? is light normal stuff correct?
+        ? is light normal stuff correct? could try drawing the flag normals and see
+        * make flag twice as long horizontally?
 
     TODO: flag.png description
         * [1] 4 layers of background described by a single texture of multiple quadratic curves over time.
@@ -65,7 +63,7 @@
     attribute vec2 aTextureCoord;
 
     varying vec2 vTextureCoord;
-    varying vec3 vLightWeighting;
+    varying vec3 vNormal;
 
     uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;    
@@ -75,12 +73,8 @@
         gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
         vTextureCoord = aTextureCoord;
 
-        // calculate lighting
-        vec3 transformedNormal = uNMatrix * aVertexNormal;
-        // TODO: better light direction, ambient light color, and directional light color
-        float directionalLightWeighting = min(max(dot(transformedNormal, normalize(vec3(0.3,0,1))), 0.0),1.0);
-
-        vLightWeighting = vec3(0.5,0.5,0.5) + vec3(0.3,0.3,0.3) * directionalLightWeighting;
+        // calculate normal
+        vNormal = uNMatrix * aVertexNormal;
     }
 </script>
 
@@ -166,7 +160,7 @@
         "precision mediump float;\n" + 
         "uniform sampler2D uSampler;\n" + 
         "varying vec2 vTextureCoord;\n\n" + 
-        "varying vec3 vLightWeighting;\n\n" +
+        "varying vec3 vNormal;\n\n" +
         "void main(void) {\n";
 
     var g_fragmentShaderFooter = "}";
@@ -391,10 +385,13 @@
             }
 		}
 
+        // TODO: better light direction, ambient light color, and directional light color
         shaderSource += 
             "\n" +
+            "   float directionalLightWeighting = min(max(dot(vNormal, normalize(vec3(0.3,0,1))), 0.0),1.0);\n" +
+            "   vec3 lightWeighting = vec3(0.5,0.5,0.5) + vec3(0.3,0.3,0.3) * directionalLightWeighting;\n" +            
             "   // make the output color\n" +
-            "   gl_FragColor = vec4(clamp(outColor*vLightWeighting,0.0,1.0), 1.0);\n" +
+            "   gl_FragColor = vec4(clamp(outColor*lightWeighting,0.0,1.0), 1.0);\n" +
             g_fragmentShaderFooter;
 
         return createFragmentShader(gl,shaderSource);
@@ -743,13 +740,18 @@
 		}
     }  
 
+    var g_cameraRotX = 0;
+    var g_cameraRotY = 0;
+    var g_cameraZoom = 0.25;
     function drawScene() {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         // perspective matrix
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
-        mat4.translate(pMatrix, [0.0, 0.0, -10.0]);
+        mat4.translate(pMatrix, [0.0, 0.0, -4.0 - g_cameraZoom * 30]);
+        mat4.rotate(pMatrix, g_cameraRotX * Math.PI * 2, [0,1,0]);
+        mat4.rotate(pMatrix, g_cameraRotY * Math.PI * 2, [1,0,0]);
 
         // model view matrix!
 		mat4.identity(mvMatrix);
@@ -910,6 +912,9 @@
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
 
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LESS);
+
         initSettings();
         initShaders();
         initBuffers();
@@ -1045,6 +1050,22 @@
                     <tr>
                         <td colspan="2"><input type="button" value="Reset Time" onClick="g_timeMs = 0; initBuffers();"/></td>
                     </tr>
+                </table>
+            </td>
+            <td>
+                <table>
+                    <tr>
+                        <td>X</td>
+                        <td><input type="range" min="0" max="100" onChange="g_cameraRotX = this.value/100;" onInput="g_cameraRotX = this.value/100;" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td>Y</td>
+                        <td><input type="range" min="0" max="100" onChange="g_cameraRotY = this.value/100;" onInput="g_cameraRotY = this.value/100;" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td>Zoom</td>
+                        <td><input type="range" min="0" max="100" onChange="g_cameraZoom = this.value/100;" onInput="g_cameraZoom = this.value/100;" value="25"/></td>
+                    </tr>                                       
                 </table>
             </td>
         </tr>
