@@ -771,7 +771,7 @@
 
         // perspective matrix
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
-        mat4.translate(pMatrix, [0.0, 0.0, -4.0 - g_cameraZoom * 30]);
+        mat4.translate(pMatrix, [0.0, 0.0, - g_cameraZoom * 40]);
         mat4.rotate(pMatrix, g_cameraRotX * Math.PI * 2, [0,1,0]);
         mat4.rotate(pMatrix, g_cameraRotY * Math.PI * 2, [1,0,0]);
 
