@@ -459,6 +459,33 @@
             ];
         }
 
+        // put the control point data on the page
+        var controlPointData = {};
+
+        controlPointData.R = new Array;
+        for (i = 0; i < GetNumUIControlPoints(); ++i)
+            controlPointData.R.push((document.getElementById("R"+i.toString()).value / 100).toFixed(2));
+
+        if (g_settings.m_orderBoost < 3)
+        {
+            controlPointData.G = new Array;
+            for (i = 0; i < GetNumUIControlPoints(); ++i)
+                controlPointData.G.push((document.getElementById("G"+i.toString()).value / 100).toFixed(2));            
+        }
+
+        if (g_settings.m_orderBoost < 1)
+        {
+            controlPointData.B = new Array;
+            controlPointData.A = new Array;
+            for (i = 0; i < GetNumUIControlPoints(); ++i)
+            {
+                controlPointData.B.push((document.getElementById("B"+i.toString()).value / 100).toFixed(2));            
+                controlPointData.A.push((document.getElementById("A"+i.toString()).value / 100).toFixed(2));            
+            }
+        }
+
+        document.getElementById("CurveData").innerText = JSON.stringify(controlPointData);
+
         // make our texture data
         var textureData = new Array;
 
@@ -540,6 +567,12 @@
             textureData,
             g_settings.m_actualTextureSizeX, g_settings.m_actualTextureSizeY
         );
+
+
+        // put the texture data on the page
+        for (i = 0; i < textureData.length; ++i)
+            textureData[i] = Math.round(textureData[i]);
+        document.getElementById("TextureData").innerText = JSON.stringify(textureData);
     }
 
     var screenQuadBuffer;
@@ -1110,6 +1143,10 @@
     <b>Description: </b><span id="ShaderDesc"></span><br><br>
     <b>Fragment Shader Source (GLSL):</b>
     <pre id="ShaderSource" style="border:1px solid black"></pre>
+    <b>Control Point Data (JSON):</b>
+    <pre id="CurveData" style="border:1px solid black"></pre>
+    <b>Texture Data (JSON):</b>
+    <pre id="TextureData" style="border:1px solid black"></pre>
     <a href="index.html">Back to Index</a><br><br>
 </body>
 
