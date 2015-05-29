@@ -5,9 +5,13 @@
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
 
     TODO:
-        * use mvMatrix instead of pMatrix, for moving around object? or for lighting? dunno look into it.
+        * make functions to sample stuff from the texture so it isn't a wall of code
+
+        * make a "nearest" version too that does the curve formulas
+
 		* make the art, instead of the curves that are there!
 		* make shader code constant, instead of being built in a string!
+        * remove unneeded code like pascals triangle etc
         * remove the UI, we don't need it! (make keep resolution, maybe add wireframe render, maybe add flag subdivision count?)
          * we might want to keep some UI options (like sampling mode!), since it could be interesting and useful to see. also resolution is important
         * make a waving flag with vector art on it, that you can zoom in and out of and orbit around.
@@ -26,7 +30,8 @@
 		* look through code for todos
 		* make a flag pole?
         ? is light normal stuff correct? could try drawing the flag normals and see
-        * make flag twice as long horizontally?
+        * use mvMatrix instead of pMatrix, for moving around object? or for lighting? dunno look into it.
+         * probably not
 
     TODO: flag.png description
         * [1] 4 layers of background described by a single texture of multiple quadratic curves over time.
@@ -75,6 +80,48 @@
         // calculate normal
         vNormal = uNMatrix * aVertexNormal;
     }
+</script>
+
+<script id="flag-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D uSampler;
+
+    varying vec2 vTextureCoord;
+    varying vec3 vNormal;
+
+    vec3 DrawLandScape () {
+
+        // sample the landscape curves
+        float sample = (0.25 + vTextureCoord.x / 2.0);
+        vec4 curveValues = texture2D(uSampler, vec2(sample));
+
+        // calculate and return color
+        vec3 outColor;
+        if (vTextureCoord.y < curveValues.x)
+            outColor = vec3(0.0,1.0,0.0);
+        else if (vTextureCoord.y < curveValues.y)
+            outColor = vec3(0.0,0.5,0.0);
+        else if (vTextureCoord.y < curveValues.z)
+            outColor = vec3(0.0,0.0,0.4);
+        else if (vTextureCoord.y < curveValues.w)
+            outColor = vec3(0.4,0.4,0.4);
+        else
+            outColor = vec3(1.0,0.5,0.3);
+
+        return outColor;
+    }
+
+    void main(void) {
+        // start off by drawing the landscape
+        vec3 outColor = DrawLandScape();
+
+        // apply lighting and return the final color
+        float directionalLightWeighting = min(max(dot(normalize(vNormal), normalize(vec3(0.4,0.4,-1))), 0.0),1.0);
+        vec3 lightWeighting = vec3(0.2,0.2,0.2) + vec3(0.8,0.8,0.8) * directionalLightWeighting;
+        gl_FragColor = vec4(clamp(outColor*lightWeighting,0.0,1.0), 1.0);
+    }
+
 </script>
 
 <script type="text/javascript">
@@ -422,7 +469,7 @@
     function initShaders() {
         // make the full screen shader program
         {
-	        var fragmentShader = buildFragmentShader();
+	        var fragmentShader = getShader(gl, "flag-fs");
 	        var vertexShader = getShader(gl, "shader-vs");
 
 	        FSshaderProgram = gl.createProgram();
