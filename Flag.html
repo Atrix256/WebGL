@@ -6,16 +6,8 @@
 
     TODO:
     	* make a diagram of where the different items are on the texture!
-        * make functions to sample stuff from the texture so it isn't a wall of code
-
-        * make a "nearest" version too that does the curve formulas
-
-        * make it have knowledge of texture size so we can multiply texture coordinates by that to work in pixel space.  this way, the terrain can be encoded in [0,0]->[4,2] and we can add more curves without breaking code!
-
-        * make an X,Y,Z offset sliders
 
 		* make the art, instead of the curves that are there!
-		* make shader code constant, instead of being built in a string!
         * remove unneeded code like pascals triangle etc
         * remove the UI, we don't need it! (make keep resolution, maybe add wireframe render, maybe add flag subdivision count?)
          * we might want to keep some UI options (like sampling mode!), since it could be interesting and useful to see. also resolution is important
@@ -92,54 +84,52 @@
     precision mediump float;
 
     uniform sampler2D uSampler;
-    uniform vec2 uMaxTextureCoord;
+    uniform vec2 uTextureResolution;
     uniform bool uBilinearSampling;
 
     varying vec2 vTextureCoord;
     varying vec3 vNormal;   
 
-    vec4 SamplePixel (vec2 pixel) {
+    vec4 SamplePixel (vec2 pixel, float t) {
 
-        // do a single sample if we are doing bilinear sampling
+        // Bilinear sampling:
+        // do a single texture read to get the quadratic bezier curve value at time t
         if (uBilinearSampling)
-    	   return texture2D(uSampler, vec2(pixel / uMaxTextureCoord));
+        {
+            pixel += vec2(0.25 + t / 2.0);
+            return texture2D(uSampler, 2.0 * pixel / uTextureResolution);
+        }
 
-        // else do 3 samples to get the control points and calculate a quadratic bezier curve
-        float t1 = fract((pixel.x-0.25)*2.0);
-        float s1 = (1.0-t1);
-        float t2 = t1 * t1;
-        float s2 = s1 * s1;
+        // Nearest sampling:
+        // do 3 texture reads to get the control points to calculate the quadratic bezier curve value at time t
+        float s = (1.0-t);
+        float t2 = t * t;
+        float s2 = s * s;
 
-        vec2 pixelA = vec2(floor(pixel.x)+0.25, floor(pixel.y)+0.25);
+        vec2 pixelA = vec2(pixel + vec2(0.25));
         vec2 pixelB = pixelA + vec2(0.5,0.0);
         vec2 pixelC = pixelB + vec2(0.0,0.5);
-        vec4 A = texture2D(uSampler, vec2(pixelA/uMaxTextureCoord));
-        vec4 B = texture2D(uSampler, vec2(pixelB/uMaxTextureCoord));
-        vec4 C = texture2D(uSampler, vec2(pixelC/uMaxTextureCoord));
+        vec4 A = texture2D(uSampler, vec2(2.0*pixelA/uTextureResolution));
+        vec4 B = texture2D(uSampler, vec2(2.0*pixelB/uTextureResolution));
+        vec4 C = texture2D(uSampler, vec2(2.0*pixelC/uTextureResolution));
 
-        return A*s2 + 2.0*B*s1*t1 + C*t2;
+        return A*s2 + 2.0*B*s*t + C*t2;
     }
     /*
 
 	Texture Layout:
-	  A A 
-	  A A
+	  A A A A A A A A
+	  A A A A A A A A
 
 
-	A = Landscape: 2x2, qudratic bezier curves end to end
+	A = Landscape: 8x2, 4 qudratic bezier curves end to end
 
     */
 
     vec3 DrawLandScape () {
-
-        // TODO: pass in base pixel and time. have SamplePixel calculate the appropriate values to sample.
-        // less work for linear case, same work for bilinear case!
-        // will that work for curves end to end? need to consider that!
-        // maybe wait til that is working and see
-
         // sample the landscape curves
-        float time = vTextureCoord.x;
-		vec4 curveValues = SamplePixel(vec2(0.25 + time / 2.0));
+        float time = vTextureCoord.x * 4.0;
+		vec4 curveValues = SamplePixel(vec2(floor(time), 0.0), fract(time));
 
         // calculate and return color
         vec3 outColor;
@@ -150,9 +140,9 @@
         else if (vTextureCoord.y < curveValues.z)
             outColor = vec3(0.0,0.0,0.4);
         else if (vTextureCoord.y < curveValues.w)
-            outColor = vec3(0.4,0.4,0.4);
+            outColor = vec3(0.0,0.25,0.0);
         else
-            outColor = vec3(1.0,0.5,0.3);
+            outColor = vec3(1.0,1.0 - vTextureCoord.y,0.0);
 
         return outColor;
     }
@@ -234,7 +224,7 @@
 	        gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
 
 	        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
-	        FSshaderProgram.maxTextureCoordUniform = gl.getUniformLocation(FSshaderProgram, "uMaxTextureCoord");
+	        FSshaderProgram.textureResolutionUniform = gl.getUniformLocation(FSshaderProgram, "uTextureResolution");
             FSshaderProgram.bilinearSamplingUniform = gl.getUniformLocation(FSshaderProgram, "uBilinearSampling");
 
 	        FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
@@ -259,20 +249,12 @@
     }
 
     var bezierTexture;
-    var g_controlPoints = [
-        [128,   0,  50, 190],
-        [  0, 255,   0,   0],
-        [190,  64, 255,  75]
-    ];
 
     var g_textureData = [
-	    127,0,51,191,
-	    0,255,0,0,
-	    0,255,0,0,
-	    191,64,255,74
-    ];
-
-    var g_textureSizeX = 2;
+      41,  87, 145, 127,       46,  87, 140, 217,       43, 117, 145, 140,       41, 135, 145, 135,       33,  87, 150, 153,       43,  66, 143, 235,       59, 107, 150, 148,       69, 150, 150, 130,
+      46,  87, 140, 217,       43, 117, 145, 140,       41, 135, 145, 135,       33,  87, 150, 153,       43,  66, 143, 235,       59, 107, 150, 148,       69, 150, 150, 130,       66,  92, 150, 135
+    ]
+    var g_textureSizeX = 8;
     var g_textureSizeY = 2;
 
     var screenQuadBuffer;
@@ -459,6 +441,8 @@
 
     var g_cameraRotX = 0;
     var g_cameraRotY = 0;
+    var g_cameraTransX = 0;
+    var g_cameraTransY = 0;
     var g_cameraZoom = 0.25;
     function drawScene() {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
@@ -466,7 +450,7 @@
 
         // perspective matrix
         mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
-        mat4.translate(pMatrix, [0.0, 0.0, - g_cameraZoom * 40]);
+        mat4.translate(pMatrix, [g_cameraTransX, g_cameraTransY, - g_cameraZoom * 40]);
         mat4.rotate(pMatrix, g_cameraRotX * Math.PI * 2, [0,1,0]);
         mat4.rotate(pMatrix, g_cameraRotY * Math.PI * 2, [1,0,0]);
 
@@ -484,7 +468,7 @@
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, bezierTexture);
         gl.uniform1i(FSshaderProgram.samplerUniform, 0);
-		gl.uniform2f(FSshaderProgram.maxTextureCoordUniform, g_textureSizeX-1, g_textureSizeY-1);
+		gl.uniform2f(FSshaderProgram.textureResolutionUniform, g_textureSizeX, g_textureSizeY);
         gl.uniform1i(FSshaderProgram.bilinearSamplingUniform, document.getElementById("SamplingMode").value == "bilinear");
         setMatrixUniforms();
         gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
@@ -589,17 +573,29 @@
             <td>
                 <table>
                     <tr>
-                        <td>X</td>
+                        <td>Rotate X</td>
                         <td><input type="range" min="0" max="100" onChange="g_cameraRotX = this.value/100;" onInput="g_cameraRotX = this.value/100;" value="0"/></td>
                     </tr>
                     <tr>
-                        <td>Y</td>
+                        <td>Rotate Y</td>
                         <td><input type="range" min="0" max="100" onChange="g_cameraRotY = this.value/100;" onInput="g_cameraRotY = this.value/100;" value="0"/></td>
+                    </tr>                                    
+                </table>
+            </td>
+            <td>
+                <table>
+                    <tr>
+                        <td>Translate X</td>
+                        <td><input type="range" min="-100" max="100" onChange="g_cameraTransX = this.value/-10;" onInput="g_cameraTransX = this.value/-10;" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td>Translate Y</td>
+                        <td><input type="range" min="-100" max="100" onChange="g_cameraTransY = this.value/-10;" onInput="g_cameraTransY = this.value/-10;" value="0"/></td>
                     </tr>
                     <tr>
                         <td>Zoom</td>
                         <td><input type="range" min="0" max="100" onChange="g_cameraZoom = this.value/100;" onInput="g_cameraZoom = this.value/100;" value="25"/></td>
-                    </tr>                                       
+                    </tr>   
                 </table>
             </td>
         </tr>
