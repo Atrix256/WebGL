@@ -71,6 +71,12 @@
         return ret;
     }
 
+    function pad (num, size) {
+        var s = num+"";
+        while (s.length < size) s = " " + s;
+        return s;
+    }
+
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript)
@@ -459,32 +465,76 @@
             ];
         }
 
-        // put the control point data on the page
-        var controlPointData = {};
+        // {"R":["0.50","0.00","0.75"],"G":["0.00","1.00","0.25"],"B":["0.20","0.00","1.00"],"A":["0.75","0.00","0.29"]}
 
-        controlPointData.R = new Array;
+        // put the control point data on the page
+        var controlPointData = "{\n";
+
+        controlPointData += "  \"R\":\n  [\n    ";
         for (i = 0; i < GetNumUIControlPoints(); ++i)
-            controlPointData.R.push((document.getElementById("R"+i.toString()).value / 100).toFixed(2));
+        {
+            controlPointData += pad((document.getElementById("R"+i.toString()).value / 100).toFixed(2), 5);
+
+            if (i < GetNumUIControlPoints()-1)
+                controlPointData += ",\n    ";
+            else
+                controlPointData += "\n";
+        }
+        controlPointData += "  ]";
 
         if (g_settings.m_orderBoost < 3)
         {
-            controlPointData.G = new Array;
+            controlPointData += ",\n  \"G\":\n  [\n    ";
             for (i = 0; i < GetNumUIControlPoints(); ++i)
-                controlPointData.G.push((document.getElementById("G"+i.toString()).value / 100).toFixed(2));            
+            {
+                controlPointData += pad((document.getElementById("G"+i.toString()).value / 100).toFixed(2), 5);
+
+                if (i < GetNumUIControlPoints()-1)
+                    controlPointData += ",\n    ";
+                else
+                    controlPointData += "\n";
+            }
+            controlPointData += "  ]";
+        }
+        else
+        {
+            controlPointData += "\n";
         }
 
         if (g_settings.m_orderBoost < 1)
         {
-            controlPointData.B = new Array;
-            controlPointData.A = new Array;
+            controlPointData += ",\n  \"B\":\n  [\n    ";
             for (i = 0; i < GetNumUIControlPoints(); ++i)
             {
-                controlPointData.B.push((document.getElementById("B"+i.toString()).value / 100).toFixed(2));            
-                controlPointData.A.push((document.getElementById("A"+i.toString()).value / 100).toFixed(2));            
-            }
-        }
+                controlPointData += pad((document.getElementById("B"+i.toString()).value / 100).toFixed(2), 5);
 
-        document.getElementById("CurveData").innerText = JSON.stringify(controlPointData);
+                if (i < GetNumUIControlPoints()-1)
+                    controlPointData += ",\n    ";
+                else
+                    controlPointData += "\n";
+            }
+            controlPointData += "  ]";
+
+
+            controlPointData += ",\n  \"A\":\n  [\n    ";
+            for (i = 0; i < GetNumUIControlPoints(); ++i)
+            {
+                controlPointData += pad((document.getElementById("A"+i.toString()).value / 100).toFixed(2), 5);
+
+                if (i < GetNumUIControlPoints()-1)
+                    controlPointData += ",\n    ";
+                else
+                    controlPointData += "\n";
+            }
+            controlPointData += "  ]\n";
+        }
+        else
+        {
+            controlPointData += "\n";
+        }
+        
+        controlPointData += "}";
+        document.getElementById("CurveData").innerText = controlPointData;
 
         // make our texture data
         var textureData = new Array;
@@ -508,7 +558,7 @@
                 }
 
                 for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
-                    textureData = textureData.concat([1,1,1,1]);
+                    textureData = textureData.concat([255,255,255,255]);
             }
         }
         else if (g_settings.m_orderBoost == 1)
@@ -530,7 +580,7 @@
                 }
 
                 for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
-                    textureData = textureData.concat([1,1,1,1]);
+                    textureData = textureData.concat([255,255,255,255]);
             }
         }
         else if (g_settings.m_orderBoost == 3)
@@ -552,7 +602,7 @@
                 }
 
                 for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
-                    textureData = textureData.concat([1,1,1,1]);
+                    textureData = textureData.concat([255,255,255,255]);
             }
         }
 
@@ -560,7 +610,7 @@
         // we have to round up to the next even numbered texture size, which can cause this needing to happen.
         for (i = g_settings.m_desiredTextureSizeY; i < g_settings.m_actualTextureSizeY; ++i)
             for (j = 0; j < g_settings.m_actualTextureSizeX; ++j)
-                textureData = textureData.concat([1,1,1,1]);
+                textureData = textureData.concat([255,255,255,255]);
 
         // create the texture
         bezierTexture = createTexture(
@@ -568,11 +618,20 @@
             g_settings.m_actualTextureSizeX, g_settings.m_actualTextureSizeY
         );
 
-
         // put the texture data on the page
-        for (i = 0; i < textureData.length; ++i)
-            textureData[i] = Math.round(textureData[i]);
-        document.getElementById("TextureData").innerText = JSON.stringify(textureData);
+        var pixelData = "[";
+        for (i = 0; i < textureData.length; ++i) {
+            if (i % (4*g_settings.m_actualTextureSizeX) == 0)
+                pixelData += "\n";
+            else if (i % 4 == 0)
+                pixelData += "     ";
+            pixelData += pad(Math.round(textureData[i]).toString(),4);
+
+            if (i < textureData.length - 1)
+                pixelData+= ",";
+        }
+        pixelData += "\n]";
+        document.getElementById("TextureData").innerText = pixelData;
     }
 
     var screenQuadBuffer;
