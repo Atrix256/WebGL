@@ -93,12 +93,31 @@
 
     uniform sampler2D uSampler;
     uniform vec2 uMaxTextureCoord;
+    uniform bool uBilinearSampling;
 
     varying vec2 vTextureCoord;
     varying vec3 vNormal;   
 
     vec4 SamplePixel (vec2 pixel) {
-    	return texture2D(uSampler, vec2(pixel / uMaxTextureCoord));
+
+        // do a single sample if we are doing bilinear sampling
+        if (uBilinearSampling)
+    	   return texture2D(uSampler, vec2(pixel / uMaxTextureCoord));
+
+        // else do 3 samples to get the control points and calculate a quadratic bezier curve
+        float t1 = fract((pixel.x-0.25)*2.0);
+        float s1 = (1.0-t1);
+        float t2 = t1 * t1;
+        float s2 = s1 * s1;
+
+        vec2 pixelA = vec2(floor(pixel.x)+0.25, floor(pixel.y)+0.25);
+        vec2 pixelB = pixelA + vec2(0.5,0.0);
+        vec2 pixelC = pixelB + vec2(0.0,0.5);
+        vec4 A = texture2D(uSampler, vec2(pixelA/uMaxTextureCoord));
+        vec4 B = texture2D(uSampler, vec2(pixelB/uMaxTextureCoord));
+        vec4 C = texture2D(uSampler, vec2(pixelC/uMaxTextureCoord));
+
+        return A*s2 + 2.0*B*s1*t1 + C*t2;
     }
     /*
 
@@ -112,6 +131,11 @@
     */
 
     vec3 DrawLandScape () {
+
+        // TODO: pass in base pixel and time. have SamplePixel calculate the appropriate values to sample.
+        // less work for linear case, same work for bilinear case!
+        // will that work for curves end to end? need to consider that!
+        // maybe wait til that is working and see
 
         // sample the landscape curves
         float time = vTextureCoord.x;
@@ -211,6 +235,7 @@
 
 	        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
 	        FSshaderProgram.maxTextureCoordUniform = gl.getUniformLocation(FSshaderProgram, "uMaxTextureCoord");
+            FSshaderProgram.bilinearSamplingUniform = gl.getUniformLocation(FSshaderProgram, "uBilinearSampling");
 
 	        FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
 	        FSshaderProgram.mvMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uMVMatrix");
@@ -460,6 +485,7 @@
         gl.bindTexture(gl.TEXTURE_2D, bezierTexture);
         gl.uniform1i(FSshaderProgram.samplerUniform, 0);
 		gl.uniform2f(FSshaderProgram.maxTextureCoordUniform, g_textureSizeX-1, g_textureSizeY-1);
+        gl.uniform1i(FSshaderProgram.bilinearSamplingUniform, document.getElementById("SamplingMode").value == "bilinear");
         setMatrixUniforms();
         gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
     }
