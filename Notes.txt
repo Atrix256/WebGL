@@ -1,3 +1,5 @@
+? is there such thing as higher quality bilinear sampling in newer hardware?
+
 * have Demo.html have control points as JSON at bottom (below shader!)
 
 Next:
