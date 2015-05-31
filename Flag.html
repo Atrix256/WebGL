@@ -5,8 +5,7 @@
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
 
     TODO:
-    	* make a diagram of where the different items are on the texture!
-
+    	* make a diagram of where the different items are on the texture
 		* make the art, instead of the curves that are there!
         * remove unneeded code like pascals triangle etc
         * remove the UI, we don't need it! (make keep resolution, maybe add wireframe render, maybe add flag subdivision count?)
@@ -30,6 +29,12 @@
         * use mvMatrix instead of pMatrix, for moving around object? or for lighting? dunno look into it.
          * probably not
         * see if texture can be specified in a way such that GL knows it won't ever change?
+        * description including size of texture used
+        * maybe show shader source on page? and texture data?
+        * make shader code branchless
+
+        ? maybe have an option to do only solid colors and no specular, since those aren't encoded in the image?
+         * or explain that this is hard coded in the shader / not part of the encoded data.
 
     TODO: flag.png description
         * [1] 4 layers of background described by a single texture of multiple quadratic curves over time.
@@ -90,7 +95,7 @@
     varying vec2 vTextureCoord;
     varying vec3 vNormal;   
 
-    vec4 SamplePixel (vec2 pixel, float t) {
+    vec4 SamplePixel_Quadratic (vec2 pixel, float t) {
 
         // Bilinear sampling:
         // do a single texture read to get the quadratic bezier curve value at time t
@@ -115,21 +120,49 @@
 
         return A*s2 + 2.0*B*s*t + C*t2;
     }
+
+    vec4 SamplePixel_Linear (vec2 pixel, float t) {
+
+        // Bilinear sampling:
+        // do a single texture read to get the linear bezier curve value at time t
+        if (uBilinearSampling)
+        {
+            pixel += vec2(0.25 + t / 2.0, 0.25);
+            return texture2D(uSampler, 2.0 * pixel / uTextureResolution);
+        }
+
+        // Nearest sampling:
+        // do 2 texture reads to get the control points to calculate the linear bezier curve value at time t
+        float s = (1.0-t);
+
+        vec2 pixelA = vec2(pixel + vec2(0.25, 0.25));
+        vec2 pixelB = pixelA + vec2(0.5,0.0);
+
+        vec4 A = texture2D(uSampler, vec2(2.0*pixelA/uTextureResolution));
+        vec4 B = texture2D(uSampler, vec2(2.0*pixelB/uTextureResolution));
+
+        return A*s + B*t;
+    }
+
     /*
 
 	Texture Layout:
 	  A A A A A A A A
 	  A A A A A A A A
+      B B B B ? ? ? ?
+      ? ? ? ? ? ? ? ?
 
 
 	A = Landscape: 8x2, 4 qudratic bezier curves end to end
+    B = Castle: 4x1, 8 linear bezier curves end to end
+    ? = unused
 
     */
 
     vec3 DrawLandScape () {
         // sample the landscape curves
         float time = vTextureCoord.x * 4.0;
-		vec4 curveValues = SamplePixel(vec2(floor(time), 0.0), fract(time));
+		vec4 curveValues = SamplePixel_Quadratic(vec2(floor(time), 0.0), fract(time));
 
         // calculate and return color
         vec3 outColor;
@@ -147,13 +180,68 @@
         return outColor;
     }
 
+    vec3 DrawCastle (vec3 inColor) {
+        vec2 adjustedTextureCoord = vec2((vTextureCoord.x - (2.2/4.0)) * 3.0, vTextureCoord.y * 2.0 - 0.55);
+        if (adjustedTextureCoord.x < 0.0 || adjustedTextureCoord.x > 1.0 ||
+            adjustedTextureCoord.y < 0.0 || adjustedTextureCoord.y > 1.0)
+            return inColor;
+
+        // TODO: i think the 2.0 * pixel / resolution is wrong. not sure what is right though!
+        // probably need to multiply by 2 before sending numbers to function.
+        return texture2D(uSampler, (0.25,2.25) / uTextureResolution).xyz;
+
+        float time = fract(adjustedTextureCoord.x * 8.0);
+        float section = floor(adjustedTextureCoord.x * 8.0);
+        float pixelX = floor(section / 4.0);
+
+        vec4 curveValues = SamplePixel_Linear(vec2(pixelX, 2.0), time);
+
+        // texture2D(uSampler, vec2(2.0*pixelA/uTextureResolution));
+        //float sampleX = (time / 2.0) * 2.0;
+        //sampleX = 0.25 + sampleX / 2.0;
+        //float sampleY = 2.25;
+        
+        //sampleX = 0.25;
+
+        //sampleX /= 8.0;
+        //sampleY /= 4.0;
+        //vec4 curveValues = texture2D(uSampler, vec2(sampleX, sampleY));
+
+        //vec4 curveValues = SamplePixel_Linear(vec2(floor(time) / 4.0, 2.0), fract(time));
+
+        //section = mod(section,4);
+        if (section < 1.0)
+        {
+            if (adjustedTextureCoord.y < curveValues.x)
+                return vec3(0.8,0.4,0.4);
+        }
+        else if (section < 2.0)
+        {
+            if (adjustedTextureCoord.y < curveValues.y)
+                return vec3(0.4,0.8,0.4);
+        }
+        else if (section < 3.0)
+        {
+            if (adjustedTextureCoord.y < curveValues.z)
+                return vec3(0.4,0.4,0.8);
+        }
+        else
+        {
+            if (adjustedTextureCoord.y < curveValues.w)
+                return vec3(0.4,0.4,0.4);
+        }
+
+        return inColor;
+    }
+
     void main(void) {
         // start off by drawing the landscape
         vec3 outColor = DrawLandScape();
+        outColor = DrawCastle(outColor);
 
         // apply lighting and return the final color
         float directionalLightWeighting = min(max(dot(normalize(vNormal), normalize(vec3(0.4,0.4,-1))), 0.0),1.0);
-        vec3 lightWeighting = vec3(0.2,0.2,0.2) + vec3(0.8,0.8,0.8) * directionalLightWeighting;
+        vec3 lightWeighting = vec3(0.2 +0.8 * directionalLightWeighting);
         gl_FragColor = vec4(clamp(outColor*lightWeighting,0.0,1.0), 1.0);
     }
 
@@ -252,10 +340,12 @@
 
     var g_textureData = [
       41,  87, 145, 127,       46,  87, 140, 217,       43, 117, 145, 140,       41, 135, 145, 135,       33,  87, 150, 153,       43,  66, 143, 235,       59, 107, 150, 148,       69, 150, 150, 130,
-      46,  87, 140, 217,       43, 117, 145, 140,       41, 135, 145, 135,       33,  87, 150, 153,       43,  66, 143, 235,       59, 107, 150, 148,       69, 150, 150, 130,       66,  92, 150, 135
+      46,  87, 140, 217,       43, 117, 145, 140,       41, 135, 145, 135,       33,  87, 150, 153,       43,  66, 143, 235,       59, 107, 150, 148,       69, 150, 150, 130,       66,  92, 150, 135,
+     255, 255, 255, 255,      255, 255, 255, 255,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,
+       0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,
     ]
     var g_textureSizeX = 8;
-    var g_textureSizeY = 2;
+    var g_textureSizeY = 4;
 
     var screenQuadBuffer;
     var screenQuadNormalBuffer;
