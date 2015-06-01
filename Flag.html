@@ -109,18 +109,14 @@
             adjustedTextureCoord.y < 0.0 || adjustedTextureCoord.y > 1.0)
             return inColor;
 
-        if (adjustedTextureCoord.x > 0.5)
-            adjustedTextureCoord.x = 1.0 - adjustedTextureCoord.x;
+        adjustedTextureCoord.x *= 2.0;
+        if (adjustedTextureCoord.x > 1.0)
+            adjustedTextureCoord.x = 2.0 - adjustedTextureCoord.x;
 
-        float time = fract(adjustedTextureCoord.x * 8.0);
-        float section = floor(adjustedTextureCoord.x * 8.0);
-        float pixelX = floor(section / 4.0) + time;
+        float time = fract(adjustedTextureCoord.x * 4.0);
+        vec4 curveValues = SamplePixel(vec2(time, 2.0));
 
-        vec4 curveValues = SamplePixel(vec2(pixelX, 2.0));
-
-        // TODO: i dont think we need all the logic above, since we are only sampling between (0,2) and (1,2).    
-
-        section = mod(section,4.0);
+        float section = floor(adjustedTextureCoord.x * 4.0);
         if (section < 1.0)
         {
             if (adjustedTextureCoord.y > curveValues.x)
