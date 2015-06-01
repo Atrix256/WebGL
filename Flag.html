@@ -104,18 +104,23 @@
     }
 
     vec3 DrawCastle (vec3 inColor) {
+
+        // scale the castle to a specific rectangle
         vec2 adjustedTextureCoord = vec2((vTextureCoord.x - (2.2/4.0)) * 3.0, vTextureCoord.y * 2.0 - 0.55);
         if (adjustedTextureCoord.x < 0.0 || adjustedTextureCoord.x > 1.0 ||
             adjustedTextureCoord.y < 0.0 || adjustedTextureCoord.y > 1.0)
             return inColor;
 
+        // mnirror the castle on the x axis
         adjustedTextureCoord.x *= 2.0;
         if (adjustedTextureCoord.x > 1.0)
             adjustedTextureCoord.x = 2.0 - adjustedTextureCoord.x;
 
+        // sample the castle curves
         float time = fract(adjustedTextureCoord.x * 4.0);
         vec4 curveValues = SamplePixel(vec2(time, 2.0));
 
+        // use the appropriate curve values to make sure a pixel is part of the castle
         float section = floor(adjustedTextureCoord.x * 4.0);
         if (section < 1.0)
         {
@@ -138,6 +143,7 @@
                 return inColor;
         }
 
+        // sample the castle color curve and return that as greyscale
         float t1 = adjustedTextureCoord.y;
         float s1 = (1.0 - t1);
         float t2 = t1 * t1;
@@ -156,18 +162,20 @@
     }
 
     vec3 DrawCastleDoors (vec3 inColor) {
+
+        // scale the doors to a specific rectangle
         vec2 adjustedTextureCoord = vec2((vTextureCoord.x - (2.57/4.0)) * 7.0, vTextureCoord.y * 4.0 - 1.10);
         if (adjustedTextureCoord.x < 0.0 || adjustedTextureCoord.x > 1.0 ||
             adjustedTextureCoord.y < 0.0 || adjustedTextureCoord.y > 1.0)
             return inColor;
 
+        // sample the curve
         float t1 = adjustedTextureCoord.x;
         float s1 = (1.0 - t1);
         float t2 = t1 * t1;
         float s2 = s1 * s1;
         float t3 = t2 * t1;
         float s3 = s2 * s1;
-
         vec4 curveValues = SamplePixel(vec2(2.0 + t1, 2.0));
 
         curveValues.x = 
@@ -176,6 +184,7 @@
            curveValues.z * 3.0 * t2 * s1 +
            curveValues.w * 1.0 * t3;       
 
+        // make it black if this pixel is part of the door
         if (adjustedTextureCoord.y < curveValues.x)
             return vec3(0.0);
         else
@@ -183,6 +192,8 @@
     }
 
     vec3 DrawSun (vec3 inColor) {
+
+        // scale the sun to a specific circle
         vec2 relativePos = vTextureCoord - vec2(0.3,0.75);
         relativePos.y /= 2.0;
         relativePos /= (1.0/12.0);
