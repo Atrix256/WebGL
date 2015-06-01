@@ -5,56 +5,19 @@
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
 
     TODO:
-    	* make a diagram of where the different items are on the texture
-		* make the art, instead of the curves that are there!
+        * AA options: none, quincunx (render 2x), 4 rook (render 4x)
+         * should you reference quicunx or 4 rook anti aliasing?
         * remove unneeded code like pascals triangle etc
         * remove the UI, we don't need it! (make keep resolution, maybe add wireframe render, maybe add flag subdivision count?)
          * we might want to keep some UI options (like sampling mode!), since it could be interesting and useful to see. also resolution is important
-        * make a waving flag with vector art on it, that you can zoom in and out of and orbit around.
-          * maybe a polar encoded sun, over some green hills (close hill lighter, far hill darker) and a blue sky background? possibly ocean in BG too
-          * animate the sun?
-        * possibly make some areas shinier than others?
-         * specular
-        * any functionality needed to share w/ the demo.html -> put into a shared javascript file!
-         * like shader generation and initialization?
-        * AA options: none, quincunx (render 2x), 4 rook (render 4x)
-         * should you reference quicunx or 4 rook anti aliasing?
         * with the curves constant (for those that are... hopefully all of them!), can make the usage more appropriate for "write once, read never, use many"
-		* probably don't need push / pop matrix stuff
-		* fix weird viewing angle.  Too large fov maybe?!
 		* update text and tile on page etc		
 		* look through code for todos
-		* make a flag pole?
-        ? is light normal stuff correct? could try drawing the flag normals and see
-        * use mvMatrix instead of pMatrix, for moving around object? or for lighting? dunno look into it.
-         * probably not
         * see if texture can be specified in a way such that GL knows it won't ever change?
-        * description including size of texture used
+        * description including size of texture used, and what is stored where in the texture
         * maybe show shader source on page? and texture data?
         * make shader code branchless
-
-        ? maybe have an option to do only solid colors and no specular, since those aren't encoded in the image?
-         * or explain that this is hard coded in the shader / not part of the encoded data.
-        * add support for quincunx and 4 rook SSAA
-
-    TODO: flag.png description
-        * [1] 4 layers of background described by a single texture of multiple quadratic curves over time.
-         * light green, dark gree, blue, then gradient colored sky above.
-         * make the water shiny (higher specular)
-         * light green should be hilly, dark green should be more mountainy
-         * we have one more unused region! could add another hill, or could maybe add an island in the background
-          * yeah, island! poking up from behind the blue, with the blue dipping down a bit at that point to make it look like it's resting in the water.
-        * [2] polar encoded sun.
-         * inside = shiny yellow (higher specular), outside = clip
-         * animated geometry.
-        * [3] castle is potentially linear curves.
-         * under curve = dark grey, above curve = clip.
-         * see then about how to do black doorway.
-          * could make have multiple "dark grey" curves, and have a black one in the middle.
-          * this would let you put in windows too!
-        * each number in brackets represents one texture and one draw pass?
-
-   
+        * shader code and image data on page, like in curve demo?
 
 -->
 <html>
@@ -73,12 +36,11 @@
     varying vec2 vTextureCoord;
     varying vec3 vNormal;
 
-    uniform mat4 uMVMatrix;
     uniform mat4 uPMatrix;    
     uniform mat3 uNMatrix;
     
     void main(void) {
-        gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0);
+        gl_Position = uPMatrix * vec4(aVertexPosition, 1.0);
         vTextureCoord = aTextureCoord;
 
         // calculate normal
@@ -119,51 +81,29 @@
         return mix(mix(A,B,fracu), mix(C,D,fracu), fracv);
     }
 
-    /*
-    // TODO: put this by texture dayta
-
-	Texture Layout:  8x4
-	  A A A A A A A A
-	  A A A A A A A A
-      B B C C D D F F
-      E E G G D D F F
-
-	A = Landscape: 8x2 - 4 qudratic bezier curves end to end
-    B = Castle: 2x1 - 4 linear bezier curves end to end (r1->r2, g1->g2, b1->b2, a1->a2), mirrored on x axis.
-    C = Castle doors: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  mirrored on x axis.
-    D = Sun frame 1-4: 2x2 - 4 quadratic curves (1 in each color channel).  Repeated 8 times, rendered polar.  Each curve (color channel) is a keyframe in the animation
-    E = Sun Green Gradient: 2x1 - 1 4th order bezier curve encoded in RGBA (combine 4 linear curves to one 4th order).  controls green color over distance from edge of sun.
-    F = Sky + Water: 2x2 - 1 Quadratic Bezier curve per color channel.  RGB = sky color gradient.  A = water specular amount.
-    G = Castle Color: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  Controls greyscale color of castle over height.
-    ? = unused
-
-    */
-
-    vec4 DrawLandScape () {
+    vec3 DrawLandScape () {
         // sample the landscape curves
         float time = vTextureCoord.x * 4.0;
         vec2 pixel = vec2(floor(time)*2.0, 0.0) + vec2(fract(time));
         vec4 curveValues = SamplePixel(pixel);
 
-        // todo: make water sample the texture to get specular!
-
         // calculate and return color
-        vec4 outColor;
+        vec3 outColor;
         if (vTextureCoord.y < curveValues.x)
-            outColor = vec4(0.0,1.0,0.0,0.0);
+            outColor = vec3(0.0,1.0,0.0);
         else if (vTextureCoord.y < curveValues.y)
-            outColor = vec4(0.0,0.5,0.0,0.0);
+            outColor = vec3(0.0,0.5,0.0);
         else if (vTextureCoord.y < curveValues.z)
-            outColor = vec4(0.0,0.0,0.4,0.0);
+            outColor = vec3(0.0,0.0,0.4);
         else if (vTextureCoord.y < curveValues.w)
-            outColor = vec4(0.0,0.25,0.0,0.0);
+            outColor = vec3(0.0,0.25,0.0);
         else
-            outColor = vec4(SamplePixel(vec2(6.0 + vTextureCoord.y, 2.0 + vTextureCoord.y)).rgb,0.0);
+            outColor = SamplePixel(vec2(6.0 + vTextureCoord.y, 2.0 + vTextureCoord.y)).rgb;
 
         return outColor;
     }
 
-    vec4 DrawCastle (vec4 inColor) {
+    vec3 DrawCastle (vec3 inColor) {
         vec2 adjustedTextureCoord = vec2((vTextureCoord.x - (2.2/4.0)) * 3.0, vTextureCoord.y * 2.0 - 0.55);
         if (adjustedTextureCoord.x < 0.0 || adjustedTextureCoord.x > 1.0 ||
             adjustedTextureCoord.y < 0.0 || adjustedTextureCoord.y > 1.0)
@@ -216,10 +156,10 @@
            curveValues.z * 3.0 * t2 * s1 +
            curveValues.w * 1.0 * t3;
 
-        return vec4(curveValues.x,curveValues.x,curveValues.x,0.0);
+        return vec3(curveValues.x);
     }
 
-    vec4 DrawCastleDoors (vec4 inColor) {
+    vec3 DrawCastleDoors (vec3 inColor) {
         vec2 adjustedTextureCoord = vec2((vTextureCoord.x - (2.57/4.0)) * 7.0, vTextureCoord.y * 4.0 - 1.10);
         if (adjustedTextureCoord.x < 0.0 || adjustedTextureCoord.x > 1.0 ||
             adjustedTextureCoord.y < 0.0 || adjustedTextureCoord.y > 1.0)
@@ -241,12 +181,12 @@
            curveValues.w * 1.0 * t3;       
 
         if (adjustedTextureCoord.y < curveValues.x)
-            return vec4(0.0);
+            return vec3(0.0);
         else
             return inColor;
     }
 
-    vec4 DrawSun (vec4 inColor) {
+    vec3 DrawSun (vec3 inColor) {
         vec2 relativePos = vTextureCoord - vec2(0.3,0.75);
         relativePos.y /= 2.0;
         relativePos /= (1.0/12.0);
@@ -287,20 +227,18 @@
                curveValues.z * 3.0 * t2 * s1 +
                curveValues.w * 1.0 * t3;    
 
-            return vec4(1.0,curveValues.x,0.0,1.0);
+            return vec3(1.0,curveValues.x,0.0);
         }
         else
             return inColor;
     }
 
     void main(void) {
-        // start off by drawing the landscape
-        vec4 outColor = DrawLandScape();
+        // draw back to front
+        vec3 outColor = DrawLandScape();
         outColor = DrawCastle(outColor);
         outColor = DrawCastleDoors(outColor);
         outColor = DrawSun(outColor);
-
-        // TODO: use outColor.w as specular power!
 
         // apply lighting and return the final color
         float directionalLightWeighting = min(max(dot(normalize(vNormal), normalize(vec3(0.4,0.4,-1))), 0.0),1.0);
@@ -312,6 +250,21 @@
 
 <script type="text/javascript">
 
+    /*
+    Texture Layout:  8x4
+      A A A A A A A A
+      A A A A A A A A
+      B B C C D D F F
+      E E G G D D F F
+
+    A = Landscape: 8x2 - 4 qudratic bezier curves end to end
+    B = Castle: 2x1 - 4 linear bezier curves end to end (r1->r2, g1->g2, b1->b2, a1->a2), mirrored on x axis.
+    C = Castle doors: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  mirrored on x axis.
+    D = Sun frame 1-4: 2x2 - 4 quadratic curves (1 in each color channel).  Repeated 8 times, rendered polar.  Each curve (color channel) is a keyframe in the animation
+    E = Sun Green Gradient: 2x1 - 1 4th order bezier curve encoded in RGBA (combine 4 linear curves to one 4th order).  controls green color over distance from edge of sun.
+    F = Sky Gradient: 2x2 - 1 Quadratic Bezier curve per color channel.  RGB = sky color gradient.  A = unused.
+    G = Castle Color: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  Controls greyscale color of castle over height.
+    */
 
     var g_textureData = [
       41,  87, 145, 127,       46,  87, 140, 217,       43, 117, 145, 140,       41, 135, 145, 135,       33,  87, 150, 153,       43,  66, 143, 235,       59, 107, 150, 148,       69, 150, 150, 130,
@@ -360,39 +313,35 @@
     var FSshaderProgram;
 
     function initShaders() {
-        // make the full screen shader program
-        {
-	        var fragmentShader = getShader(gl, "flag-fs");
-	        var vertexShader = getShader(gl, "shader-vs");
+        var fragmentShader = getShader(gl, "flag-fs");
+        var vertexShader = getShader(gl, "shader-vs");
 
-	        FSshaderProgram = gl.createProgram();
-	        gl.attachShader(FSshaderProgram, vertexShader);
-	        gl.attachShader(FSshaderProgram, fragmentShader);
-	        gl.linkProgram(FSshaderProgram);
+        FSshaderProgram = gl.createProgram();
+        gl.attachShader(FSshaderProgram, vertexShader);
+        gl.attachShader(FSshaderProgram, fragmentShader);
+        gl.linkProgram(FSshaderProgram);
 
-	        if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
-	            alert("Could not initialise FS shader");
+        if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
+            alert("Could not initialise FS shader");
 
-	        gl.useProgram(FSshaderProgram);
+        gl.useProgram(FSshaderProgram);
 
-	        FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
-	        gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
+        FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
 
-        	FSshaderProgram.vertexNormalAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexNormal");
-        	gl.enableVertexAttribArray(FSshaderProgram.vertexNormalAttribute);
+        FSshaderProgram.vertexNormalAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexNormal");
+        gl.enableVertexAttribArray(FSshaderProgram.vertexNormalAttribute);
 
-	        FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
-	        gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
+        FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
+        gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
 
-	        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
-	        FSshaderProgram.textureResolutionUniform = gl.getUniformLocation(FSshaderProgram, "uTextureResolution");
-            FSshaderProgram.bilinearSamplingUniform = gl.getUniformLocation(FSshaderProgram, "uBilinearSampling");
-            FSshaderProgram.timeSecondsUniform = gl.getUniformLocation(FSshaderProgram, "uTimeSeconds");
+        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
+        FSshaderProgram.textureResolutionUniform = gl.getUniformLocation(FSshaderProgram, "uTextureResolution");
+        FSshaderProgram.bilinearSamplingUniform = gl.getUniformLocation(FSshaderProgram, "uBilinearSampling");
+        FSshaderProgram.timeSecondsUniform = gl.getUniformLocation(FSshaderProgram, "uTimeSeconds");
 
-	        FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
-	        FSshaderProgram.mvMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uMVMatrix");
-	        FSshaderProgram.nMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uNMatrix");
-	    }
+        FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
+        FSshaderProgram.nMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uNMatrix");
     }
 
     function createTexture(byteArrayWithRGBAData, width, height) {
@@ -411,26 +360,10 @@
     var screenQuadNormalBuffer;
     var screenQuadTextureCoordinateBuffer;
 
-    var mvMatrix = mat4.create();
-    var mvMatrixStack = [];
     var pMatrix = mat4.create();    
-
-    function mvPushMatrix() {
-        var copy = mat4.create();
-        mat4.set(mvMatrix, copy);
-        mvMatrixStack.push(copy);
-    }
-
-    function mvPopMatrix() {
-        if (mvMatrixStack.length == 0) {
-            throw "Invalid popMatrix!";
-        }
-        mvMatrix = mvMatrixStack.pop();
-    }   
 
     function setMatrixUniforms() {
         gl.uniformMatrix4fv(FSshaderProgram.pMatrixUniform, false, pMatrix);
-        gl.uniformMatrix4fv(FSshaderProgram.mvMatrixUniform, false, mvMatrix);
 
         var normalMatrix = mat3.create();
         mat4.toInverseMat3(pMatrix, normalMatrix);
@@ -573,7 +506,6 @@
   	var g_timeMs = 0;
   	var g_lastTimeMs = 0;
     function animate() {
-
         if (document.getElementById("Animate").checked)
         {
 	        var timeMs = new Date().getTime();
@@ -604,10 +536,7 @@
         mat4.rotate(pMatrix, g_cameraRotX * Math.PI * 2, [0,1,0]);
         mat4.rotate(pMatrix, g_cameraRotY * Math.PI * 2, [1,0,0]);
 
-        // model view matrix!
-		mat4.identity(mvMatrix);
-
-        // draw the full screen quad
+        // draw the flag
         gl.useProgram(FSshaderProgram);
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
         gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
@@ -649,9 +578,6 @@
         gl.enable(gl.DEPTH_TEST);
         gl.depthFunc(gl.LESS);
 
-        // TODO: do we want backface culling?
-        //gl.enable(gl.CULL_FACE) 
-
         initShaders();
         initBuffers();
 
@@ -678,7 +604,6 @@
 
     function OnChangeSettings()
     {
-    	// TODO: this! for sampling mode changes
     }
 </script>
 </head>
