@@ -92,6 +92,7 @@
     uniform sampler2D uSampler;
     uniform vec2 uTextureResolution;
     uniform bool uBilinearSampling;
+    uniform float uTimeSeconds;
 
     varying vec2 vTextureCoord;
     varying vec3 vNormal;   
@@ -119,44 +120,50 @@
     }
 
     /*
+    // TODO: put this by texture dayta
 
-	Texture Layout:
+	Texture Layout:  8x4
 	  A A A A A A A A
 	  A A A A A A A A
-      B B C C ? ? ? ?
-      ? ? ? ? ? ? ? ?
+      B B C C D D F F
+      E E G G D D F F
 
-
-	A = Landscape: 8x2, 4 qudratic bezier curves end to end
-    B = Castle: 2x1, 4 linear bezier curves end to end, mirrored on x axis
-    C = Castle doors: 2x1, 1 4th order bezier curve encoded in RGBA (combines 4 linear to one 5th order).  mirrored on x axis.
+	A = Landscape: 8x2 - 4 qudratic bezier curves end to end
+    B = Castle: 2x1 - 4 linear bezier curves end to end (r1->r2, g1->g2, b1->b2, a1->a2), mirrored on x axis.
+    C = Castle doors: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  mirrored on x axis.
+    D = Sun frame 1-4: 2x2 - 4 quadratic curves (1 in each color channel).  Repeated 8 times, rendered polar.  Each curve (color channel) is a keyframe in the animation
+    E = Sun Green Gradient: 2x1 - 1 4th order bezier curve encoded in RGBA (combine 4 linear curves to one 4th order).  controls green color over distance from edge of sun.
+    F = Sky + Water: 2x2 - 1 Quadratic Bezier curve per color channel.  RGB = sky color gradient.  A = water specular amount.
+    G = Castle Color: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  Controls greyscale color of castle over height.
     ? = unused
 
     */
 
-    vec3 DrawLandScape () {
+    vec4 DrawLandScape () {
         // sample the landscape curves
         float time = vTextureCoord.x * 4.0;
         vec2 pixel = vec2(floor(time)*2.0, 0.0) + vec2(fract(time));
         vec4 curveValues = SamplePixel(pixel);
 
+        // todo: make water sample the texture to get specular!
+
         // calculate and return color
-        vec3 outColor;
+        vec4 outColor;
         if (vTextureCoord.y < curveValues.x)
-            outColor = vec3(0.0,1.0,0.0);
+            outColor = vec4(0.0,1.0,0.0,0.0);
         else if (vTextureCoord.y < curveValues.y)
-            outColor = vec3(0.0,0.5,0.0);
+            outColor = vec4(0.0,0.5,0.0,0.0);
         else if (vTextureCoord.y < curveValues.z)
-            outColor = vec3(0.0,0.0,0.4);
+            outColor = vec4(0.0,0.0,0.4,0.0);
         else if (vTextureCoord.y < curveValues.w)
-            outColor = vec3(0.0,0.25,0.0);
+            outColor = vec4(0.0,0.25,0.0,0.0);
         else
-            outColor = vec3(1.0,1.0 - vTextureCoord.y,0.0);
+            outColor = vec4(SamplePixel(vec2(6.0 + vTextureCoord.y, 2.0 + vTextureCoord.y)).rgb,0.0);
 
         return outColor;
     }
 
-    vec3 DrawCastle (vec3 inColor) {
+    vec4 DrawCastle (vec4 inColor) {
         vec2 adjustedTextureCoord = vec2((vTextureCoord.x - (2.2/4.0)) * 3.0, vTextureCoord.y * 2.0 - 0.55);
         if (adjustedTextureCoord.x < 0.0 || adjustedTextureCoord.x > 1.0 ||
             adjustedTextureCoord.y < 0.0 || adjustedTextureCoord.y > 1.0)
@@ -171,34 +178,48 @@
 
         vec4 curveValues = SamplePixel(vec2(pixelX, 2.0));
 
-        // TODO: i dont think we need all the logic above, since we are only sampling between (0,2) and (1,2).
+        // TODO: i dont think we need all the logic above, since we are only sampling between (0,2) and (1,2).    
 
         section = mod(section,4.0);
         if (section < 1.0)
         {
-            if (adjustedTextureCoord.y < curveValues.x)
-                return vec3(0.4,0.4,0.4);
+            if (adjustedTextureCoord.y > curveValues.x)
+                return inColor;
         }
         else if (section < 2.0)
         {
-            if (adjustedTextureCoord.y < curveValues.y)
-                return vec3(0.4,0.4,0.4);
+            if (adjustedTextureCoord.y > curveValues.y)
+                return inColor;
         }
         else if (section < 3.0)
         {
-            if (adjustedTextureCoord.y < curveValues.z)
-                return vec3(0.4,0.4,0.4);
+            if (adjustedTextureCoord.y > curveValues.z)
+                return inColor;
         }
         else
         {
-            if (adjustedTextureCoord.y < curveValues.w)
-                return vec3(0.4,0.4,0.4);
+            if (adjustedTextureCoord.y > curveValues.w)
+                return inColor;
         }
 
-        return inColor;
+        float t1 = adjustedTextureCoord.y;
+        float s1 = (1.0 - t1);
+        float t2 = t1 * t1;
+        float s2 = s1 * s1;
+        float t3 = t2 * t1;
+        float s3 = s2 * s1;
+        curveValues = SamplePixel(vec2(2.0 + t1, 3.0));
+
+        curveValues.x = 
+           curveValues.x * 1.0 * s3 +
+           curveValues.y * 3.0 * t1 * s2 +
+           curveValues.z * 3.0 * t2 * s1 +
+           curveValues.w * 1.0 * t3;
+
+        return vec4(curveValues.x,curveValues.x,curveValues.x,0.0);
     }
 
-    vec3 DrawCastleDoors (vec3 inColor) {
+    vec4 DrawCastleDoors (vec4 inColor) {
         vec2 adjustedTextureCoord = vec2((vTextureCoord.x - (2.57/4.0)) * 7.0, vTextureCoord.y * 4.0 - 1.10);
         if (adjustedTextureCoord.x < 0.0 || adjustedTextureCoord.x > 1.0 ||
             adjustedTextureCoord.y < 0.0 || adjustedTextureCoord.y > 1.0)
@@ -220,21 +241,71 @@
            curveValues.w * 1.0 * t3;       
 
         if (adjustedTextureCoord.y < curveValues.x)
-            return vec3(0.0);
+            return vec4(0.0);
+        else
+            return inColor;
+    }
+
+    vec4 DrawSun (vec4 inColor) {
+        vec2 relativePos = vTextureCoord - vec2(0.3,0.75);
+        relativePos.y /= 2.0;
+        relativePos /= (1.0/12.0);
+
+        float dist = length(relativePos);
+        if ( dist> 1.0)
+            return inColor;
+        float angle = (atan(relativePos.y, relativePos.x) + 3.14) / 6.28;
+        angle = fract(angle + fract(uTimeSeconds*0.2));
+
+        float time = fract(angle * 8.0);
+        vec4 curveValues = SamplePixel(vec2(4.0 + time, 2.0 + time));
+
+        float curveDist;
+        float animTime = fract(uTimeSeconds*0.125) * 4.0;
+        if (animTime < 1.0)
+            curveDist = mix(curveValues.x, curveValues.y, fract(animTime));
+        else if (animTime < 2.0)
+            curveDist = mix(curveValues.y, curveValues.z, fract(animTime));
+        else if (animTime < 3.0)
+            curveDist = mix(curveValues.z, curveValues.w, fract(animTime));
+        else
+            curveDist = mix(curveValues.w, curveValues.x, fract(animTime));
+
+        if (dist < curveDist)
+        {
+            float t1 = (curveDist - dist) / curveDist;
+            float s1 = (1.0 - t1);
+            float t2 = t1 * t1;
+            float s2 = s1 * s1;
+            float t3 = t2 * t1;
+            float s3 = s2 * s1;
+            curveValues = SamplePixel(vec2(t1, 3.0));
+
+            curveValues.x = 
+               curveValues.x * 1.0 * s3 +
+               curveValues.y * 3.0 * t1 * s2 +
+               curveValues.z * 3.0 * t2 * s1 +
+               curveValues.w * 1.0 * t3;    
+
+            return vec4(1.0,curveValues.x,0.0,1.0);
+        }
         else
             return inColor;
     }
 
     void main(void) {
         // start off by drawing the landscape
-        vec3 outColor = DrawLandScape();
+        vec4 outColor = DrawLandScape();
         outColor = DrawCastle(outColor);
         outColor = DrawCastleDoors(outColor);
+        outColor = DrawSun(outColor);
+
+        // TODO: use outColor.w as specular power!
 
         // apply lighting and return the final color
         float directionalLightWeighting = min(max(dot(normalize(vNormal), normalize(vec3(0.4,0.4,-1))), 0.0),1.0);
         vec3 lightWeighting = vec3(0.2 +0.8 * directionalLightWeighting);
-        gl_FragColor = vec4(clamp(outColor*lightWeighting,0.0,1.0), 1.0);
+        gl_FragColor = vec4(clamp(outColor.xyz*lightWeighting,0.0,1.0), 1.0);
     }
 
 </script>
@@ -245,8 +316,8 @@
     var g_textureData = [
       41,  87, 145, 127,       46,  87, 140, 217,       43, 117, 145, 140,       41, 135, 145, 135,       33,  87, 150, 153,       43,  66, 143, 235,       59, 107, 150, 148,       69, 150, 150, 130,
       46,  87, 140, 217,       43, 117, 145, 140,       41, 135, 145, 135,       33,  87, 150, 153,       43,  66, 143, 235,       59, 107, 150, 148,       69, 150, 150, 130,       66,  92, 150, 135,
-     200, 255, 200, 220,      255, 200, 220, 220,        0, 255, 255, 255,      255, 255, 255,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,
-       0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,        0,   0,   0,   0,
+     200, 255, 200, 220,      255, 200, 220, 220,        0, 255, 255, 255,      255, 255, 255,   0,      255, 128,   0, 255,        0, 128, 255, 255,      255, 255,   0,   0,      255, 255,   0,   0,
+     255, 255, 255,   0,      255, 255,   0, 128,      200,  75, 170,   0,       75, 170,   0, 127,        0, 128, 255, 255,      255, 128,   0, 255,      255, 255,   0,   0,      255,   0,   0,   0,
     ]
     var g_textureSizeX = 8;
     var g_textureSizeY = 4;
@@ -316,6 +387,7 @@
 	        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
 	        FSshaderProgram.textureResolutionUniform = gl.getUniformLocation(FSshaderProgram, "uTextureResolution");
             FSshaderProgram.bilinearSamplingUniform = gl.getUniformLocation(FSshaderProgram, "uBilinearSampling");
+            FSshaderProgram.timeSecondsUniform = gl.getUniformLocation(FSshaderProgram, "uTimeSeconds");
 
 	        FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
 	        FSshaderProgram.mvMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uMVMatrix");
@@ -548,6 +620,7 @@
         gl.uniform1i(FSshaderProgram.samplerUniform, 0);
 		gl.uniform2f(FSshaderProgram.textureResolutionUniform, g_textureSizeX, g_textureSizeY);
         gl.uniform1i(FSshaderProgram.bilinearSamplingUniform, document.getElementById("SamplingMode").value == "bilinear");
+        gl.uniform1f(FSshaderProgram.timeSecondsUniform, g_timeMs / 1000.0);
         setMatrixUniforms();
         gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
     }

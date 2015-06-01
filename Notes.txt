@@ -81,6 +81,10 @@ compare quality (and speed?) vs baking curve as 1x16?
 
  =====Paper Notes=====
 
+* floating point textures - do they have better bilinear / trilinear texture filtering?
+
+ * can mirror curves around axis for more efficiency.  Can also repeat it N times (especially for polar curves)
+
 * note that we could get smaller textures with cubic (trilinear) if we could choose whcih pixels in a 2d texture to sample.
 
 * yes, lerping between curve points is the same as lerping control points.
