@@ -1,10 +1,10 @@
+NEXT:
+ * animated cubic in 2x1 (lerp control point positions) and 2x2 (quadratic curve control point positions)
+ * could even use this to describe a surface (put this in paper if it turns out to be useful)
+
 ? is there such thing as higher quality bilinear sampling in newer hardware?
 
-* have Demo.html have control points as JSON at bottom (below shader!)
-
-Next:
- * vector graphics time! webgl first probably.
- * then C++ opengl version of these demos
+* C++ opengl version of these demos? do we need it? would help profile... but do we care? depends on if you are texture bound or not...
 
 * look into animating curves?
  * lerp results over time (actual time, not t!)
@@ -80,6 +80,13 @@ compare speed vs sending control points in a constant buffer.  also vs hard code
 compare quality (and speed?) vs baking curve as 1x16?
 
  =====Paper Notes=====
+
+ notes for paper:
+ * putting the control points in RGBA is a way to get a smoother curve with only a single texture read (1x1). can get 1 cubic, or two linear, or a quadratic curve, and a scalar value.
+ * a nice benefit is that you could extend this to 2x2 and do a single texture read to make the control points animate on a quadratic curve instead of linearly.
+ * could use a volume texture and animate them on a cubic curve instead.
+ * could also do more reads to make higher order curve, or higher order control point control.
+
 
 * floating point textures - do they have better bilinear / trilinear texture filtering?
 

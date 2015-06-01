@@ -7,22 +7,11 @@
     TODO:
         * AA options: none, quincunx (render 2x), 4 rook (render 4x)
          * should you reference quicunx or 4 rook anti aliasing?
-        * remove unneeded code like pascals triangle etc
-        * remove the UI, we don't need it! (make keep resolution, maybe add wireframe render, maybe add flag subdivision count?)
-         * we might want to keep some UI options (like sampling mode!), since it could be interesting and useful to see. also resolution is important
-        * with the curves constant (for those that are... hopefully all of them!), can make the usage more appropriate for "write once, read never, use many"
-		* update text and tile on page etc		
-		* look through code for todos
-        * see if texture can be specified in a way such that GL knows it won't ever change?
-        * description including size of texture used, and what is stored where in the texture
-        * maybe show shader source on page? and texture data?
-        * make shader code branchless
-        * shader code and image data on page, like in curve demo?
-
+        * make shader code branchless?
 -->
 <html>
 <head>
-<title>GPU Efficient Texture Based Bezier Curve Evaluation - Curves Features Demo</title>
+<title>GPU Efficient Texture Based Bezier Curve Evaluation - Applications To Vector Art</title>
 <meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
@@ -198,15 +187,18 @@
         relativePos.y /= 2.0;
         relativePos /= (1.0/12.0);
 
+        // don't write to pixels outside the circle
         float dist = length(relativePos);
         if ( dist> 1.0)
             return inColor;
+
+        // get the angle as a percentage so we can do a polar texture lookup
         float angle = (atan(relativePos.y, relativePos.x) + 3.14) / 6.28;
         angle = fract(angle + fract(uTimeSeconds*0.2));
-
         float time = fract(angle * 8.0);
         vec4 curveValues = SamplePixel(vec2(4.0 + time, 2.0 + time));
 
+        // handle animation between keyframes
         float curveDist;
         float animTime = fract(uTimeSeconds*0.125) * 4.0;
         if (animTime < 1.0)
@@ -218,6 +210,7 @@
         else
             curveDist = mix(curveValues.w, curveValues.x, fract(animTime));
 
+        // if the pixel is inside the curve, draw it, using the curve based gradient
         if (dist < curveDist)
         {
             float t1 = (curveDist - dist) / curveDist;
@@ -236,6 +229,7 @@
 
             return vec3(1.0,curveValues.x,0.0);
         }
+        // else the pixel is outside the curve, so return whatever color is already there
         else
             return inColor;
     }
@@ -247,7 +241,7 @@
         outColor = DrawCastleDoors(outColor);
         outColor = DrawSun(outColor);
 
-        // apply lighting and return the final color
+        // apply ambient and diffuse lighting and return the final color
         float directionalLightWeighting = min(max(dot(normalize(vNormal), normalize(vec3(0.4,0.4,-1))), 0.0),1.0);
         vec3 lightWeighting = vec3(0.2 +0.8 * directionalLightWeighting);
         gl_FragColor = vec4(clamp(outColor.xyz*lightWeighting,0.0,1.0), 1.0);
@@ -285,6 +279,12 @@
     var gl;
     var g_frameCounter = 0;
 
+    function pad (num, size) {
+        var s = num+"";
+        while (s.length < size) s = " " + s;
+        return s;
+    }
+
     function getShader(gl, id) {
         var shaderScript = document.getElementById(id);
         if (!shaderScript)
@@ -300,9 +300,15 @@
 
         var shader;
         if (shaderScript.type == "x-shader/x-fragment")
+        {
             shader = gl.createShader(gl.FRAGMENT_SHADER);
+            document.getElementById("FragmentShaderSource").innerText = str;
+        }
         else if (shaderScript.type == "x-shader/x-vertex")
+        {
             shader = gl.createShader(gl.VERTEX_SHADER);
+            document.getElementById("VertexShaderSource").innerText = str;
+        }
         else
             return null;
 
@@ -440,7 +446,6 @@
 
     var flagNumCells = 20;
     function initBuffers() {
-	    // TODO: review usage (gl.STATIC_DRAW)
         vertices = new Array;
         textureCoords = new Array;
         var delta = 1.0 / flagNumCells;
@@ -602,6 +607,21 @@
             g_textureSizeY
         );
 
+        // put the texture data on the page
+        var pixelData = "[";
+        for (i = 0; i < g_textureData.length; ++i) {
+            if (i % (4*g_textureSizeX) == 0)
+                pixelData += "\n";
+            else if (i % 4 == 0)
+                pixelData += "     ";
+            pixelData += pad(Math.round(g_textureData[i]).toString(),4);
+
+            if (i < g_textureData.length - 1)
+                pixelData+= ",";
+        }
+        pixelData += "\n]";
+        document.getElementById("TextureData").innerText = pixelData;
+
         tick();
     }
 
@@ -609,14 +629,11 @@
         initGL();
     }
 
-    function OnChangeSettings()
-    {
-    }
 </script>
 </head>
 
 <body onload="DoOnLoad()">
-    <h1>GPU Efficient Texture Based Bezier Curve Evaluation - Curves Features Demo</h1>
+    <h1>GPU Efficient Texture Based Bezier Curve Evaluation - Applications To Vector Art</h1>
     <a href="index.html">Back to Index</a><br><br>
     <table>
         <tr>
@@ -625,12 +642,22 @@
                     <tr>
                         <td>Sampling:</td>
                         <td>
-                            <select id="SamplingMode" onChange="OnChangeSettings();">
+                            <select id="SamplingMode">
                                 <option value="bilinear">Hardware Bilinear</option>
                                 <option value="nearest">Software Bilinear (+3 Texture Reads)</option>
                             </select>
                         </td>
                     </tr>
+                    <tr>
+                        <td>Anti Aliasing:</td>
+                        <td>
+                            <select id="AntiAliasing">
+                                <option value="none">None</option>
+                                <option value="quincunx">Quincunx</option>
+                                <option value="4rook">4-Rook SSAA</option>
+                            </select>
+                        </td>
+                    </tr>                    
                     <tr>
                         <td>Resolution:</td>
                         <td><select id="CanvasSize" onChange="ResizeCanvas();">
@@ -640,17 +667,13 @@
                         </select>
                         </td>
                     </tr>
-                </table>
-            </td>
-            <td>
-                <table>
                     <tr>
                         <td>Animate</td>
                         <td><input id="Animate" type="checkbox" checked="true"></td>
                     </tr>                      
                     <tr>
                         <td colspan="2"><input type="button" value="Reset Time" onClick="g_timeMs = 0; initBuffers();"/></td>
-                    </tr>
+                    </tr>                    
                 </table>
             </td>
             <td>
@@ -663,10 +686,7 @@
                         <td>Rotate Y</td>
                         <td><input type="range" min="0" max="100" onChange="g_cameraRotY = this.value/100;" onInput="g_cameraRotY = this.value/100;" value="0"/></td>
                     </tr>                                    
-                </table>
-            </td>
-            <td>
-                <table>
+
                     <tr>
                         <td>Translate X</td>
                         <td><input type="range" min="-100" max="100" onChange="g_cameraTransX = this.value/-10;" onInput="g_cameraTransX = this.value/-10;" value="0"/></td>
@@ -684,7 +704,66 @@
         </tr>
     </table>
     <div id="fps">FPS: --</div>
-    <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas><br>
+    <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas><br><br>
+    <b>Description: </b>A waving flag using vector art stored in an 8x4 texture.<br><br>
+    <b>8x4 Texture Description (JSON):</b>
+    <table style="border:1px solid black">
+        <tr>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+        </tr>
+        <tr>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+        </tr>
+        <tr>
+            <td style="border:1px solid black">B</td>
+            <td style="border:1px solid black">B</td>
+            <td style="border:1px solid black">C</td>
+            <td style="border:1px solid black">C</td>
+            <td style="border:1px solid black">D</td>
+            <td style="border:1px solid black">D</td>
+            <td style="border:1px solid black">F</td>
+            <td style="border:1px solid black">F</td>
+        </tr>
+        <tr>
+            <td style="border:1px solid black">E</td>
+            <td style="border:1px solid black">E</td>
+            <td style="border:1px solid black">G</td>
+            <td style="border:1px solid black">G</td>
+            <td style="border:1px solid black">D</td>
+            <td style="border:1px solid black">D</td>
+            <td style="border:1px solid black">F</td>
+            <td style="border:1px solid black">F</td>
+        </tr>                        
+    </table>
+    <ul>
+        <li><b>A:</b> Landscape: 8x2 - 4 qudratic bezier curves end to end</li>
+        <li><b>B:</b> Castle: 2x1 - 4 linear bezier curves end to end (r1->r2, g1->g2, b1->b2, a1->a2), mirrored on x axis.</li>
+        <li><b>C:</b> Castle doors: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  mirrored on x axis.</li>
+        <li><b>D:</b> Sun frame 1-4: 2x2 - 4 quadratic curves (1 in each color channel).  Repeated 8 times, rendered polar.  Each curve (color channel) is a keyframe in the animation</li>
+        <li><b>E:</b> Sun Green Gradient: 2x1 - 1 4th order bezier curve encoded in RGBA (combine 4 linear curves to one 4th order).  controls green color over distance from edge of sun.</li>
+        <li><b>F:</b> Sky Gradient: 2x2 - 1 Quadratic Bezier curve per color channel.  RGB = sky color gradient.  A = unused.</li>
+        <li><b>G:</b> Castle Color: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  Controls greyscale color of castle over height.</li>
+    </ul>
+    <b>8x4 Texture Data (JSON):</b>
+    <pre id="TextureData" style="border:1px solid black; white-space: pre-wrap;"></pre>      
+    <b>Vertex Shader Source (GLSL):</b>
+    <pre id="VertexShaderSource" style="border:1px solid black; white-space: pre-wrap;"></pre>
+    <b>Fragment Shader Source (GLSL):</b>
+    <pre id="FragmentShaderSource" style="border:1px solid black; white-space: pre-wrap;"></pre>
     <a href="index.html">Back to Index</a><br><br>
 </body>
 
