@@ -1,4 +1,10 @@
-NEXT:
+NEXT: C++ GL demos.  see if it has the same bilinear precision or not.
+
+
+TODO: anti aliasing options on flag
+
+* if doing c++ version, check if precision highp etc helps the bilinear texture read stuff.
+
  * animated cubic in 2x1 (lerp control point positions) and 2x2 (quadratic curve control point positions)
  * could even use this to describe a surface (put this in paper if it turns out to be useful)
 

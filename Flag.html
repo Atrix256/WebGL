@@ -7,7 +7,6 @@
     TODO:
         * AA options: none, quincunx (render 2x), 4 rook (render 4x)
          * should you reference quicunx or 4 rook anti aliasing?
-        * make shader code branchless?
 -->
 <html>
 <head>
@@ -594,6 +593,8 @@
         initBuffers();
 
         gl.clearColor(0.4, 0.5, 0.6, 1.0);
+
+        // todo: make render targets that are needed
     }
 
     function DoOnLoad() {
@@ -651,7 +652,7 @@
                     <tr>
                         <td>Anti Aliasing:</td>
                         <td>
-                            <select id="AntiAliasing">
+                            <select id="AntiAliasing" onChange="ResizeCanvas();">
                                 <option value="none">None</option>
                                 <option value="quincunx">Quincunx</option>
                                 <option value="4rook">4-Rook SSAA</option>
@@ -661,9 +662,9 @@
                     <tr>
                         <td>Resolution:</td>
                         <td><select id="CanvasSize" onChange="ResizeCanvas();">
-                            <option value="250">500x250</option>
-                            <option value="500" selected="selected">1000x500</option>
-                            <option value="750">1500x750</option>
+                            <option value="256">512x256</option>
+                            <option value="512" selected="selected">1024x512</option>
+                            <option value="1024">2048x1024</option>
                         </select>
                         </td>
                     </tr>
@@ -704,9 +705,9 @@
         </tr>
     </table>
     <div id="fps">FPS: --</div>
-    <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas><br><br>
+    <canvas id="webglcanvas" style="border: none" width="1024" height="512"></canvas><br><br>
     <b>Description: </b>A waving flag using vector art stored in an 8x4 texture.<br><br>
-    <b>8x4 Texture Description (JSON):</b>
+    <b>8x4 Texture Description:</b>
     <table style="border:1px solid black">
         <tr>
             <td style="border:1px solid black">A</td>
