@@ -26,9 +26,10 @@
 
     uniform mat4 uPMatrix;    
     uniform mat3 uNMatrix;
+    uniform vec2 uRenderOffset;
     
     void main(void) {
-        gl_Position = uPMatrix * vec4(aVertexPosition, 1.0);
+        gl_Position = uPMatrix * vec4(aVertexPosition, 1.0) + vec4(uRenderOffset,0.0,0.0);
         vTextureCoord = aTextureCoord;
 
         // calculate normal
@@ -354,6 +355,7 @@
 
         FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
         FSshaderProgram.nMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uNMatrix");
+        FSshaderProgram.nRenderOffsetUniform = gl.getUniformLocation(FSshaderProgram, "uRenderOffset");
     }
 
     function createTexture(byteArrayWithRGBAData, width, height) {
@@ -514,6 +516,47 @@
         screenQuadTextureCoordinateBuffer.numItems = textureCoords.length / screenQuadTextureCoordinateBuffer.itemSize;
     }
 
+    var g_frameBuffers;
+    var g_frameBufferTextures;
+    function initTextureFramebuffers () {
+    	var numBuffers = 0;
+    	// No anti aliasing means we render directly to the default frame buffer
+    	if (document.getElementById("AntiAliasing").value == "none")
+    		numBuffers = 0;
+		// Quincunx means we render the scene to two different frame buffers, then combine them into the default frame buffer    	}
+    	else if (document.getElementById("AntiAliasing").value == "quincunx")
+    		numBuffers = 2;
+    	// 4rook means we render the scene to four different frame buffers, then combine them into the default frame buffer
+    	else if (document.getElementById("AntiAliasing").value == "4rook")
+    		numBuffers = 4;
+
+    	// create our buffers
+    	g_frameBuffers = new Array;
+    	g_frameBufferTextures = new Array;   	
+		for (var i = 0; i < numBuffers; ++i) {
+			g_frameBuffers.push(gl.createFramebuffer())
+			gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[i]);
+
+			g_frameBufferTextures.push(gl.createTexture());
+			gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[i]);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.viewportWidth, gl.viewportHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+			var renderbuffer = gl.createRenderbuffer();
+			gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+			gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, gl.viewportWidth, gl.viewportHeight);
+
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, g_frameBufferTextures[i], 0);
+			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+
+			gl.bindTexture(gl.TEXTURE_2D, null);
+			gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+			gl.bindFramebuffer(gl.FRAMEBUFFER, null);    		
+		}
+    }
+
   	var g_timeMs = 0;
   	var g_lastTimeMs = 0;
     function animate() {
@@ -537,7 +580,7 @@
     var g_cameraTransX = 0;
     var g_cameraTransY = 0;
     var g_cameraZoom = 0.25;
-    function drawScene() {
+    function drawSceneInternal (offsetX, offsetY) {
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -546,6 +589,8 @@
         mat4.translate(pMatrix, [g_cameraTransX, g_cameraTransY, - g_cameraZoom * 40]);
         mat4.rotate(pMatrix, g_cameraRotX * Math.PI * 2, [0,1,0]);
         mat4.rotate(pMatrix, g_cameraRotY * Math.PI * 2, [1,0,0]);
+
+		gl.uniform2f(FSshaderProgram.nRenderOffsetUniform, offsetX / gl.viewportWidth, offsetY / gl.viewportHeight);
 
         // draw the flag
         gl.useProgram(FSshaderProgram);
@@ -563,6 +608,48 @@
         gl.uniform1f(FSshaderProgram.timeSecondsUniform, g_timeMs / 1000.0);
         setMatrixUniforms();
         gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
+    }
+
+    function drawScene () {
+    	//g_frameBuffers
+    	//g_frameBufferTextures
+
+    	// No AA -> render straight to the default render target
+    	if (g_frameBuffers.length == 0)
+    	{
+    		// TODO: temp!
+    		var offsetX = 0;
+    		var offsetY = 0;
+    		if (Math.floor(g_frameCounter/10) % 2 == 0)
+    			offsetX = offsetY = 0.5;
+
+    		drawSceneInternal(offsetX, offsetY);
+    		return;
+    	}
+
+    	// quincunx AA -> render once then render again with offset of (0.5,0.5) then combine in the following pattern:
+    	// 
+		//  B        C
+		//  *--------*
+		//  |   A    |
+		//  |   *    |
+		//  |        |
+		//  *--------*
+		//  D        E
+		//
+		// where A comes from the first render with a weighting of 1/2
+		// B,C,D,E come from the second render, each with a weighting of 1/8
+		//
+  		if (g_frameBuffers.length == 2)
+  		{
+  			gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[0]);
+  			drawSceneInternal(0,0);
+  			gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[1]);
+  			drawSceneInternal(0.5,0.5);
+  			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  			//drawSceneInternal();
+  			// TODO: combine renderings!
+  		}
     }
 
     function tick() {
@@ -591,6 +678,7 @@
 
         initShaders();
         initBuffers();
+        initTextureFramebuffers();
 
         gl.clearColor(0.4, 0.5, 0.6, 1.0);
 
