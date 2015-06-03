@@ -4,9 +4,7 @@
 
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
 
-    TODO:
-        * is AA working right? are we offsetting the camera the right way? are we sampling the textures correctly?
-        * should you reference quicunx or 4 rook anti aliasing in paper?
+    // TODO: floating point texture support here and in the generic curve demo too!
 -->
 <html>
 <head>
@@ -890,6 +888,10 @@
         g_frameCounter++;
     }
 
+    function VerifyExtension(ext) {
+    	if (!gl.getExtension(ext))
+    		alert("Could not find extension " + ext);
+    }
 
     function initGL() {
         var canvas = document.getElementById("webglcanvas");
@@ -899,7 +901,8 @@
         // details of options below here: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
         gl = WebGLUtils.setupWebGL(canvas, {alpha:true, depth: true, stencil: false, antialias: false, premultipliedAlpha:false, preserveDrawingBuffer: false});
 
-        gl.getExtension("OES_standard_derivatives");
+		VerifyExtension("OES_standard_derivatives");
+		VerifyExtension("OES_texture_float");
 
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
@@ -909,8 +912,6 @@
         initTextureFramebuffers();
 
         gl.clearColor(0.4, 0.5, 0.6, 1.0);
-
-        // todo: make render targets that are needed
     }
 
     function DoOnLoad() {

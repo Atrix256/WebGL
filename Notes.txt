@@ -1,7 +1,14 @@
+* get floating point textures working on both the flag demo, and the generic curves demo!
+
+* try higher bit depth texture in WebGL, i think it ought to be easy to do.
+ * see if that gets rid of the jaggies
+ * even if it does, there should be a better way to get better bilinear results... maybe will find it in C++ port.
+
 NEXT: C++ GL demos.  see if it has the same bilinear precision or not.
 
 
-TODO: anti aliasing options on flag
+
+* should you reference quicunx or 4 rook anti aliasing in paper?
 
 * if doing c++ version, check if precision highp etc helps the bilinear texture read stuff.
 

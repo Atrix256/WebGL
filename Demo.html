@@ -129,6 +129,7 @@
 
     var g_fragmentShaderHeader = 
         "#extension GL_OES_standard_derivatives : enable\n"+
+        "#extension OES_texture_float : enable\n"+
         "precision mediump float;\n" + 
         "uniform sampler2D uSampler;\n" + 
         "varying vec2 vTextureCoord;\n\n" + 
@@ -436,10 +437,14 @@
             ? gl.LINEAR
             : gl.NEAREST;
 
+        var format = (document.getElementById("ImageFormat").value == "RGBAU8")
+            ? gl.UNSIGNED_BYTE
+            : gl.FLOAT;
+
         var data = new Uint8Array(byteArrayWithRGBAData);
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, format, data);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
         gl.bindTexture(gl.TEXTURE_2D, null);
@@ -464,8 +469,6 @@
                 document.getElementById("A"+i.toString()).value * 2.55,
             ];
         }
-
-        // {"R":["0.50","0.00","0.75"],"G":["0.00","1.00","0.25"],"B":["0.20","0.00","1.00"],"A":["0.75","0.00","0.29"]}
 
         // put the control point data on the page
         var controlPointData = "{\n";
@@ -1014,6 +1017,10 @@
 
     }
 
+    function VerifyExtension(ext) {
+        if (!gl.getExtension(ext))
+            alert("Could not find extension " + ext);
+    }
 
     function initGL() {
         var canvas = document.getElementById("webglcanvas");
@@ -1023,7 +1030,8 @@
         // details of options below here: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
         gl = WebGLUtils.setupWebGL(canvas, {alpha:true, depth: false, stencil: false, antialias: false, premultipliedAlpha:false, preserveDrawingBuffer: false});
 
-        gl.getExtension("OES_standard_derivatives");
+        VerifyExtension("OES_standard_derivatives");
+        VerifyExtension("OES_texture_float");
 
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
@@ -1151,6 +1159,15 @@
             </td>
             <td>
                 <table>
+                    <tr>
+                        <td>Image Format</td>
+                        <td>
+                            <select id="ImageFormat" onChange="initGL();">
+                                <option value="RGBAU8">RGBA 8 bit unsigned</option>
+                                <option value="RGBAF32">RGBA 32 bit float</option>
+                            </select>                            
+                        </td>
+                    </tr>
                     <tr>
                         <td>Render Polar</td>
                         <td><input id="RenderPolar" type="checkbox" onChange="OnChangeSettings();"></td>
