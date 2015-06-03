@@ -6,8 +6,7 @@
 
     TODO:
         * is AA working right? are we offsetting the camera the right way? are we sampling the textures correctly?
-        * 4 rook 
-        * should you reference quicunx or 4 rook anti aliasing?
+        * should you reference quicunx or 4 rook anti aliasing in paper?
 -->
 <html>
 <head>
@@ -49,6 +48,38 @@
         vec3 outColor = Center / 2.0 + (A+B+C+D) / 8.0;
 
         gl_FragColor = vec4(outColor,1.0);
+    }
+</script>
+
+<script id="fourrook-vs" type="x-shader/x-vertex">
+    attribute vec2 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        gl_Position = vec4(aVertexPosition, 1.0, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+</script>
+
+<script id="fourrook-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D uSamplerA;
+    uniform sampler2D uSamplerB;
+    uniform sampler2D uSamplerC;
+    uniform sampler2D uSamplerD;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        vec3 A = texture2D(uSamplerA, vTextureCoord).xyz;
+        vec3 B = texture2D(uSamplerB, vTextureCoord).xyz;
+        vec3 C = texture2D(uSamplerC, vTextureCoord).xyz;
+        vec3 D = texture2D(uSamplerD, vTextureCoord).xyz;
+
+        gl_FragColor = vec4((A+B+C+D)/4.0,1.0);
     }
 </script>
 
@@ -361,6 +392,7 @@
 
     var FSshaderProgram;
     var QuincunxShaderProgram;
+    var FourRookShaderProgram;
 
     function initShaders() {
 
@@ -419,6 +451,30 @@
             QuincunxShaderProgram.samplerAUniform = gl.getUniformLocation(QuincunxShaderProgram, "uSamplerA");
             QuincunxShaderProgram.samplerBUniform = gl.getUniformLocation(QuincunxShaderProgram, "uSamplerB");
             QuincunxShaderProgram.sampleOffsetUniform = gl.getUniformLocation(QuincunxShaderProgram, "uSampleOffset");
+        }
+
+        // make the fourrook shader
+        {
+            var fragmentShader = getShader(gl, "fourrook-fs");
+            var vertexShader = getShader(gl, "fourrook-vs");
+
+            FourRookShaderProgram = gl.createProgram();
+            gl.attachShader(FourRookShaderProgram, vertexShader);
+            gl.attachShader(FourRookShaderProgram, fragmentShader);
+            gl.linkProgram(FourRookShaderProgram);
+
+            if (!gl.getProgramParameter(FourRookShaderProgram, gl.LINK_STATUS))
+                alert("Could not initialise fourrook shader");
+
+            gl.useProgram(FourRookShaderProgram);
+
+            FourRookShaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FourRookShaderProgram, "aTextureCoord");
+            gl.enableVertexAttribArray(FourRookShaderProgram.textureCoordinateAttribute);
+
+            FourRookShaderProgram.samplerAUniform = gl.getUniformLocation(FourRookShaderProgram, "uSamplerA");
+            FourRookShaderProgram.samplerBUniform = gl.getUniformLocation(FourRookShaderProgram, "uSamplerB");
+            FourRookShaderProgram.samplerCUniform = gl.getUniformLocation(FourRookShaderProgram, "uSamplerC");
+            FourRookShaderProgram.samplerDUniform = gl.getUniformLocation(FourRookShaderProgram, "uSamplerD");
         }
     }
 
@@ -624,8 +680,8 @@
 		// Quincunx means we render the scene to two different frame buffers, then combine them into the default frame buffer    	}
     	else if (document.getElementById("AntiAliasing").value == "quincunx")
     		numBuffers = 2;
-    	// 4rook means we render the scene to four different frame buffers, then combine them into the default frame buffer
-    	else if (document.getElementById("AntiAliasing").value == "4rook")
+    	// FourRook means we render the scene to four different frame buffers, then combine them into the default frame buffer
+    	else if (document.getElementById("AntiAliasing").value == "fourrook")
     		numBuffers = 4;
 
     	// create our buffers
@@ -737,6 +793,38 @@
         gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
     }
 
+    function drawSceneFourRook () {
+        gl.disable(gl.DEPTH_TEST);
+
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // combine the textures
+        gl.useProgram(FourRookShaderProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        gl.vertexAttribPointer(FourRookShaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        gl.vertexAttribPointer(FourRookShaderProgram.textureCoordinateAttribute, screenQuadTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[0]);
+        gl.uniform1i(FourRookShaderProgram.samplerAUniform, 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[1]);
+        gl.uniform1i(FourRookShaderProgram.samplerBUniform, 1);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[2]);
+        gl.uniform1i(FourRookShaderProgram.samplerCUniform, 2);
+
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[3]);
+        gl.uniform1i(FourRookShaderProgram.samplerDUniform, 3);
+
+        gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
+    }
+
     function drawScene () {
     	// No AA -> render straight to the default render target
     	if (g_frameBuffers.length == 0)
@@ -766,7 +854,31 @@
   			drawSceneInternal(-0.5,-0.5);
   			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             drawSceneQuincunx();
+            return;
   		}
+
+        // fourrook AA -> render four times with offsets as described below, then average for each pixel
+        //
+        //  +-----------+
+        //  |  |  |A |  |
+        //  |--|--|--|--|
+        //  |D |  |  |  |
+        //  |--|--|--|--|
+        //  |  |  |  |B |
+        //  |--|--|--|--|
+        //  |  |C |  |  |
+        //  +-----------+
+        //
+        gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[0]);
+        drawSceneInternal(1/8,3/8);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[1]);
+        drawSceneInternal(3/8,-1/8);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[2]);
+        drawSceneInternal(-1/8,-3/8);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[3]);
+        drawSceneInternal(-3/8,1/8);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        drawSceneFourRook();
     }
 
     function tick() {
@@ -857,7 +969,7 @@
                             <select id="AntiAliasing" onChange="ResizeCanvas();">
                                 <option value="none">None</option>
                                 <option value="quincunx">Quincunx</option>
-                                <option value="4rook">4-Rook SSAA</option>
+                                <option value="fourrook">4-Rook SSAA</option>
                             </select>
                         </td>
                     </tr>                    
