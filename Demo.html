@@ -437,11 +437,18 @@
             ? gl.LINEAR
             : gl.NEAREST;
 
-        var format = (document.getElementById("ImageFormat").value == "RGBAU8")
-            ? gl.UNSIGNED_BYTE
-            : gl.FLOAT;
+        var format;
+        var data;
+        if (document.getElementById("ImageFormat").value == "RGBAF32") {
+        	format = gl.FLOAT;
+        	data = new Float32Array(byteArrayWithRGBAData);
+        }
+        else
+        {
+        	format = gl.UNSIGNED_BYTE;
+			data = new Uint8Array(byteArrayWithRGBAData);        	
+        }
 
-        var data = new Uint8Array(byteArrayWithRGBAData);
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, format, data);
