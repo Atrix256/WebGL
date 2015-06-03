@@ -5,8 +5,9 @@
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
 
     TODO:
-        * AA options: none, quincunx (render 2x), 4 rook (render 4x)
-         * should you reference quicunx or 4 rook anti aliasing?
+        * is AA working right? are we offsetting the camera the right way? are we sampling the textures correctly?
+        * 4 rook 
+        * should you reference quicunx or 4 rook anti aliasing?
 -->
 <html>
 <head>
@@ -15,6 +16,41 @@
 
 <script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
 <script type="text/javascript" src="webgl-utils.js"></script>
+
+<script id="quincunx-vs" type="x-shader/x-vertex">
+    attribute vec2 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        gl_Position = vec4(aVertexPosition, 1.0, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+</script>
+
+<script id="quincunx-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D uSamplerA;
+    uniform sampler2D uSamplerB;
+    uniform vec2 uSampleOffset;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        vec3 Center = texture2D(uSamplerA, vTextureCoord).xyz;
+
+        vec3 A = texture2D(uSamplerB, vTextureCoord).xyz;
+        vec3 B = texture2D(uSamplerB, vTextureCoord + vec2(uSampleOffset.x,0.0)).xyz;
+        vec3 C = texture2D(uSamplerB, vTextureCoord + vec2(0.0,uSampleOffset.y)).xyz;
+        vec3 D = texture2D(uSamplerB, vTextureCoord + vec2(uSampleOffset.x,uSampleOffset.y)).xyz;
+
+        vec3 outColor = Center / 2.0 + (A+B+C+D) / 8.0;
+
+        gl_FragColor = vec4(outColor,1.0);
+    }
+</script>
 
 <script id="shader-vs" type="x-shader/x-vertex">
     attribute vec3 aVertexPosition;
@@ -324,38 +360,66 @@
     }
 
     var FSshaderProgram;
+    var QuincunxShaderProgram;
 
     function initShaders() {
-        var fragmentShader = getShader(gl, "flag-fs");
-        var vertexShader = getShader(gl, "shader-vs");
 
-        FSshaderProgram = gl.createProgram();
-        gl.attachShader(FSshaderProgram, vertexShader);
-        gl.attachShader(FSshaderProgram, fragmentShader);
-        gl.linkProgram(FSshaderProgram);
+        // make the flag shader
+        {
+            var fragmentShader = getShader(gl, "flag-fs");
+            var vertexShader = getShader(gl, "shader-vs");
 
-        if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
-            alert("Could not initialise FS shader");
+            FSshaderProgram = gl.createProgram();
+            gl.attachShader(FSshaderProgram, vertexShader);
+            gl.attachShader(FSshaderProgram, fragmentShader);
+            gl.linkProgram(FSshaderProgram);
 
-        gl.useProgram(FSshaderProgram);
+            if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
+                alert("Could not initialise FS shader");
 
-        FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
-        gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
+            gl.useProgram(FSshaderProgram);
 
-        FSshaderProgram.vertexNormalAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexNormal");
-        gl.enableVertexAttribArray(FSshaderProgram.vertexNormalAttribute);
+            FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
+            gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
 
-        FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
-        gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
+            FSshaderProgram.vertexNormalAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexNormal");
+            gl.enableVertexAttribArray(FSshaderProgram.vertexNormalAttribute);
 
-        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
-        FSshaderProgram.textureResolutionUniform = gl.getUniformLocation(FSshaderProgram, "uTextureResolution");
-        FSshaderProgram.bilinearSamplingUniform = gl.getUniformLocation(FSshaderProgram, "uBilinearSampling");
-        FSshaderProgram.timeSecondsUniform = gl.getUniformLocation(FSshaderProgram, "uTimeSeconds");
+            FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
+            gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
 
-        FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
-        FSshaderProgram.nMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uNMatrix");
-        FSshaderProgram.nRenderOffsetUniform = gl.getUniformLocation(FSshaderProgram, "uRenderOffset");
+            FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
+            FSshaderProgram.textureResolutionUniform = gl.getUniformLocation(FSshaderProgram, "uTextureResolution");
+            FSshaderProgram.bilinearSamplingUniform = gl.getUniformLocation(FSshaderProgram, "uBilinearSampling");
+            FSshaderProgram.timeSecondsUniform = gl.getUniformLocation(FSshaderProgram, "uTimeSeconds");
+
+            FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
+            FSshaderProgram.nMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uNMatrix");
+            FSshaderProgram.nRenderOffsetUniform = gl.getUniformLocation(FSshaderProgram, "uRenderOffset");
+        }
+
+        // make the quincunx shader
+        {
+            var fragmentShader = getShader(gl, "quincunx-fs");
+            var vertexShader = getShader(gl, "quincunx-vs");
+
+            QuincunxShaderProgram = gl.createProgram();
+            gl.attachShader(QuincunxShaderProgram, vertexShader);
+            gl.attachShader(QuincunxShaderProgram, fragmentShader);
+            gl.linkProgram(QuincunxShaderProgram);
+
+            if (!gl.getProgramParameter(QuincunxShaderProgram, gl.LINK_STATUS))
+                alert("Could not initialise quincunx shader");
+
+            gl.useProgram(QuincunxShaderProgram);
+
+            QuincunxShaderProgram.textureCoordinateAttribute = gl.getAttribLocation(QuincunxShaderProgram, "aTextureCoord");
+            gl.enableVertexAttribArray(QuincunxShaderProgram.textureCoordinateAttribute);
+
+            QuincunxShaderProgram.samplerAUniform = gl.getUniformLocation(QuincunxShaderProgram, "uSamplerA");
+            QuincunxShaderProgram.samplerBUniform = gl.getUniformLocation(QuincunxShaderProgram, "uSamplerB");
+            QuincunxShaderProgram.sampleOffsetUniform = gl.getUniformLocation(QuincunxShaderProgram, "uSampleOffset");
+        }
     }
 
     function createTexture(byteArrayWithRGBAData, width, height) {
@@ -370,8 +434,11 @@
     }
 
     var bezierTexture;
+    var flagBuffer;
+    var flagNormalBuffer;
+    var flagTextureCoordinateBuffer;
+
     var screenQuadBuffer;
-    var screenQuadNormalBuffer;
     var screenQuadTextureCoordinateBuffer;
 
     var pMatrix = mat4.create();    
@@ -495,25 +562,56 @@
 		}
 
 	    // make the vertex buffer
-        screenQuadBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        flagBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);  
-        screenQuadBuffer.itemSize = 3;
-        screenQuadBuffer.numItems = vertices.length / screenQuadBuffer.itemSize;
+        flagBuffer.itemSize = 3;
+        flagBuffer.numItems = vertices.length / flagBuffer.itemSize;
 
 	    // make the normal buffer
-	    screenQuadNormalBuffer = gl.createBuffer();
-        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadNormalBuffer);
+	    flagNormalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagNormalBuffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);  
-        screenQuadNormalBuffer.itemSize = 3;
-        screenQuadNormalBuffer.numItems = normals.length / screenQuadNormalBuffer.itemSize;        
+        flagNormalBuffer.itemSize = 3;
+        flagNormalBuffer.numItems = normals.length / flagNormalBuffer.itemSize;        
               
         // make the texture coordinate buffer
+        flagTextureCoordinateBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagTextureCoordinateBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+        flagTextureCoordinateBuffer.itemSize = 2;
+        flagTextureCoordinateBuffer.numItems = textureCoords.length / flagTextureCoordinateBuffer.itemSize;
+
+        // make the screen quad buffer
+        screenQuadBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        vertices = [
+            // Front face
+            -1.0, -1.0,
+             1.0, -1.0,
+             1.0,  1.0,
+            -1.0, -1.0,
+             1.0,  1.0,
+            -1.0,  1.0,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        screenQuadBuffer.itemSize = 2;
+        screenQuadBuffer.numItems = 6;      
+
+        // make the full screen quad texture coordinate buffer
         screenQuadTextureCoordinateBuffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+        vertices = [
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 0,
+            1, 1,
+            0, 1,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
         screenQuadTextureCoordinateBuffer.itemSize = 2;
-        screenQuadTextureCoordinateBuffer.numItems = textureCoords.length / screenQuadTextureCoordinateBuffer.itemSize;
+        screenQuadTextureCoordinateBuffer.numItems = 6; 
     }
 
     var g_frameBuffers;
@@ -581,6 +679,10 @@
     var g_cameraTransY = 0;
     var g_cameraZoom = 0.25;
     function drawSceneInternal (offsetX, offsetY) {
+
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LESS);
+
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -590,16 +692,15 @@
         mat4.rotate(pMatrix, g_cameraRotX * Math.PI * 2, [0,1,0]);
         mat4.rotate(pMatrix, g_cameraRotY * Math.PI * 2, [1,0,0]);
 
-		gl.uniform2f(FSshaderProgram.nRenderOffsetUniform, offsetX / gl.viewportWidth, offsetY / gl.viewportHeight);
-
         // draw the flag
         gl.useProgram(FSshaderProgram);
-        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
-        gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
-        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadNormalBuffer);
-        gl.vertexAttribPointer(FSshaderProgram.vertexNormalAttribute, screenQuadNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
-        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
-        gl.vertexAttribPointer(FSshaderProgram.textureCoordinateAttribute, screenQuadTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
+        gl.uniform2f(FSshaderProgram.nRenderOffsetUniform, offsetX / gl.viewportWidth, offsetY / gl.viewportHeight);
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, flagBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagNormalBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.vertexNormalAttribute, flagNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagTextureCoordinateBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.textureCoordinateAttribute, flagTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, bezierTexture);
         gl.uniform1i(FSshaderProgram.samplerUniform, 0);
@@ -607,23 +708,40 @@
         gl.uniform1i(FSshaderProgram.bilinearSamplingUniform, document.getElementById("SamplingMode").value == "bilinear");
         gl.uniform1f(FSshaderProgram.timeSecondsUniform, g_timeMs / 1000.0);
         setMatrixUniforms();
+        gl.drawArrays(gl.TRIANGLES,0,flagBuffer.numItems);
+    }
+
+    function drawSceneQuincunx () {
+        gl.disable(gl.DEPTH_TEST);
+
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // combine the textures
+        gl.useProgram(QuincunxShaderProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        gl.vertexAttribPointer(QuincunxShaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        gl.vertexAttribPointer(QuincunxShaderProgram.textureCoordinateAttribute, screenQuadTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[0]);
+        gl.uniform1i(QuincunxShaderProgram.samplerAUniform, 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[1]);
+        gl.uniform1i(QuincunxShaderProgram.samplerBUniform, 1);
+
+        gl.uniform2f(QuincunxShaderProgram.sampleOffsetUniform, 1.0 / gl.viewportWidth, 1.0 / gl.viewportHeight);
+
         gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
     }
 
     function drawScene () {
-    	//g_frameBuffers
-    	//g_frameBufferTextures
-
     	// No AA -> render straight to the default render target
     	if (g_frameBuffers.length == 0)
     	{
-    		// TODO: temp!
-    		var offsetX = 0;
-    		var offsetY = 0;
-    		if (Math.floor(g_frameCounter/10) % 2 == 0)
-    			offsetX = offsetY = 0.5;
-
-    		drawSceneInternal(offsetX, offsetY);
+    		drawSceneInternal(0.0, 0.0);
     		return;
     	}
 
@@ -645,10 +763,9 @@
   			gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[0]);
   			drawSceneInternal(0,0);
   			gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[1]);
-  			drawSceneInternal(0.5,0.5);
+  			drawSceneInternal(-0.5,-0.5);
   			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  			//drawSceneInternal();
-  			// TODO: combine renderings!
+            drawSceneQuincunx();
   		}
     }
 
@@ -672,9 +789,6 @@
 
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
-
-        gl.enable(gl.DEPTH_TEST);
-        gl.depthFunc(gl.LESS);
 
         initShaders();
         initBuffers();
