@@ -130,6 +130,7 @@
     var g_fragmentShaderHeader = 
         "#extension GL_OES_standard_derivatives : enable\n"+
         "#extension OES_texture_float : enable\n"+
+        "#extension OES_texture_float_linear : enable\n" +
         "precision mediump float;\n" + 
         "uniform sampler2D uSampler;\n" + 
         "varying vec2 vTextureCoord;\n\n" + 
@@ -442,6 +443,8 @@
         if (document.getElementById("ImageFormat").value == "RGBAF32") {
         	format = gl.FLOAT;
         	data = new Float32Array(byteArrayWithRGBAData);
+            for (i = 0; i < data.length; ++i)
+                data[i] /= 256;
         }
         else
         {
@@ -1039,6 +1042,7 @@
 
         VerifyExtension("OES_standard_derivatives");
         VerifyExtension("OES_texture_float");
+        VerifyExtension("OES_texture_float_linear");
 
         gl.viewportWidth = canvas.width;
         gl.viewportHeight = canvas.height;
