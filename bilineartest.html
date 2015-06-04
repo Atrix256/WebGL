@@ -1,0 +1,222 @@
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec2 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        gl_Position = vec4(aVertexPosition, 1.0, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+</script>
+
+<script id="shader-fs" type="x-shader/x-fragment">
+precision mediump float;
+uniform sampler2D uSampler;
+varying vec2 vTextureCoord;
+
+vec4 SoftwareBilinear (vec2 sample) {
+    float fracu = 0.0;//fract(sample.x + 0.5);
+    float fracv = 0.0;//fract(sample.y + 0.5);
+
+    vec2 floorPixel = floor(sample) + vec2(0.5,0.5);
+
+    vec4 A = texture2D(uSampler, floorPixel);
+    vec4 B = texture2D(uSampler, floorPixel+vec2(0.5,0.0));
+    vec4 C = texture2D(uSampler, floorPixel+vec2(0.0,0.5));
+    vec4 D = texture2D(uSampler, floorPixel+vec2(0.5,0.5));
+
+    return mix(mix(A,B,fracu), mix(C,D,fracu), fracv);
+}
+
+void main(void) {
+    vec4 colorValues;
+
+    if (vTextureCoord.x < 0.5)
+        colorValues = texture2D(uSampler, vec2(vTextureCoord.x));
+    else
+        colorValues = SoftwareBilinear(vec2(vTextureCoord.x));
+
+    vec3 outColor;
+    outColor.x = step(vTextureCoord.y, colorValues.x);
+    outColor.y = step(vTextureCoord.y, colorValues.y);
+    outColor.z = step(vTextureCoord.y, colorValues.z);
+
+    gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
+}
+</script>
+
+<script type="text/javascript">
+
+    var gl;
+
+    function getShader(gl, id) {
+        var shaderScript = document.getElementById(id);
+        if (!shaderScript)
+            return null;
+
+        var str = "";
+        var k = shaderScript.firstChild;
+        while (k) {
+            if (k.nodeType == 3)
+                str += k.textContent;
+            k = k.nextSibling;
+        }
+
+        var shader;
+        if (shaderScript.type == "x-shader/x-fragment")
+            shader = gl.createShader(gl.FRAGMENT_SHADER);
+        else if (shaderScript.type == "x-shader/x-vertex")
+            shader = gl.createShader(gl.VERTEX_SHADER);
+        else
+            return null;
+
+        gl.shaderSource(shader, str);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert(gl.getShaderInfoLog(shader));
+            return null;
+        }
+
+        return shader;
+    }
+
+    var FSshaderProgram;
+
+    function initShaders() {
+        // make the full screen shader program
+        var fragmentShader = getShader(gl, "shader-fs");
+        var vertexShader = getShader(gl, "shader-vs");
+
+        FSshaderProgram = gl.createProgram();
+        gl.attachShader(FSshaderProgram, vertexShader);
+        gl.attachShader(FSshaderProgram, fragmentShader);
+        gl.linkProgram(FSshaderProgram);
+
+        if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
+            alert("Could not initialise FS shader");
+
+        gl.useProgram(FSshaderProgram);
+
+        FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
+
+        FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
+        gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
+
+        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
+    }
+
+    function createTexture(byteArrayWithRGBAData, width, height) {
+        var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(byteArrayWithRGBAData));
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return texture;
+    }
+
+    var theTexture;
+    var screenQuadBuffer;
+    var screenQuadTextureCoordinateBuffer;
+
+    function initBuffers() {
+        // make the full screen quad vertex buffer
+        screenQuadBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        vertices = [
+            // Front face
+            -1.0, -1.0,
+             1.0, -1.0,
+             1.0,  1.0,
+            -1.0, -1.0,
+             1.0,  1.0,
+            -1.0,  1.0,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        screenQuadBuffer.itemSize = 2;
+        screenQuadBuffer.numItems = 6;
+
+        // make the full screen quad texture coordinate buffer
+        screenQuadTextureCoordinateBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        vertices = [
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 0,
+            1, 1,
+            0, 1,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        screenQuadTextureCoordinateBuffer.itemSize = 2;
+        screenQuadTextureCoordinateBuffer.numItems = 6;
+    }
+
+    function drawScene() {
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // draw the full screen quad
+        gl.useProgram(FSshaderProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.textureCoordinateAttribute, screenQuadTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, theTexture);
+        gl.uniform1i(FSshaderProgram.samplerUniform, 0);
+        gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
+    }
+
+    function tick() {
+        requestAnimFrame(tick);
+        drawScene();
+    }
+
+    function initGL() {
+        var canvas = document.getElementById("webglcanvas");
+
+        // details of options below here: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+        gl = WebGLUtils.setupWebGL(canvas, {alpha:true, depth: false, stencil: false, antialias: false, premultipliedAlpha:false, preserveDrawingBuffer: false});
+
+        gl.viewportWidth = canvas.width;
+        gl.viewportHeight = canvas.height;
+        initShaders();
+        initBuffers();
+
+        var textureData = [
+            100, 200, 105, 255,    200, 10, 255, 255,
+            28,   96, 255, 255,     22, 200, 88, 255
+        ];
+
+        // create the texture
+        theTexture = createTexture(
+            textureData,
+            2, 2
+        );
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    }
+
+    function DoOnLoad() {
+        initGL();
+        tick();
+    }
+
+</script>
+</head>
+
+<body onload="DoOnLoad()">
+    <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas>
+</body>
+
+</html>
