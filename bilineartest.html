@@ -21,34 +21,48 @@ precision mediump float;
 uniform sampler2D uSampler;
 varying vec2 vTextureCoord;
 
-vec4 SoftwareBilinear (vec2 sample) {
-    float fracu = 0.0;//fract(sample.x + 0.5);
-    float fracv = 0.0;//fract(sample.y + 0.5);
+vec4 SamplePixel (vec2 pixel, bool bilinearSampling) {
+    // Bilinear sampling:
+    // Hardware based bilinear sampling
+    if (bilinearSampling)
+        return texture2D(uSampler, (pixel + vec2(0.5)) / 2.0);
 
-    vec2 floorPixel = floor(sample) + vec2(0.5,0.5);
+    // Nearest sampling:
+    // Software bilinear sampling (higher quality)
+    float fracu = fract(pixel.x);
+    float fracv = fract(pixel.y);
 
-    vec4 A = texture2D(uSampler, floorPixel);
-    vec4 B = texture2D(uSampler, floorPixel+vec2(0.5,0.0));
-    vec4 C = texture2D(uSampler, floorPixel+vec2(0.0,0.5));
-    vec4 D = texture2D(uSampler, floorPixel+vec2(0.5,0.5));
+    vec2 floorPixel = floor(pixel) + vec2(0.5,0.5);
+
+    vec4 A = texture2D(uSampler, floorPixel / 2.0);
+    vec4 B = texture2D(uSampler, (floorPixel+vec2(1.0,0.0)) / 2.0);
+    vec4 C = texture2D(uSampler, (floorPixel+vec2(0.0,1.0)) / 2.0);
+    vec4 D = texture2D(uSampler, (floorPixel+vec2(1.0,1.0)) / 2.0);
 
     return mix(mix(A,B,fracu), mix(C,D,fracu), fracv);
 }
 
 void main(void) {
-    vec4 colorValues;
+    vec4 colorValue;
 
-    if (vTextureCoord.x < 0.5)
-        colorValues = texture2D(uSampler, vec2(vTextureCoord.x));
+    if (vTextureCoord.x < 0.995)
+    {
+   		float pixel = vTextureCoord.x / 0.995;
+        colorValue = SamplePixel(vec2(pixel), true);
+    }
+    else if (vTextureCoord.x > 1.005)
+    {
+    	float pixel = fract(vTextureCoord.x - 0.005) / 0.995;
+        colorValue = SamplePixel(vec2(pixel), false);
+    }
     else
-        colorValues = SoftwareBilinear(vec2(vTextureCoord.x));
+    {
+    	gl_FragColor = vec4(1.0);
+    	return;
+    }
 
-    vec3 outColor;
-    outColor.x = step(vTextureCoord.y, colorValues.x);
-    outColor.y = step(vTextureCoord.y, colorValues.y);
-    outColor.z = step(vTextureCoord.y, colorValues.z);
-
-    gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);
+    float value = step(vTextureCoord.y, colorValue.x);
+    gl_FragColor = vec4(0.0, value, 0.0, 1.0);
 }
 </script>
 
@@ -150,10 +164,10 @@ void main(void) {
         gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
         vertices = [
             0, 0,
-            1, 0,
-            1, 1,
+            2, 0,
+            2, 1,
             0, 0,
-            1, 1,
+            2, 1,
             0, 1,
         ];
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
@@ -194,8 +208,8 @@ void main(void) {
         initBuffers();
 
         var textureData = [
-            100, 200, 105, 255,    200, 10, 255, 255,
-            28,   96, 255, 255,     22, 200, 88, 255
+            128, 0, 0, 255,     50, 0, 0, 255,
+             50, 0, 0, 255,    200, 0, 0, 255
         ];
 
         // create the texture
@@ -216,7 +230,13 @@ void main(void) {
 </head>
 
 <body onload="DoOnLoad()">
-    <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas>
+	On the left is hardware bilinear sampling.
+	<br><br>
+	On the right is bilinear interpolation in a pixel shader with floats, after sampling each of the four pixels involved, to preform the bilinear interpolation.
+	<br><br>
+	No matter what I do, I cannot seem to make the hardware bilinear sample higher quality.  Some of the things I've tried include using highp precision on the types as well as the sampler, and have also tried floating point textures.
+	<br><br>
+    <canvas id="webglcanvas" style="border: none" width="1000" height="500"></canvas>
 </body>
 
 </html>
