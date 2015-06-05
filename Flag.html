@@ -3,8 +3,6 @@
     http://learningwebgl.com/blog/?page_id=1217
 
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
-
-    // TODO: floating point texture support here and in the generic curve demo too!
 -->
 <html>
 <head>
@@ -395,41 +393,6 @@
     var FourRookShaderProgram;
 
     function initShaders() {
-
-        // make the flag shader
-        {
-            var fragmentShader = getShader(gl, "flag-fs");
-            var vertexShader = getShader(gl, "flag-vs");
-
-            FSshaderProgram = gl.createProgram();
-            gl.attachShader(FSshaderProgram, vertexShader);
-            gl.attachShader(FSshaderProgram, fragmentShader);
-            gl.linkProgram(FSshaderProgram);
-
-            if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
-                alert("Could not initialise FS shader");
-
-            gl.useProgram(FSshaderProgram);
-
-            FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
-            gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
-
-            FSshaderProgram.vertexNormalAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexNormal");
-            gl.enableVertexAttribArray(FSshaderProgram.vertexNormalAttribute);
-
-            FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
-            gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
-
-            FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
-            FSshaderProgram.textureResolutionUniform = gl.getUniformLocation(FSshaderProgram, "uTextureResolution");
-            FSshaderProgram.bilinearSamplingUniform = gl.getUniformLocation(FSshaderProgram, "uBilinearSampling");
-            FSshaderProgram.timeSecondsUniform = gl.getUniformLocation(FSshaderProgram, "uTimeSeconds");
-
-            FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
-            FSshaderProgram.nMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uNMatrix");
-            FSshaderProgram.nRenderOffsetUniform = gl.getUniformLocation(FSshaderProgram, "uRenderOffset");
-        }
-
         // make the quincunx shader
         {
             var fragmentShader = getShader(gl, "quincunx-fs");
@@ -476,6 +439,40 @@
             FourRookShaderProgram.samplerCUniform = gl.getUniformLocation(FourRookShaderProgram, "uSamplerC");
             FourRookShaderProgram.samplerDUniform = gl.getUniformLocation(FourRookShaderProgram, "uSamplerD");
         }
+
+        // make the flag shader
+        {
+            var fragmentShader = getShader(gl, "flag-fs");
+            var vertexShader = getShader(gl, "flag-vs");
+
+            FSshaderProgram = gl.createProgram();
+            gl.attachShader(FSshaderProgram, vertexShader);
+            gl.attachShader(FSshaderProgram, fragmentShader);
+            gl.linkProgram(FSshaderProgram);
+
+            if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
+                alert("Could not initialise FS shader");
+
+            gl.useProgram(FSshaderProgram);
+
+            FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
+            gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
+
+            FSshaderProgram.vertexNormalAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexNormal");
+            gl.enableVertexAttribArray(FSshaderProgram.vertexNormalAttribute);
+
+            FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
+            gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
+
+            FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
+            FSshaderProgram.textureResolutionUniform = gl.getUniformLocation(FSshaderProgram, "uTextureResolution");
+            FSshaderProgram.bilinearSamplingUniform = gl.getUniformLocation(FSshaderProgram, "uBilinearSampling");
+            FSshaderProgram.timeSecondsUniform = gl.getUniformLocation(FSshaderProgram, "uTimeSeconds");
+
+            FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
+            FSshaderProgram.nMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uNMatrix");
+            FSshaderProgram.nRenderOffsetUniform = gl.getUniformLocation(FSshaderProgram, "uRenderOffset");
+        }        
     }
 
     function createTexture(byteArrayWithRGBAData, width, height) {

@@ -444,7 +444,7 @@
         	format = gl.FLOAT;
         	data = new Float32Array(byteArrayWithRGBAData);
             for (i = 0; i < data.length; ++i)
-                data[i] /= 256;
+                data[i] /= 255;
         }
         else
         {
@@ -638,7 +638,11 @@
                 pixelData += "\n";
             else if (i % 4 == 0)
                 pixelData += "     ";
-            pixelData += pad(Math.round(textureData[i]).toString(),4);
+
+			if (document.getElementById("ImageFormat").value == "RGBAF32")
+				pixelData += pad((textureData[i]/255).toFixed(2).toString(),5);
+			else
+            	pixelData += pad(Math.round(textureData[i]).toString(),4);
 
             if (i < textureData.length - 1)
                 pixelData+= ",";

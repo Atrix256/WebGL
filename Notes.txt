@@ -1,3 +1,7 @@
+? is it that the texture coordinates are low precision
+
+
+
 * get floating point textures working on both the flag demo, and the generic curves demo!
 
 * try higher bit depth texture in WebGL, i think it ought to be easy to do.
@@ -21,7 +25,7 @@ NEXT: C++ GL demos.  see if it has the same bilinear precision or not.
 
 * look into animating curves?
  * lerp results over time (actual time, not t!)
- ? is this the same as lerping over control points?
+ ? is this the same as lerping over control points? yes! what other operations are there that can be done like that?
  * mention this in the paper
  * see about animating some objects in the vector graphics demos
 
@@ -100,6 +104,7 @@ compare quality (and speed?) vs baking curve as 1x16?
  * could use a volume texture and animate them on a cubic curve instead.
  * could also do more reads to make higher order curve, or higher order control point control.
 
+* distance textures were shown at siggraph 2007
 
 * floating point textures - do they have better bilinear / trilinear texture filtering?
 
