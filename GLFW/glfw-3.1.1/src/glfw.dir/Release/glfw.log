@@ -1,0 +1,73 @@
+﻿Build started 6/5/2015 12:26:04 PM.
+     1>Project "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\glfw.vcxproj" on node 2 (Build target(s)).
+     1>PrepareForBuild:
+         Creating directory "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\Release\".
+         Creating directory "glfw.dir\Release\glfw.tlog\".
+       InitializeBuildStatus:
+         Creating "glfw.dir\Release\glfw.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+       CustomBuild:
+         Building Custom Rule C:/Users/awolfe.BLIZZARD/Desktop/glfw-3.1.1/src/CMakeLists.txt
+         CMake does not need to re-run because C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\CMakeFiles\generate.stamp is up-to-date.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /I"C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src" /nologo /W3 /WX- /O2 /Ob2 /Oy- /D WIN32 /D _WINDOWS /D NDEBUG /D _CRT_SECURE_NO_WARNINGS /D _GLFW_USE_CONFIG_H /D "CMAKE_INTDIR=\"Release\"" /D _MBCS /Gm- /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"glfw.dir\Release\\" /Fd"glfw.dir\Release\vc120.pdb" /Gd /TC /analyze- /errorReport:prompt "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\context.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\init.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\input.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\monitor.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\window.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\win32_init.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\win32_monitor.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\win32_time.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\win32_tls.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\win32_window.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\winmm_joystick.c" "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\wgl_context.c"
+         {{xgTaskID=00000008}}
+         context.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=0000000A}}
+         input.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=00000009}}
+         init.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=0000000B}}
+         monitor.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=0000000C}}
+         window.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=0000000E}}
+         win32_monitor.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=0000000F}}
+         win32_time.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=0000000D}}
+         win32_init.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=00000012}}
+         winmm_joystick.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=00000010}}
+         win32_tls.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=00000013}}
+         wgl_context.c
+         {{xgTaskID=00000000}}
+         {{xgTaskID=00000011}}
+         win32_window.c
+         {{xgTaskID=00000000}}
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\Release\glfw3.lib" /NOLOGO glfw.dir\Release\context.obj
+         glfw.dir\Release\init.obj
+         glfw.dir\Release\input.obj
+         glfw.dir\Release\monitor.obj
+         glfw.dir\Release\window.obj
+         glfw.dir\Release\win32_init.obj
+         glfw.dir\Release\win32_monitor.obj
+         glfw.dir\Release\win32_time.obj
+         glfw.dir\Release\win32_tls.obj
+         glfw.dir\Release\win32_window.obj
+         glfw.dir\Release\winmm_joystick.obj
+         glfw.dir\Release\wgl_context.obj
+         {{xgTaskID=00000014}}
+         
+         {{xgTaskID=00000000}}
+         glfw.vcxproj -> C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\Release\glfw3.lib
+       FinalizeBuildStatus:
+         Deleting file "glfw.dir\Release\glfw.tlog\unsuccessfulbuild".
+         Touching "glfw.dir\Release\glfw.tlog\glfw.lastbuildstate".
+     1>Done Building Project "C:\Users\awolfe.BLIZZARD\Desktop\glfw-3.1.1\src\glfw.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:00.68
