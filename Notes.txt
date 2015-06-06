@@ -1,3 +1,13 @@
+* clean up GLFW code.
+* make trilinear sampling work for cubic curves
+ * not sure if it's a command line param to this program of what to do or what??
+
+* then directx version maybe just in case?
+
+* ask nvidia developer forums if this is just a hardware limitation w/ no way to get around
+ * also ask if bilinear, trilinear, quadrilinear are done in hardware.
+
+
 ? is it that the texture coordinates are low precision
 
 
