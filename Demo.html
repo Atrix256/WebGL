@@ -3,6 +3,9 @@
     http://learningwebgl.com/blog/?page_id=1217
 
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
+
+    TODO:
+    * make a 2 axis colors mode that does two samples - one for each axis
 -->
 <html>
 <head>
@@ -148,7 +151,7 @@
         return createFragmentShader(gl,shaderSource);
     }
 
-    function buildFragmentShader_visual (bilinear, curves, polar) {
+    function buildFragmentShader_visual (bilinear, renderMode, polar) {
         var shaderSource = "/*\n   Description:\n   " + g_settings.m_shaderDescription + "\n\n   Texture Layout:\n   " + g_settings.m_textureLayout + "\n*/\n\n" + g_fragmentShaderHeader;
 
         // convert to polar coordinates if we should
@@ -286,7 +289,7 @@
                 "       curveValues.w * 1.0 * t3;\n\n";
         }
 
-       if (curves) {
+       if (renderMode == "curves") {
             shaderSource +=
                 "   // Calculate slope using dfdx so we can use the gradient to aproximate distance\n" +
                 "   vec4 slope = dFdx(curveValues) / dFdx(vTextureCoord.x);\n\n";
@@ -296,7 +299,7 @@
             "   // R,G,B curves add to their color channels respectively, alpha adds to all.\n" + 
             "   vec3 outColor;\n";
 
-		if (curves) {
+		if (renderMode == "curves") {
 			shaderSource +=
             	"   outColor.x = smoothstep(0.01,0.0,abs(textureCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));\n";
 
@@ -327,6 +330,40 @@
                     "   outColor.z = 0.0;\n";
             }  	
 		}
+        else if (renderMode == "colors")
+        {
+            shaderSource += 
+                "   outColor.x = curveValues.x * 0.5;\n";
+
+            if (g_settings.m_orderBoost < 3)
+            {
+                shaderSource += 
+                    "   outColor.y = curveValues.y * 0.5;\n";
+
+                if (g_settings.m_orderBoost < 1)
+                {
+                    shaderSource +=
+                        "   outColor.z = curveValues.z * 0.5;\n" +
+                        "   float v = curveValues.w * 0.5;\n" +
+                        "   outColor.x += v;\n" +
+                        "   outColor.y += v;\n" +
+                        "   outColor.z += v;\n";
+                }
+                else
+                {
+                    shaderSource +=
+                        "   outColor.z = 0.0;\n" + 
+                        "   outColor *= 2.0;\n";
+                }
+            }
+            else
+            {
+                shaderSource +=
+                    "   outColor.y = 0.0;\n" +
+                    "   outColor.z = 0.0;\n" +
+                    "   outColor *= 2.0;\n";
+            }            
+        }
 		else {
 	        shaderSource += 
 	            "   outColor.x = step(textureCoord.y, curveValues.x) * 0.5;\n";
@@ -375,9 +412,8 @@
             return buildFragmentShader_texture();
 
         var bilinear = (document.getElementById("SamplingMode").value == "bilinear");
-        var curves = (renderMode == "curves");
         var polar = document.getElementById("RenderPolar").checked;
-        return buildFragmentShader_visual(bilinear, curves, polar);
+        return buildFragmentShader_visual(bilinear, renderMode, polar);
 
         alert("Could not find shader to generate");
         return null;
@@ -1157,7 +1193,8 @@
                             <select id="RenderMode" onChange="OnChangeSettings();">
                                 <option value="halfspace">HalfSpace</option>
                                 <option value="curves">Curves (dFdx for gradient distance)</option>
-                                <option value="texture">Texture</option>
+                                <option value="colors">Gradient</option>
+                                <option value="texture">Source Texture</option>
                             </select>
                         </td>
                     </tr>
