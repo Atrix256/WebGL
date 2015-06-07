@@ -136,14 +136,14 @@
         "#extension OES_texture_float_linear : enable\n" +
         "precision mediump float;\n" + 
         "uniform sampler2D uSampler;\n" + 
-        "varying vec2 vTextureCoord;\n\n" + 
-        "void main(void) {\n";
+        "varying vec2 vTextureCoord;\n\n";
 
     var g_fragmentShaderFooter = "}";
 
     function buildFragmentShader_texture () {
         var shaderSource = 
             g_fragmentShaderHeader +
+            "void main(void) {\n" +
             "   gl_FragColor = texture2D(uSampler, vTextureCoord);\n" + 
             g_fragmentShaderFooter;
 
@@ -154,20 +154,28 @@
     function buildFragmentShader_visual (bilinear, renderMode, polar) {
         var shaderSource = "/*\n   Description:\n   " + g_settings.m_shaderDescription + "\n\n   Texture Layout:\n   " + g_settings.m_textureLayout + "\n*/\n\n" + g_fragmentShaderHeader;
 
+        shaderSource +=
+            "vec2 AdjustTextureCoords (vec2 texCoord) {\n";
+
         // convert to polar coordinates if we should
         if (polar) {
         	shaderSource +=
         		"   // Convert the texture coordinares from cartesian to polar space.\n" +
-        		"   vec2 adjustedTextureCoord = (vTextureCoord - vec2(0.5)) * 2.0;\n" +
+        		"   vec2 adjustedTextureCoord = (texCoord - vec2(0.5)) * 2.0;\n" +
         		"   adjustedTextureCoord.x *= -1.0;\n" +
         		"   adjustedTextureCoord.y *= -1.0;\n" +
         		"   vec2 textureCoord;\n" +
         		"   textureCoord.x = (atan(adjustedTextureCoord.y, adjustedTextureCoord.x) + 3.14159265359) / 6.28318530718;\n" +
-        		"   textureCoord.y = length(adjustedTextureCoord);\n\n";  
+        		"   textureCoord.y = length(adjustedTextureCoord);\n" +
+                "   return textureCoord;\n"
         }
         else {
-        	shaderSource += "   vec2 textureCoord = vTextureCoord;\n\n";
+        	shaderSource += "   return texCoord;\n";
         }
+
+        shaderSource +=
+            "}\n\n" +
+            "vec4 GetCurveValues (vec2 textureCoord) {\n";
 
         // calculate how many texture samples there will be
         var textureSampleCount = bilinear ? g_settings.m_desiredTextureSizeY - 1 : g_settings.m_desiredTextureSizeY + 1;
@@ -289,10 +297,23 @@
                 "       curveValues.w * 1.0 * t3;\n\n";
         }
 
-       if (renderMode == "curves") {
+        shaderSource +=
+            "   return curveValues;\n" +
+            "}\n\nvoid main(void) {\n" +
+            "   //Calculate our texture coordinates\n" +
+            "   vec2 textureCoord = AdjustTextureCoords(vTextureCoord);\n\n" +
+            "   // Get our curve values\n" +
+            "   vec4 curveValues = GetCurveValues(textureCoord);\n\n";
+
+        if (renderMode == "curves") {
             shaderSource +=
                 "   // Calculate slope using dfdx so we can use the gradient to aproximate distance\n" +
                 "   vec4 slope = dFdx(curveValues) / dFdx(vTextureCoord.x);\n\n";
+        }
+        else if (renderMode == "colors2d") {
+            shaderSource +=
+                "   // modulate our curve values by the other axis\n" +
+                "   curveValues *= GetCurveValues(textureCoord.yx);\n\n";
         }
 
         shaderSource +=
@@ -330,7 +351,7 @@
                     "   outColor.z = 0.0;\n";
             }  	
 		}
-        else if (renderMode == "colors")
+        else if (renderMode == "colors" || renderMode == "colors2d")
         {
             shaderSource += 
                 "   outColor.x = curveValues.x * 0.5;\n";
@@ -1194,6 +1215,7 @@
                                 <option value="halfspace">HalfSpace</option>
                                 <option value="curves">Curves (dFdx for gradient distance)</option>
                                 <option value="colors">Gradient</option>
+                                <option value="colors2d">Gradient 2 axis</option>
                                 <option value="texture">Source Texture</option>
                             </select>
                         </td>
