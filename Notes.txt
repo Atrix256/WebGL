@@ -1,3 +1,10 @@
+"Description: 9 texture samples taken to make 8 curves end to end for each color channel, where each curve is order 8. Then the R,G,B,A curves are combined with the cubic bezier curve function, to end up with one curve that is order 11. The source texture dimensions are 16x8."
+- i don't think that is correct! the curve has 89 control points!! i think maybe they are multiplied
+
+? how does order work with trilinear? i don't think it works the same way. possibly related to above question.
+
+
+
 * clean up GLFW code.
 * make trilinear sampling work for cubic curves
  * not sure if it's a command line param to this program of what to do or what??
@@ -108,6 +115,8 @@ compare quality (and speed?) vs baking curve as 1x16?
 
  =====Paper Notes=====
 
+! updated video drivers got better bilinear sampling accuracy?!
+
  notes for paper:
  * putting the control points in RGBA is a way to get a smoother curve with only a single texture read (1x1). can get 1 cubic, or two linear, or a quadratic curve, and a scalar value.
  * a nice benefit is that you could extend this to 2x2 and do a single texture read to make the control points animate on a quadratic curve instead of linearly.
@@ -195,6 +204,8 @@ G->H->A
  * technically, could also make it not even share control points!
  * higher degree curves = more texture sampels needed.  End to end curves = fewer.
 
+* mention perf - maybe one measurement but maybe mention that it depends on how many texture reads other code is doing etc.
+
 ! cubic. don't need 4x2 image... it has the same coordinates next to eachother! 3x2 does it!
 
 ! can put the same upper right value as lower left and use texture wrap to make it looping?
@@ -205,6 +216,9 @@ G->H->A
  * M = # of curves end to end you want
  * N = # of control points you want on your curve (degree)
  * this is with bilinear sampling only, what about trilinear and beyond? (step up the pascal triangle. one less texture lookup)
+
+future work
+? see if this stuff can be extended to bezier triangles or rectangular bezier patches?  Or other 3d uses
 
 =====DEMO NOTES=====
 * chrome disable vsync
