@@ -1,17 +1,13 @@
-/*
-    Expands ShaderDefs.h into classes
-
-*/
+//=============================================================================================================
+// Expands ShaderDefs.h into CShader... classes
+//=============================================================================================================
 
 #include <vector>
 #include "utils.h"
 
-// TODO: remove friendship with main!
-
 #define SHADER_BEGIN(NAME) \
     class CShader##NAME## { \
     public: \
-        friend int main(void); \
         CShader##NAME##(); \
         ~CShader##NAME##(); \
         void Render(); \

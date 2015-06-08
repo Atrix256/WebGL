@@ -1,7 +1,12 @@
+//=============================================================================================================
+// Utility functions
+//=============================================================================================================
+
 #include "utils.h"
 #include <stdio.h>
 #include <vector>
 
+//=============================================================================================================
 GLuint LoadShader(const char *vertexShader, const char *fragmentShader) {
     GLuint vertShader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -51,6 +56,7 @@ GLuint LoadShader(const char *vertexShader, const char *fragmentShader) {
     return program;
 }
 
+//=============================================================================================================
 GLuint MakeFloatBuffer(const std::vector<float>& data)
 {
     GLuint buffer = 0;
@@ -60,6 +66,7 @@ GLuint MakeFloatBuffer(const std::vector<float>& data)
     return buffer;
 }
 
+//=============================================================================================================
 GLuint MakeTexture(GLsizei width, GLsizei height, const std::vector<unsigned char>& data)
 {
     GLuint texture = 0;

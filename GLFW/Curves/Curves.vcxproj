@@ -89,7 +89,6 @@
   <ItemGroup>
     <ClInclude Include="ShaderDefs.h" />
     <ClInclude Include="Shaders.h" />
-    <ClInclude Include="Shaders.inl" />
     <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

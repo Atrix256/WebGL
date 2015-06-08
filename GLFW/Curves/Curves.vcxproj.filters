@@ -26,9 +26,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Shaders.inl">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ShaderDefs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
