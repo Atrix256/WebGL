@@ -1,10 +1,10 @@
-#define SHADER(...) #__VA_ARGS__
+#define VERTEX_SHADER(name, ...) const char *s_vertexShader_##name = #__VA_ARGS__
+#define FRAGMENT_SHADER(name, ...) const char *s_fragmentShader_##name = #__VA_ARGS__
 
 //--------------------------------------------------------------------------------------------------
 //                                     VERTEX SHADER
 //--------------------------------------------------------------------------------------------------
-const char *s_vertexShader=
-SHADER(
+VERTEX_SHADER(BilinearTest,
 attribute vec2 aVertexPosition;
 attribute vec2 aTextureCoord;
 
@@ -19,8 +19,7 @@ void main(void) {
 //--------------------------------------------------------------------------------------------------
 //                                     FRAGMENT SHADER
 //--------------------------------------------------------------------------------------------------
-const char *s_fragmentShader=
-SHADER(
+FRAGMENT_SHADER(BilinearTest,
 uniform sampler2D uSampler;
 varying vec2 vTextureCoord;
 
@@ -46,11 +45,7 @@ vec4 SamplePixel(vec2 pixel, bool bilinearSampling) {
 }
 
 void main(void) {
-
-    //gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
-    //return;
-
-    vec4 colorValue = vec4(0.0);
+    vec4 colorValue;
 
     if (vTextureCoord.x < 0.995)
     {
@@ -75,4 +70,5 @@ void main(void) {
 
 //--------------------------------------------------------------------------------------------------
 
-#undef SHADER
+#undef VERTEX_SHADER
+#undef FRAGMENT_SHADER

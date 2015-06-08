@@ -1,0 +1,25 @@
+/*
+    Macros to declare shaders
+
+    SHADER_BEGIN(NAME)
+        SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE)
+        SHADER_UNIFORM(NAME)
+        SHADER_TEXTURE(NAME)
+    SHADER_END()
+
+    // TODO: more documenation!
+
+*/
+
+SHADER_BEGIN(BilinearTest)
+    SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2)
+    SHADER_UNIFORM(uSampler)
+    SHADER_TEXTURE(uSampler)
+SHADER_END()
+
+#undef SHADER_BEGIN
+#undef SHADER_VERTEX_ATTRIBUTE
+#undef SHADER_UNIFORM
+#undef SHADER_TEXTURE
+#undef SHADER_END
