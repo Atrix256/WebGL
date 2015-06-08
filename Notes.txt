@@ -3,7 +3,9 @@
 
 ? how does order work with trilinear? i don't think it works the same way. possibly related to above question.
 
-
+? where did IQ get his 24.8 knowledge from?
+ * http://iquilezles.org/www/articles/hwinterpolation/hwinterpolation.htm
+ * http://iquilezles.org/www/articles/texture/texture.htm
 
 * clean up GLFW code.
 * make trilinear sampling work for cubic curves
