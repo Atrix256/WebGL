@@ -10,11 +10,6 @@
 
     TODO:
     * make a 2 axis colors mode that does two samples - one for each axis
-    
-    * linear sampling option (hardware linear, software linear). probably a bit better than hardware bilinear, probably not quite as good as software bilinear
-     * this should probably be an option on the flag as well
-
-    ? maybe have a pure software bilinear texture read? same as control points, but more texture reads. to show they are the same
 -->
 <html>
 <head>
@@ -161,7 +156,7 @@
         else if (samplingMode == "bilinearSmoothstep") {
             shaderSource +=
                 "   //Apply a cubic curve (smoothstep) to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
-                "   //smoothstep is otherwise known as 3x^2 - 2x^3\n" +
+                "   //smoothstep is otherwise known as a clamp and y=3x^2-2x^3\n" +
                 "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
                 "   p = p*myTexResolution + 0.5;\n\n" +
                 "   vec2 i = floor(p);\n" +
@@ -171,7 +166,7 @@
                 "   p = (p - 0.5)/myTexResolution;\n" +
                 "   return texture2D(uSampler, p);\n}\n\n";            
         }
-        else {
+        else if (samplingMode == "bilinearQuintic") {
             shaderSource +=
                 "   //Apply a quintic curve to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
                 "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
@@ -183,6 +178,30 @@
                 "   p = (p - 0.5)/myTexResolution;\n" +
                 "   return texture2D(uSampler, p);\n}\n\n";                  
         }
+        else if (samplingMode == "bilinearsw") {
+            shaderSource +=
+                "   // Do four pixel reads and combine with bilinear sampling to get the final result\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   vec4 sampleA = texture2D(uSampler, (i + vec2(0.0,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleB = texture2D(uSampler, (i + vec2(1.0,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleC = texture2D(uSampler, (i + vec2(0.0,1.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleD = texture2D(uSampler, (i + vec2(1.0,1.0) - 0.5) / myTexResolution);\n" +
+                "   return mix(mix(sampleA, sampleB, f.x), mix(sampleC, sampleD, f.x), f.y);\n}\n\n";                  
+        }        
+        else if (samplingMode == "bilinearhwsw") {
+            shaderSource +=
+                "   // Do two pixel reads and combine with lerp to get the final result\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   vec4 sampleA = texture2D(uSampler, (i + vec2(f.x,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleB = texture2D(uSampler, (i + vec2(f.x,1.0) - 0.5) / myTexResolution);\n" +
+                "   return mix(sampleA, sampleB, f.y);\n}\n\n";             
+        }         
 
         shaderSource +=
             "void main(void) {\n" +
@@ -216,7 +235,7 @@
                 "   p = (p - 0.5)/myTexResolution;\n" +
                 "   return texture2D(uSampler, p);\n}\n\n";            
         }
-        else {
+        else if (samplingMode == "bilinearQuintic") {
             shaderSource +=
                 "   //Apply a quintic curve to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
                 "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
@@ -228,6 +247,30 @@
                 "   p = (p - 0.5)/myTexResolution;\n" +
                 "   return texture2D(uSampler, p);\n}\n\n";                  
         }
+        else if (samplingMode == "bilinearsw") {
+            shaderSource +=
+                "   // Do four pixel reads and combine with bilinear interpolation to get the final result\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   vec4 sampleA = texture2D(uSampler, (i + vec2(0.0,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleB = texture2D(uSampler, (i + vec2(1.0,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleC = texture2D(uSampler, (i + vec2(0.0,1.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleD = texture2D(uSampler, (i + vec2(1.0,1.0) - 0.5) / myTexResolution);\n" +
+                "   return mix(mix(sampleA, sampleB, f.x), mix(sampleC, sampleD, f.x), f.y);\n}\n\n";                  
+        } 
+        else if (samplingMode == "bilinearhwsw") {
+            shaderSource +=
+                "   // Do two pixel reads and combine with lerp to get the final result\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   vec4 sampleA = texture2D(uSampler, (i + vec2(f.x,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleB = texture2D(uSampler, (i + vec2(f.x,1.0) - 0.5) / myTexResolution);\n" +
+                "   return mix(sampleA, sampleB, f.y);\n}\n\n";             
+        }                  
 
         shaderSource +=
             "vec2 AdjustTextureCoords (vec2 texCoord) {\n";
@@ -1090,9 +1133,12 @@
 
         if (document.getElementById("SamplingMode").value == "bilinearSmoothstep")
             g_settings.m_shaderDescription += "  Texture coordinates softened with a cubic curve (smoothstep)."
-
-        if (document.getElementById("SamplingMode").value == "bilinearQuintic")
+        else if (document.getElementById("SamplingMode").value == "bilinearQuintic")
             g_settings.m_shaderDescription += "  Texture coordinates softened with a quintic curve."
+        else if (document.getElementById("SamplingMode").value == "bilinearhwsw")
+            g_settings.m_shaderDescription += "  Two linear reads done on hardware, lerped in the fragment shader.";
+        else if (document.getElementById("SamplingMode").value == "bilinearsw")
+            g_settings.m_shaderDescription += "  Four pixel reads done on hardware, bilinearly interpolated in fragment shader.";        
 
         document.getElementById("ShaderDesc").innerHTML = g_settings.m_shaderDescription;
 
@@ -1284,10 +1330,12 @@
                         <td>Sampling:</td>
                         <td>
                             <select id="SamplingMode" onChange="OnChangeSettings();">
-                                <option value="bilinear">Bilinear</option>
-                                <option value="bilinearSmoothstep">Bilinear + Cubic Curve (Smoothstep)</option>
-                                <option value="bilinearQuintic">Bilinear + Quintic Curve</option>
-                                <option value="nearest">Fragment Shader Blends Control Points (More Texture Reads)</option>
+                                <option value="bilinear">Hardware Bilinear (1 pixel read)</option>
+                                <option value="bilinearSmoothstep">Hardware Bilinear + Cubic Curve (Smoothstep) (1 pixel read)</option>
+                                <option value="bilinearQuintic">Hardware Bilinear + Quintic Curve (1 pixel read)</option>
+                                <option value="bilinearhwsw">Hardware Linear / Software Linear (2 pixel reads) </option>
+                                <option value="nearest">Fragment Shader Blends Control Points (3 texture reads)</option>
+                                <option value="bilinearsw">Software Bilinear (4 texture reads) </option>                                
                             </select>
                         </td>
                     </tr>
