@@ -2,16 +2,19 @@
     WebGL initialization and basic utility code is based on the source code found here:
     http://learningwebgl.com/blog/?page_id=1217
 
+    Smoothing of texture coordinates by using smoothstep or a quintic curve from here:
+    http://iquilezles.org/www/articles/hwinterpolation/hwinterpolation.htm
+    http://iquilezles.org/www/articles/texture/texture.htm
+
     The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
 
     TODO:
     * make a 2 axis colors mode that does two samples - one for each axis
-    * make sure that enhanced bilinear modes work with 2d gradient
-    * should the adjust texture coordinate logic (rect to polar), go in SamplePixel instead?
-    * if IQ's solutions look good, link to his page from this and the flag demo? http://iquilezles.org/www/articles/texture/texture.htm
-     * try solution in flag demo too
-    * make quintic mode available too.
-    * make enhanced bilinear modes work on texture viewing mode as well!
+    
+    * linear sampling option (hardware linear, software linear). probably a bit better than hardware bilinear, probably not quite as good as software bilinear
+     * this should probably be an option on the flag as well
+
+    ? maybe have a pure software bilinear texture read? same as control points, but more texture reads. to show they are the same
 -->
 <html>
 <head>
@@ -146,11 +149,44 @@
 
     var g_fragmentShaderFooter = "}";
 
-    function buildFragmentShader_texture () {
+    function buildFragmentShader_texture (samplingMode) {
         var shaderSource = 
             g_fragmentShaderHeader +
+            "vec4 SamplePixel (vec2 p) {\n";
+
+        if (samplingMode == "nearest" || samplingMode == "bilinear") {
+            shaderSource +=
+                "   return texture2D(uSampler, p);\n}\n\n";
+        }
+        else if (samplingMode == "bilinearSmoothstep") {
+            shaderSource +=
+                "   //Apply a cubic curve (smoothstep) to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
+                "   //smoothstep is otherwise known as 3x^2 - 2x^3\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   f = smoothstep(0.0, 1.0, f);\n" +
+                "   p = i + f;\n\n" +
+                "   p = (p - 0.5)/myTexResolution;\n" +
+                "   return texture2D(uSampler, p);\n}\n\n";            
+        }
+        else {
+            shaderSource +=
+                "   //Apply a quintic curve to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   f = f*f*f*(f*(f*6.0-15.0)+10.0);\n" +
+                "   p = i + f;\n\n" +
+                "   p = (p - 0.5)/myTexResolution;\n" +
+                "   return texture2D(uSampler, p);\n}\n\n";                  
+        }
+
+        shaderSource +=
             "void main(void) {\n" +
-            "   gl_FragColor = texture2D(uSampler, vTextureCoord);\n" + 
+            "   gl_FragColor = SamplePixel(vTextureCoord);\n" + 
             g_fragmentShaderFooter;
 
         document.getElementById("ShaderSource").innerText = shaderSource;
@@ -167,20 +203,22 @@
             shaderSource +=
                 "   return texture2D(uSampler, p);\n}\n\n";
         }
-        else if (samplingMode != "bilinearSmoothstep") {
+        else if (samplingMode == "bilinearSmoothstep") {
             shaderSource +=
+                "   //Apply a cubic curve (smoothstep) to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
+                "   //smoothstep is otherwise known as 3x^2 - 2x^3\n" +
                 "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
                 "   p = p*myTexResolution + 0.5;\n\n" +
                 "   vec2 i = floor(p);\n" +
                 "   vec2 f = p - i;\n" +
-                "   f.x = smoothstep(f.x, 0.0, 1.0);\n" +
-                "   f.y = smoothstep(f.y, 0.0, 1.0);\n" +
+                "   f = smoothstep(0.0, 1.0, f);\n" +
                 "   p = i + f;\n\n" +
                 "   p = (p - 0.5)/myTexResolution;\n" +
                 "   return texture2D(uSampler, p);\n}\n\n";            
         }
         else {
             shaderSource +=
+                "   //Apply a quintic curve to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
                 "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
                 "   p = p*myTexResolution + 0.5;\n\n" +
                 "   vec2 i = floor(p);\n" +
@@ -188,7 +226,7 @@
                 "   f = f*f*f*(f*(f*6.0-15.0)+10.0);\n" +
                 "   p = i + f;\n\n" +
                 "   p = (p - 0.5)/myTexResolution;\n" +
-                "   return texture2D(uSampler, p);\n}\n\n";
+                "   return texture2D(uSampler, p);\n}\n\n";                  
         }
 
         shaderSource +=
@@ -466,10 +504,10 @@
 
     function buildFragmentShader () {
         var renderMode = document.getElementById("RenderMode").value;
+        var samplingMode = document.getElementById("SamplingMode").value;        
         if (renderMode == "texture")
-            return buildFragmentShader_texture();
+            return buildFragmentShader_texture(samplingMode);
 
-        var samplingMode = document.getElementById("SamplingMode").value;
         var polar = document.getElementById("RenderPolar").checked;
         return buildFragmentShader_visual(samplingMode, renderMode, polar);
 
@@ -1051,7 +1089,10 @@
         	g_settings.m_shaderDescription += "  Rendered Polar."
 
         if (document.getElementById("SamplingMode").value == "bilinearSmoothstep")
-            g_settings.m_shaderDescription += "  Texture coordinates softened with smoothstep."
+            g_settings.m_shaderDescription += "  Texture coordinates softened with a cubic curve (smoothstep)."
+
+        if (document.getElementById("SamplingMode").value == "bilinearQuintic")
+            g_settings.m_shaderDescription += "  Texture coordinates softened with a quintic curve."
 
         document.getElementById("ShaderDesc").innerHTML = g_settings.m_shaderDescription;
 
@@ -1244,8 +1285,9 @@
                         <td>
                             <select id="SamplingMode" onChange="OnChangeSettings();">
                                 <option value="bilinear">Bilinear</option>
-                                <option value="bilinearSmoothstep">Bilinear + Smoothstep</option>
-                                <option value="nearest">Nearest (+2 Texture Reads)</option>
+                                <option value="bilinearSmoothstep">Bilinear + Cubic Curve (Smoothstep)</option>
+                                <option value="bilinearQuintic">Bilinear + Quintic Curve</option>
+                                <option value="nearest">Fragment Shader Blends Control Points (More Texture Reads)</option>
                             </select>
                         </td>
                     </tr>
