@@ -144,7 +144,7 @@
 
     var g_fragmentShaderFooter = "}";
 
-    function buildFragmentShader_texture (samplingMode) {
+    function buildFragmentShader_texture (samplingMode, imageFormat) {
         var shaderSource = 
             g_fragmentShaderHeader +
             "vec4 SamplePixel (vec2 p) {\n";
@@ -203,24 +203,36 @@
                 "   return mix(sampleA, sampleB, f.y);\n}\n\n";             
         }         
 
-        shaderSource +=
-            "void main(void) {\n" +
-            "   gl_FragColor = SamplePixel(vTextureCoord);\n" + 
-            g_fragmentShaderFooter;
+        if (imageFormat == "RGBAF32_255") {
+            shaderSource +=
+                "void main(void) {\n" +
+                "   gl_FragColor = SamplePixel(vTextureCoord) / 255.0;\n" + 
+                g_fragmentShaderFooter;
+        }
+        else {
+            shaderSource +=
+                "void main(void) {\n" +
+                "   gl_FragColor = SamplePixel(vTextureCoord);\n" + 
+                g_fragmentShaderFooter;            
+        }
 
         document.getElementById("ShaderSource").innerText = shaderSource;
         return createFragmentShader(gl,shaderSource);
     }
 
-    function buildFragmentShader_visual (samplingMode, renderMode, polar) {
+    function buildFragmentShader_visual (samplingMode, renderMode, polar, imageFormat) {
         var shaderSource = "/*\n   Description:\n   " + g_settings.m_shaderDescription + "\n\n   Texture Layout:\n   " + g_settings.m_textureLayout + "\n*/\n\n" + g_fragmentShaderHeader;
 
         shaderSource +=
             "vec4 SamplePixel (vec2 p) {\n";
 
+        var postSample = "";
+        if (imageFormat == "RGBAF32_255")
+            postSample = " / 255.0";
+
         if (samplingMode == "nearest" || samplingMode == "bilinear") {
             shaderSource +=
-                "   return texture2D(uSampler, p);\n}\n\n";
+                "   return texture2D(uSampler, p)" + postSample + ";\n}\n\n";
         }
         else if (samplingMode == "bilinearSmoothstep") {
             shaderSource +=
@@ -233,7 +245,7 @@
                 "   f = smoothstep(0.0, 1.0, f);\n" +
                 "   p = i + f;\n\n" +
                 "   p = (p - 0.5)/myTexResolution;\n" +
-                "   return texture2D(uSampler, p);\n}\n\n";            
+                "   return texture2D(uSampler, p)" + postSample + ";\n}\n\n";            
         }
         else if (samplingMode == "bilinearQuintic") {
             shaderSource +=
@@ -245,7 +257,7 @@
                 "   f = f*f*f*(f*(f*6.0-15.0)+10.0);\n" +
                 "   p = i + f;\n\n" +
                 "   p = (p - 0.5)/myTexResolution;\n" +
-                "   return texture2D(uSampler, p);\n}\n\n";                  
+                "   return texture2D(uSampler, p)" + postSample + ";\n}\n\n";                  
         }
         else if (samplingMode == "bilinearsw") {
             shaderSource +=
@@ -258,7 +270,7 @@
                 "   vec4 sampleB = texture2D(uSampler, (i + vec2(1.0,0.0) - 0.5) / myTexResolution);\n" +
                 "   vec4 sampleC = texture2D(uSampler, (i + vec2(0.0,1.0) - 0.5) / myTexResolution);\n" +
                 "   vec4 sampleD = texture2D(uSampler, (i + vec2(1.0,1.0) - 0.5) / myTexResolution);\n" +
-                "   return mix(mix(sampleA, sampleB, f.x), mix(sampleC, sampleD, f.x), f.y);\n}\n\n";                  
+                "   return mix(mix(sampleA, sampleB, f.x), mix(sampleC, sampleD, f.x), f.y)" + postSample + ";\n}\n\n";                  
         } 
         else if (samplingMode == "bilinearhwsw") {
             shaderSource +=
@@ -269,7 +281,7 @@
                 "   vec2 f = p - i;\n" +
                 "   vec4 sampleA = texture2D(uSampler, (i + vec2(f.x,0.0) - 0.5) / myTexResolution);\n" +
                 "   vec4 sampleB = texture2D(uSampler, (i + vec2(f.x,1.0) - 0.5) / myTexResolution);\n" +
-                "   return mix(sampleA, sampleB, f.y);\n}\n\n";             
+                "   return mix(sampleA, sampleB, f.y)" + postSample + ";\n}\n\n";             
         }                  
 
         shaderSource +=
@@ -548,11 +560,12 @@
     function buildFragmentShader () {
         var renderMode = document.getElementById("RenderMode").value;
         var samplingMode = document.getElementById("SamplingMode").value;        
+        var imageFormat = document.getElementById("ImageFormat").value;        
         if (renderMode == "texture")
-            return buildFragmentShader_texture(samplingMode);
+            return buildFragmentShader_texture(samplingMode, imageFormat);
 
         var polar = document.getElementById("RenderPolar").checked;
-        return buildFragmentShader_visual(samplingMode, renderMode, polar);
+        return buildFragmentShader_visual(samplingMode, renderMode, polar, imageFormat);
 
         alert("Could not find shader to generate");
         return null;
@@ -621,6 +634,10 @@
             for (i = 0; i < data.length; ++i)
                 data[i] /= 255;
         }
+        else if (document.getElementById("ImageFormat").value == "RGBAF32_255") {
+            format = gl.FLOAT;
+            data = new Float32Array(byteArrayWithRGBAData);
+        }        
         else
         {
         	format = gl.UNSIGNED_BYTE;
@@ -816,6 +833,8 @@
 
 			if (document.getElementById("ImageFormat").value == "RGBAF32")
 				pixelData += pad((textureData[i]/255).toFixed(2).toString(),5);
+            else if (document.getElementById("ImageFormat").value == "RGBAF32_255")
+                pixelData += pad(Math.round(textureData[i]).toString(),4);
 			else
             	pixelData += pad(Math.round(textureData[i]).toString(),4);
 
@@ -1369,7 +1388,8 @@
                         <td>
                             <select id="ImageFormat" onChange="initGL();">
                                 <option value="RGBAU8">RGBA 8 bit unsigned</option>
-                                <option value="RGBAF32">RGBA 32 bit float</option>
+                                <option value="RGBAF32">RGBA 32 bit float (0..1)</option>
+                                <option value="RGBAF32_255">RGBA 32 bit float (0..255)</option>
                             </select>                            
                         </td>
                     </tr>
