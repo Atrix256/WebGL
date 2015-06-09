@@ -107,7 +107,7 @@
 
     uniform sampler2D uSampler;
     uniform vec2 uTextureResolution;
-    uniform bool uBilinearSampling;
+    uniform int uSamplingMode;
     uniform float uTimeSeconds;
 
     varying vec2 vTextureCoord;
@@ -115,24 +115,27 @@
 
     vec4 SamplePixel (vec2 pixel) {
 
-        // Bilinear sampling:
-        // Hardware based bilinear sampling in 8 bits
-        if (uBilinearSampling)
+        // Hardware bilinear sampling - 1 texture read
+        if (uSamplingMode == 0)
             return texture2D(uSampler, (pixel + vec2(0.5)) / uTextureResolution);
 
-        // Nearest sampling:
-        // Software bilinear sampling in floats (higher quality)
-        float fracu = fract(pixel.x);
-        float fracv = fract(pixel.y);
+        vec2 frac = fract(pixel);
+        vec2 floorPixel = floor(pixel) + 0.5;
 
-        vec2 floorPixel = floor(pixel) + vec2(0.5,0.5);
+        // Hardware linear / Software linear sampling - 2 texture reads
+        if (uSamplingMode == 1)
+        {
+        	vec4 A = texture2D(uSampler, (floorPixel+vec2(frac.x,0.0)) / uTextureResolution);
+        	vec4 B = texture2D(uSampler, (floorPixel+vec2(frac.x,1.0)) / uTextureResolution);
+			return mix(A,B,frac.y);
+        }
 
-        vec4 A = texture2D(uSampler, floorPixel / uTextureResolution);
+        // Software bilinear sampling - 4 texture reads
+        vec4 A = texture2D(uSampler, (floorPixel+vec2(0.0,0.0)) / uTextureResolution);
         vec4 B = texture2D(uSampler, (floorPixel+vec2(1.0,0.0)) / uTextureResolution);
         vec4 C = texture2D(uSampler, (floorPixel+vec2(0.0,1.0)) / uTextureResolution);
         vec4 D = texture2D(uSampler, (floorPixel+vec2(1.0,1.0)) / uTextureResolution);
-
-        return mix(mix(A,B,fracu), mix(C,D,fracu), fracv);
+        return mix(mix(A,B,frac.x), mix(C,D,frac.x), frac.y);
     }
 
     vec3 DrawLandScape () {
@@ -466,7 +469,7 @@
 
             FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
             FSshaderProgram.textureResolutionUniform = gl.getUniformLocation(FSshaderProgram, "uTextureResolution");
-            FSshaderProgram.bilinearSamplingUniform = gl.getUniformLocation(FSshaderProgram, "uBilinearSampling");
+            FSshaderProgram.samplingModeUniform = gl.getUniformLocation(FSshaderProgram, "uSamplingMode");
             FSshaderProgram.timeSecondsUniform = gl.getUniformLocation(FSshaderProgram, "uTimeSeconds");
 
             FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
@@ -758,7 +761,7 @@
         gl.bindTexture(gl.TEXTURE_2D, bezierTexture);
         gl.uniform1i(FSshaderProgram.samplerUniform, 0);
 		gl.uniform2f(FSshaderProgram.textureResolutionUniform, g_textureSizeX, g_textureSizeY);
-        gl.uniform1i(FSshaderProgram.bilinearSamplingUniform, document.getElementById("SamplingMode").value == "bilinear");
+        gl.uniform1i(FSshaderProgram.samplingModeUniform, document.getElementById("SamplingMode").value);
         gl.uniform1f(FSshaderProgram.timeSecondsUniform, g_timeMs / 1000.0);
         setMatrixUniforms();
         gl.drawArrays(gl.TRIANGLES,0,flagBuffer.numItems);
@@ -958,8 +961,9 @@
                         <td>Sampling:</td>
                         <td>
                             <select id="SamplingMode">
-                                <option value="bilinear">Hardware Bilinear</option>
-                                <option value="nearest">Software Bilinear (+3 Texture Reads)</option>
+                                <option value="0">Hardware Bilinear (1 texture read)</option>
+                                <option value="1">Hardware Linear / Software Linear (2 texture reads)</option>
+                                <option value="2">Software Bilinear (4 texture reads)</option>
                             </select>
                         </td>
                     </tr>
