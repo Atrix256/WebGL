@@ -622,7 +622,7 @@
     }
 
     function createTexture(byteArrayWithRGBAData, width, height) {
-        var filter = (document.getElementById("SamplingMode").value != "nearest")
+        var filter = (document.getElementById("SamplingMode").value != "nearest" && document.getElementById("SamplingMode").value != "bilinearsw")
             ? gl.LINEAR
             : gl.NEAREST;
 
