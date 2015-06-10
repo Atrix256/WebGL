@@ -5,7 +5,10 @@
 /*
 
 TODO:
-* changing this to float breaks it! SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
+* can we use vec2d etc? i think not... keep trying to fight the precision problems.
+* can we auto-include .inl for each shader name? i think so!
+* make a bilinear (quadratic) and trilinear (cubic / 3d texture) curve demo
+* might make it so you don't have to define each macro every place you include the shaderdefs (if not defined, define empty ones in header!)
 */
 
 #include "utils.h"
@@ -15,6 +18,8 @@ TODO:
 #include <vector>
 
 #include "Shaders.h"
+
+EShaderTest g_whichTest = EShaderTest::e_shaderFirst;
 
 //=============================================================================================================
 static void error_callback(int error, const char* description)
@@ -27,6 +32,16 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
+
+    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS) {
+        if (g_whichTest > EShaderTest::e_shaderFirst)
+            g_whichTest = EShaderTest(g_whichTest - 1);
+    }
+
+    if (key == GLFW_KEY_RIGHT && action == GLFW_PRESS) {
+        if (g_whichTest < EShaderTest::e_shaderLast)
+            g_whichTest = EShaderTest(g_whichTest + 1);
+    }
 }
 
 //=============================================================================================================
@@ -57,29 +72,12 @@ int main(void)
 
     printf("Using OpenGL %s\n", glGetString(GL_VERSION));
 
-    // create the shader and set up shader data
-    CShaderBilinearTest shader;
-    shader.SetAttributeData_aTextureCoord({
-        0.0, 0.0,
-        2.0, 0.0,
-        2.0, 1.0,
-        0.0, 0.0,
-        2.0, 1.0,
-        0.0, 1.0,
-    });
-    shader.SetAttributeData_aVertexPosition({
-        -1.0, -1.0,
-         1.0, -1.0,
-         1.0,  1.0,
-        -1.0, -1.0,
-         1.0,  1.0,
-        -1.0,  1.0,
-    });
-
-    shader.SetTextureData_uSampler(2, 2, {
-        128, 0, 0, 255,      50, 0, 0, 255,
-         50, 0, 0, 255,     200, 0, 0, 255
-    });
+    // init our shaders
+    #define SHADER_BEGIN(NAME) CShader##NAME shader##NAME##;  InitShaderTest(shader##NAME##);
+    #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
+    #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
+    #define SHADER_END()
+    #include "ShaderDefs.h"
 
     // render loop
     while (!glfwWindowShouldClose(window))
@@ -89,7 +87,14 @@ int main(void)
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        shader.Render();
+        // render the right shader
+        switch (g_whichTest){
+        #define SHADER_BEGIN(NAME) case e_shader##NAME: shader##NAME##.Render(); break;
+        #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
+        #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
+        #define SHADER_END()
+        #include "ShaderDefs.h"
+        }
 
         glfwSwapBuffers(window);
         glfwPollEvents();

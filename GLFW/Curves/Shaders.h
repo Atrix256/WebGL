@@ -38,3 +38,25 @@
     };
 
 #include "ShaderDefs.h"
+
+// init / factory function
+template<typename T>
+void InitShaderTest(T& shader);
+#define SHADER_BEGIN(NAME) template<> void InitShaderTest<CShader##NAME##>(CShader##NAME##& shader);
+#define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
+#define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
+#define SHADER_END()
+#include "ShaderDefs.h"
+
+// shader enum
+enum EShaderTest {
+    #define SHADER_BEGIN(NAME) e_shader##NAME,
+    #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
+    #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
+    #define SHADER_END()
+    #include "ShaderDefs.h"
+
+    e_shaderInvalid,
+    e_shaderFirst = 0,
+    e_shaderLast = e_shaderInvalid - 1
+};

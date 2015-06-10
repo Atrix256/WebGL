@@ -36,4 +36,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Shader_BilinearTest.inl">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>
