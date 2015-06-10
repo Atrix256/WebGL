@@ -12,13 +12,13 @@
         ~CShader##NAME##(); \
         void Render(); \
 
-#define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE) \
+#define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE) \
     private: \
         GLuint m_attr_##NAME##; \
         GLuint m_attr_##NAME##_buffer; \
     public: \
-        void SetAttributeData_##NAME##(const std::vector<float>& data) { \
-            m_attr_##NAME##_buffer = MakeFloatBuffer(data); \
+        void SetAttributeData_##NAME##(const std::vector<TYPE>& data) { \
+            m_attr_##NAME##_buffer = MakeBuffer<TYPE>(data); \
             m_numTriangles = data.size() / ELEMENTSIZE; \
         }
 
@@ -26,12 +26,12 @@
     private: \
         GLuint m_uniform_##NAME##;
 
-#define SHADER_TEXTURE(NAME) \
+#define SHADER_TEXTURE(NAME, TYPE) \
     private: \
         GLuint m_texture_##NAME##; \
     public: \
-        void SetTextureData_##NAME##(GLsizei width, GLsizei height, const std::vector<unsigned char>& data) { \
-            m_texture_##NAME## = MakeTexture(width, height, data); \
+        void SetTextureData_##NAME##(GLsizei width, GLsizei height, const std::vector<TYPE>& data) { \
+            m_texture_##NAME## = MakeTexture<TYPE>(width, height, data); \
         }
 
 #define SHADER_END() \

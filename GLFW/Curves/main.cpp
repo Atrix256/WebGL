@@ -2,6 +2,12 @@
 // Main
 //=============================================================================================================
 
+/*
+
+TODO:
+* changing this to float breaks it! SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
+*/
+
 #include "utils.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -9,8 +15,6 @@
 #include <vector>
 
 #include "Shaders.h"
-
-bool renderShader2 = false;
 
 //=============================================================================================================
 static void error_callback(int error, const char* description)
@@ -23,9 +27,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
-
-    if (key == GLFW_KEY_LEFT && action == GLFW_PRESS)
-        renderShader2 = !renderShader2;
 }
 
 //=============================================================================================================
@@ -54,6 +55,8 @@ int main(void)
     }
     printf("Using GLEW %s\n", glewGetString(GLEW_VERSION));
 
+    printf("Using OpenGL %s\n", glGetString(GL_VERSION));
+
     // create the shader and set up shader data
     CShaderBilinearTest shader;
     shader.SetAttributeData_aTextureCoord({
@@ -72,31 +75,10 @@ int main(void)
          1.0,  1.0,
         -1.0,  1.0,
     });
+
     shader.SetTextureData_uSampler(2, 2, {
         128, 0, 0, 255,      50, 0, 0, 255,
          50, 0, 0, 255,     200, 0, 0, 255
-    });
-
-    CShaderBilinearTest shader2;
-    shader2.SetAttributeData_aTextureCoord({
-        0.0, 0.0,
-        2.0, 0.0,
-        2.0, 1.0,
-        0.0, 0.0,
-        2.0, 1.0,
-        0.0, 1.0,
-    });
-    shader2.SetAttributeData_aVertexPosition({
-        -1.0, -1.0,
-         1.0, -1.0,
-         1.0,  1.0,
-        -1.0, -1.0,
-         1.0,  1.0,
-        -1.0,  1.0,
-    });
-    shader2.SetTextureData_uSampler(2, 2, {
-        128, 0, 0, 255,      50, 0, 0, 255,
-         50, 0, 0, 255,     100, 0, 0, 255
     });
 
     // render loop
@@ -107,10 +89,7 @@ int main(void)
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        if (!renderShader2)
-            shader.Render();
-        else
-            shader2.Render();
+        shader.Render();
 
         glfwSwapBuffers(window);
         glfwPollEvents();
