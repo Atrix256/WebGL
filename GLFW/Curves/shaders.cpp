@@ -12,15 +12,9 @@
 //=============================================================================================================
 
 template <typename T>
-const char *GetVertexShader();
-
-template <typename T>
-const char *GetFragmentShader();
-
-template <typename T>
-GLuint LoadShader(const T& dummy)
+GLuint LoadShader(const T& shader)
 {
-    return LoadShader(GetVertexShader<T>(), GetFragmentShader<T>());
+    return LoadShader(shader.GetVertexShader(), shader.GetFragmentShader());
 }
 
 //=============================================================================================================
@@ -87,9 +81,3 @@ GLenum GLType<double>()
         glDrawArrays(GL_TRIANGLES, 0, m_numTriangles); \
     } 
 #include "ShaderDefs.h"
-
-// used by shader source code
-#define SHADER_SOURCE(...) "#version 450\n" #__VA_ARGS__
-
-// include shader source
-#include "Shader_BilinearTest.inl"

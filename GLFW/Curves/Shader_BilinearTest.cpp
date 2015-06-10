@@ -1,11 +1,12 @@
+#include "Shaders.h"
+
 //=============================================================================================================
 //                                            BilinearTest
 //=============================================================================================================
 
-template<>
-void InitShaderTest<CShaderBilinearTest>(CShaderBilinearTest &shader)
+void CShaderBilinearTest::Init()
 {
-    shader.SetAttributeData_aTextureCoord({
+    SetAttributeData_aTextureCoord({
         0.0, 0.0,
         2.0, 0.0,
         2.0, 1.0,
@@ -13,7 +14,7 @@ void InitShaderTest<CShaderBilinearTest>(CShaderBilinearTest &shader)
         2.0, 1.0,
         0.0, 1.0,
     });
-    shader.SetAttributeData_aVertexPosition({
+    SetAttributeData_aVertexPosition({
         -1.0, -1.0,
          1.0, -1.0,
          1.0,  1.0,
@@ -22,14 +23,13 @@ void InitShaderTest<CShaderBilinearTest>(CShaderBilinearTest &shader)
         -1.0,  1.0,
     });
 
-    shader.SetTextureData_uSampler(2, 2, {
+    SetTextureData_uSampler(2, 2, {
         128, 0, 0, 255,      50, 0, 0, 255,
          50, 0, 0, 255,     200, 0, 0, 255
     });
 }
 
-template<>
-const char *GetVertexShader<CShaderBilinearTest>()
+const char *CShaderBilinearTest::GetVertexShader()
 {
     return
     SHADER_SOURCE(
@@ -45,8 +45,7 @@ const char *GetVertexShader<CShaderBilinearTest>()
     );
 }
 
-template<>
-const char *GetFragmentShader<CShaderBilinearTest>()
+const char *CShaderBilinearTest::GetFragmentShader()
 {
     return
     SHADER_SOURCE(

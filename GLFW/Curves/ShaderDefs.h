@@ -35,6 +35,12 @@ SHADER_BEGIN(BilinearTest)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float)
 SHADER_END()
 
+SHADER_BEGIN(Quadratic2d)
+    SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
+    SHADER_UNIFORM_TEXTURE_2D(uSampler, float)
+SHADER_END()
+
 #undef SHADER_BEGIN
 #undef SHADER_VERTEX_ATTRIBUTE
 #undef SHADER_UNIFORM_TEXTURE_2D

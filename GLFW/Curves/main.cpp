@@ -5,10 +5,9 @@
 /*
 
 TODO:
-* can we use vec2d etc? i think not... keep trying to fight the precision problems.
-* can we auto-include .inl for each shader name? i think so!
 * make a bilinear (quadratic) and trilinear (cubic / 3d texture) curve demo
-* might make it so you don't have to define each macro every place you include the shaderdefs (if not defined, define empty ones in header!)
+* can we use vec2d etc? i think not (says it needs to be flat?)... keep trying to fight the precision problems though if you can.
+
 */
 
 #include "utils.h"
@@ -73,7 +72,7 @@ int main(void)
     printf("Using OpenGL %s\n", glGetString(GL_VERSION));
 
     // init our shaders
-    #define SHADER_BEGIN(NAME) CShader##NAME shader##NAME##;  InitShaderTest(shader##NAME##);
+    #define SHADER_BEGIN(NAME) CShader##NAME shader##NAME##;  shader##NAME##.Init();
     #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
     #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
     #define SHADER_END()
