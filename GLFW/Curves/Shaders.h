@@ -22,7 +22,7 @@
             m_numTriangles = data.size() / ELEMENTSIZE; \
         }
 
-#define SHADER_UNIFORM_TEXTURE(NAME, TYPE) \
+#define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE) \
     private: \
         GLuint m_uniform_##NAME##; \
         GLuint m_texture_##NAME##; \
