@@ -22,12 +22,9 @@
             m_numTriangles = data.size() / ELEMENTSIZE; \
         }
 
-#define SHADER_UNIFORM(NAME) \
+#define SHADER_UNIFORM_TEXTURE(NAME, TYPE) \
     private: \
-        GLuint m_uniform_##NAME##;
-
-#define SHADER_TEXTURE(NAME, TYPE) \
-    private: \
+        GLuint m_uniform_##NAME##; \
         GLuint m_texture_##NAME##; \
     public: \
         void SetTextureData_##NAME##(GLsizei width, GLsizei height, const std::vector<TYPE>& data) { \
