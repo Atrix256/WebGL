@@ -89,7 +89,7 @@ GLenum GLType<double>()
 #include "ShaderDefs.h"
 
 // used by shader source code defined below
-#define SHADER(...) #__VA_ARGS__
+#define SHADER(...) "#version 450\n" #__VA_ARGS__
 
 //=============================================================================================================
 //                                            BilinearTest
@@ -100,10 +100,10 @@ const char *GetVertexShader<CShaderBilinearTest>()
 {
     return
     SHADER(
-    attribute vec2 aVertexPosition;
-    attribute vec2 aTextureCoord;
+    in vec2 aVertexPosition;
+    in vec2 aTextureCoord;
 
-    varying vec2 vTextureCoord;
+    out vec2 vTextureCoord;
 
     void main(void) {
         gl_Position = vec4(aVertexPosition, 1.0, 1.0);
@@ -118,7 +118,10 @@ const char *GetFragmentShader<CShaderBilinearTest>()
     return
     SHADER(
     uniform sampler2D uSampler;
-    varying vec2 vTextureCoord;
+    
+    in vec2 vTextureCoord;
+
+    out vec4 outColor;
 
     vec4 SamplePixel(vec2 pixel, bool bilinearSampling) {
         // Bilinear sampling:
@@ -156,12 +159,12 @@ const char *GetFragmentShader<CShaderBilinearTest>()
         }
         else
         {
-            gl_FragColor = vec4(1.0);
+            outColor = vec4(1.0);
             return;
         }
 
         float value = step(vTextureCoord.y, colorValue.x);
-        gl_FragColor = vec4(0.0, value, 0.0, 1.0);
+        outColor = vec4(0.0, value, 0.0, 1.0);
     }
     );
 }
