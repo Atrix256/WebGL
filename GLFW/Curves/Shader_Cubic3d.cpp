@@ -63,28 +63,28 @@ const char *CShaderCubic3d::GetFragmentShader()
 
     out vec4 outColor;
 
-    vec4 SamplePixel(vec3 pixel, bool linearSampling) {
+    vec4 SampleTime(vec3 time, bool linearSampling) {
         // Trilinear sampling:
         // Hardware based trilinear sampling
         if (linearSampling)
-            return texture(uSampler, (pixel + 0.5) / 2.0);
+            return texture(uSampler, (time + 0.5) / 2.0);
 
         // Nearest sampling:
         // Software trilinear sampling (higher quality)
-        vec3 frac = fract(pixel);
+        vec3 frac = fract(time);
 
-        vec3 floorPixel = floor(pixel) + 0.5;
+        vec3 floorTime = floor(time) + 0.5;
 
-        vec4 A = texture(uSampler, (floorPixel + vec3(0.0, 0.0, 0.0)) / 2.0);
-        vec4 B = texture(uSampler, (floorPixel + vec3(1.0, 0.0, 0.0)) / 2.0);
-        vec4 C = texture(uSampler, (floorPixel + vec3(0.0, 1.0, 0.0)) / 2.0);
-        vec4 D = texture(uSampler, (floorPixel + vec3(1.0, 1.0, 0.0)) / 2.0);
+        vec4 A = texture(uSampler, (floorTime + vec3(0.0, 0.0, 0.0)) / 2.0);
+        vec4 B = texture(uSampler, (floorTime + vec3(1.0, 0.0, 0.0)) / 2.0);
+        vec4 C = texture(uSampler, (floorTime + vec3(0.0, 1.0, 0.0)) / 2.0);
+        vec4 D = texture(uSampler, (floorTime + vec3(1.0, 1.0, 0.0)) / 2.0);
         vec4 front = mix(mix(A, B, frac.x), mix(C, D, frac.x), frac.y);
 
-        vec4 E = texture(uSampler, (floorPixel + vec3(0.0, 0.0, 1.0)) / 2.0);
-        vec4 F = texture(uSampler, (floorPixel + vec3(1.0, 0.0, 1.0)) / 2.0);
-        vec4 G = texture(uSampler, (floorPixel + vec3(0.0, 1.0, 1.0)) / 2.0);
-        vec4 H = texture(uSampler, (floorPixel + vec3(1.0, 1.0, 1.0)) / 2.0);
+        vec4 E = texture(uSampler, (floorTime + vec3(0.0, 0.0, 1.0)) / 2.0);
+        vec4 F = texture(uSampler, (floorTime + vec3(1.0, 0.0, 1.0)) / 2.0);
+        vec4 G = texture(uSampler, (floorTime + vec3(0.0, 1.0, 1.0)) / 2.0);
+        vec4 H = texture(uSampler, (floorTime + vec3(1.0, 1.0, 1.0)) / 2.0);
         vec4 back = mix(mix(E, F, frac.x), mix(G, H, frac.x), frac.y);
 
         return mix(front, back, frac.z);
@@ -92,17 +92,17 @@ const char *CShaderCubic3d::GetFragmentShader()
 
 
     void main(void) {
-        vec4 colorValue;
+        vec4 colorValue = vec4(0.0);
 
         if (vTextureCoord.x < 0.995)
         {
-            float pixel = vTextureCoord.x / 0.995;
-            colorValue = SamplePixel(vec3(pixel), true);
+            float time = vTextureCoord.x / 0.995;
+            colorValue = SampleTime(vec3(time), true);
         }
         else if (vTextureCoord.x > 1.005)
         {
-            float pixel = fract(vTextureCoord.x - 0.005) / 0.995;
-            colorValue = SamplePixel(vec3(pixel), false);
+            float time = fract(vTextureCoord.x - 0.005) / 0.995;
+            colorValue = SampleTime(vec3(time), false);
         }
         else
         {

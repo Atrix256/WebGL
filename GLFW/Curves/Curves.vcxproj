@@ -84,10 +84,23 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shaders.cpp" />
-    <ClCompile Include="Shader_BilinearTest.cpp" />
-    <ClCompile Include="Shader_Cubic3d.cpp" />
-    <ClCompile Include="Shader_Quadratic2d.cpp" />
-    <ClCompile Include="Shader_TrilinearTest.cpp" />
+    <ClCompile Include="Shader_BilinearTest.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Shader_Cubic2d.cpp" />
+    <ClCompile Include="Shader_Cubic3d.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Shader_Quadratic2d.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="Shader_TrilinearTest.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>

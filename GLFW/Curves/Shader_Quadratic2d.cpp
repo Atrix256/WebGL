@@ -60,38 +60,38 @@ const char *CShaderQuadratic2d::GetFragmentShader()
 
     out vec4 outColor;
 
-    vec4 SamplePixel(vec2 pixel, bool linearSampling) {
+    vec4 SampleTime(vec2 time, bool linearSampling) {
         // Bilinear sampling:
         // Hardware based bilinear sampling
         if (linearSampling)
-            return texture(uSampler, (pixel + 0.5) / 2.0);
+            return texture(uSampler, (time + 0.5) / 2.0);
 
         // Nearest sampling:
         // Software bilinear sampling (higher quality)
-        vec2 frac = fract(pixel);
+        vec2 frac = fract(time);
 
-        vec2 floorPixel = floor(pixel) + 0.5;
+        vec2 floorTime = floor(time) + 0.5;
 
-        vec4 A = texture(uSampler, (floorPixel + vec2(0.0, 0.0)) / 2.0);
-        vec4 B = texture(uSampler, (floorPixel + vec2(1.0, 0.0)) / 2.0);
-        vec4 C = texture(uSampler, (floorPixel + vec2(0.0, 1.0)) / 2.0);
-        vec4 D = texture(uSampler, (floorPixel + vec2(1.0, 1.0)) / 2.0);
+        vec4 A = texture(uSampler, (floorTime + vec2(0.0, 0.0)) / 2.0);
+        vec4 B = texture(uSampler, (floorTime + vec2(1.0, 0.0)) / 2.0);
+        vec4 C = texture(uSampler, (floorTime + vec2(0.0, 1.0)) / 2.0);
+        vec4 D = texture(uSampler, (floorTime + vec2(1.0, 1.0)) / 2.0);
 
         return mix(mix(A, B, frac.x), mix(C, D, frac.x), frac.y);
     }
 
     void main(void) {
-        vec4 colorValue;
+        vec4 colorValue = vec4(0.0);
 
         if (vTextureCoord.x < 0.995)
         {
-            float pixel = vTextureCoord.x / 0.995;
-            colorValue = SamplePixel(vec2(pixel), true);
+            float time = vTextureCoord.x / 0.995;
+            colorValue = SampleTime(vec2(time), true);
         }
         else if (vTextureCoord.x > 1.005)
         {
-            float pixel = fract(vTextureCoord.x - 0.005) / 0.995;
-            colorValue = SamplePixel(vec2(pixel), false);
+            float time = fract(vTextureCoord.x - 0.005) / 0.995;
+            colorValue = SampleTime(vec2(time), false);
         }
         else
         {
