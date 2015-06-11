@@ -417,7 +417,37 @@ HRESULT InitDevice()
     // Set primitive topology
     g_pImmediateContext->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 
+    // Create texture
+    D3D11_TEXTURE2D_DESC desc;
+    ZeroMemory(&desc, sizeof(desc));
+    desc.Width = 2;
+    desc.Height = 2;
+    desc.MipLevels = desc.ArraySize = 1;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    desc.SampleDesc.Count = 1;
+    desc.Usage = D3D11_USAGE_DYNAMIC;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    desc.MiscFlags = 0;
+
+    // info on creating a texture: https://msdn.microsoft.com/en-us/library/windows/desktop/ff476521(v=vs.85).aspx
+    unsigned char buf[] = {
+        128, 0, 0, 255,     50, 0, 0, 255,
+         50, 0, 0, 255,    200, 0, 0, 255
+    };
+
+    D3D11_SUBRESOURCE_DATA tbsd;
+    tbsd.pSysMem = (void *)buf;
+    tbsd.SysMemPitch = 2 * 4;
+    tbsd.SysMemSlicePitch = 2*2 * 4; // Not needed since this is a 2d texture
+
+    ID3D11Texture2D *pTexture = NULL;
+    hr = g_pd3dDevice->CreateTexture2D(&desc, &tbsd, &pTexture);
+    if (FAILED(hr))
+        return hr;
+
     return S_OK;
+    
 }
 
 
