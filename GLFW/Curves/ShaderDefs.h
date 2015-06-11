@@ -4,6 +4,7 @@
 //    SHADER_BEGIN(NAME)
 //        SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
 //        SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
+//        SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
 //    SHADER_END()
 //
 //    SHADER_BEGIN(NAME)
@@ -19,11 +20,12 @@
 //    TYPE can be float or double.
 //
 //    SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
+//    SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
 //
-//    Defines a shader uniform.  Also defines a 2d texture to assign to it.  NAME is the name of the uniform as
+//    Defines a shader uniform.  Also defines a texture to assign to it.  NAME is the name of the uniform as
 //    defined in the shader.  Call SetTextureData_<NAME> to set the texture data.
 //
-//    Type can be float or unsigned char, but for now, always pass 0-255
+//    Type can be float or unsigned char. floats should be 0..1, unsigned char should be 0..255
 //
 //    SHADER_END()       - ends the shader declaration
 //
@@ -35,6 +37,12 @@ SHADER_BEGIN(BilinearTest)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float)
 SHADER_END()
 
+SHADER_BEGIN(TrilinearTest)
+    SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 3, double)
+    SHADER_UNIFORM_TEXTURE_3D(uSampler, float)
+SHADER_END()
+
 SHADER_BEGIN(Quadratic2d)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
@@ -44,4 +52,5 @@ SHADER_END()
 #undef SHADER_BEGIN
 #undef SHADER_VERTEX_ATTRIBUTE
 #undef SHADER_UNIFORM_TEXTURE_2D
+#undef SHADER_UNIFORM_TEXTURE_3D
 #undef SHADER_END

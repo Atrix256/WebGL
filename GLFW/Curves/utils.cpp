@@ -97,16 +97,40 @@ GLuint MakeTexture<unsigned char>(GLsizei width, GLsizei height, const std::vect
 template<>
 GLuint MakeTexture<float>(GLsizei width, GLsizei height, const std::vector<float>& data)
 {
-    // copy the data and change from 0..255 range to 0..1 range
-    std::vector<float> dataCopy;
-    std::for_each(data.begin(), data.end(), [&dataCopy](float f) {dataCopy.push_back(f / 255.0f); });
-
     GLuint texture = 0;
     glCreateTextures(GL_TEXTURE_2D, 1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, &dataCopy[0]);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, &data[0]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glBindTexture(GL_TEXTURE_2D, NULL);
+    return texture;
+}
+
+//=============================================================================================================
+template<>
+GLuint MakeTexture3D<unsigned char>(GLsizei width, GLsizei height, GLsizei depth, const std::vector<unsigned char>& data)
+{
+    GLuint texture = 0;
+    glCreateTextures(GL_TEXTURE_3D, 1, &texture);
+    glBindTexture(GL_TEXTURE_3D, texture);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_3D, NULL);
+    return texture;
+}
+
+//=============================================================================================================
+template<>
+GLuint MakeTexture3D<float>(GLsizei width, GLsizei height, GLsizei depth, const std::vector<float>& data)
+{
+    GLuint texture = 0;
+    glCreateTextures(GL_TEXTURE_3D, 1, &texture);
+    glBindTexture(GL_TEXTURE_3D, texture);
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F, width, height, depth, 0, GL_RGBA, GL_FLOAT, &data[0]);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_3D, NULL);
     return texture;
 }

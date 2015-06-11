@@ -23,9 +23,13 @@ void CShaderQuadratic2d::Init()
         -1.0,  1.0,
     });
 
+    float A = 0.5f;
+    float B = 0.2f;
+    float C = 0.8f;
+
     SetTextureData_uSampler(2, 2, {
-        128, 0, 0, 255,      50, 0, 0, 255,
-         50, 0, 0, 255,     200, 0, 0, 255
+        A, 0.0f, 0.0f, 0.0f,     B, 0.0f, 0.0f, 0.0f,
+        B, 0.0f, 0.0f, 0.0f,     C, 0.0f, 0.0f, 0.0f
     });
 }
 
@@ -55,25 +59,24 @@ const char *CShaderQuadratic2d::GetFragmentShader()
 
     out vec4 outColor;
 
-    vec4 SamplePixel(vec2 pixel, bool bilinearSampling) {
+    vec4 SamplePixel(vec2 pixel, bool linearSampling) {
         // Bilinear sampling:
         // Hardware based bilinear sampling
-        if (bilinearSampling)
-            return texture2D(uSampler, (pixel + vec2(0.5)) / 2.0);
+        if (linearSampling)
+            return texture(uSampler, (pixel + 0.5) / 2.0);
 
         // Nearest sampling:
         // Software bilinear sampling (higher quality)
-        float fracu = fract(pixel.x);
-        float fracv = fract(pixel.y);
+        vec2 frac = fract(pixel);
 
-        vec2 floorPixel = floor(pixel) + vec2(0.5, 0.5);
+        vec2 floorPixel = floor(pixel) + 0.5;
 
-        vec4 A = texture2D(uSampler, floorPixel / 2.0);
-        vec4 B = texture2D(uSampler, (floorPixel + vec2(1.0, 0.0)) / 2.0);
-        vec4 C = texture2D(uSampler, (floorPixel + vec2(0.0, 1.0)) / 2.0);
-        vec4 D = texture2D(uSampler, (floorPixel + vec2(1.0, 1.0)) / 2.0);
+        vec4 A = texture(uSampler, (floorPixel + vec2(0.0, 0.0)) / 2.0);
+        vec4 B = texture(uSampler, (floorPixel + vec2(1.0, 0.0)) / 2.0);
+        vec4 C = texture(uSampler, (floorPixel + vec2(0.0, 1.0)) / 2.0);
+        vec4 D = texture(uSampler, (floorPixel + vec2(1.0, 1.0)) / 2.0);
 
-        return mix(mix(A, B, fracu), mix(C, D, fracu), fracv);
+        return mix(mix(A, B, frac.x), mix(C, D, frac.x), frac.y);
     }
 
     void main(void) {

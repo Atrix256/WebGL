@@ -5,9 +5,16 @@
 /*
 
 TODO:
-* make a bilinear (quadratic) and trilinear (cubic / 3d texture) curve demo
+
+* render control points in bilinear and trilinear test
+
+* finish Shader_Quadratic2d
+* make a higher order 2d texture curve
+* make a shader_cubic3d
+* make a higher order 3d texture curve
 * can we use vec2d etc? i think not (says it needs to be flat?)... keep trying to fight the precision problems though if you can.
 
+* render control points for all tests!
 */
 
 #include "utils.h"
@@ -75,6 +82,7 @@ int main(void)
     #define SHADER_BEGIN(NAME) CShader##NAME shader##NAME##;  shader##NAME##.Init();
     #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
     #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
+    #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
     #define SHADER_END()
     #include "ShaderDefs.h"
 
@@ -91,6 +99,7 @@ int main(void)
         #define SHADER_BEGIN(NAME) case e_shader##NAME: shader##NAME##.Render(); break;
         #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
         #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
+        #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
         #define SHADER_END()
         #include "ShaderDefs.h"
         }
