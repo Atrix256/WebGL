@@ -24,8 +24,8 @@ void CShaderQuadratic2d::Init()
     });
 
     const float R[] = { 0.5f , 0.0f, 0.75f };
-    const float G[] = { 0.0f, 1.0f, 0.25f };
-    const float B[] = { 0.2f, 0.0f, 1.00f };
+    const float G[] = { 0.0f , 1.0f, 0.25f };
+    const float B[] = { 0.2f , 0.0f, 1.00f };
     const float A[] = { 0.75f, 0.0f, 0.29f };
 
     SetTextureData_uSampler(2, 2, {

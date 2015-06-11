@@ -7,7 +7,6 @@
 TODO:
 
 * make a higher order 2d texture curve
-* make a shader_cubic3d
 * make a higher order 3d texture curve
 * can we use vec2d etc? i think not (says it needs to be flat?)... keep trying to fight the precision problems though if you can.
 
