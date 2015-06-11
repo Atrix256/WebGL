@@ -6,8 +6,6 @@
 
 TODO:
 
-* render control points in bilinear and trilinear test
-
 * finish Shader_Quadratic2d
 * make a higher order 2d texture curve
 * make a shader_cubic3d
@@ -96,7 +94,7 @@ int main(void)
 
         // render the right shader
         switch (g_whichTest){
-        #define SHADER_BEGIN(NAME) case e_shader##NAME: shader##NAME##.Render(); break;
+        #define SHADER_BEGIN(NAME) case e_shader##NAME: shader##NAME##.Render(); glfwSetWindowTitle(window, #NAME " - Arrow keys to cycle test"); break;
         #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
         #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
         #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)

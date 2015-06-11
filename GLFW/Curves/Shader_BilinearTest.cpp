@@ -59,6 +59,18 @@ const char *CShaderBilinearTest::GetFragmentShader()
 
     out vec4 outColor;
 
+    bool PixelInControlPoint(vec2 pixel) {
+
+        vec4 A = texture(uSampler, vec2(0.25, 0.25));
+        vec4 B = texture(uSampler, vec2(0.75, 0.25));
+        vec4 C = texture(uSampler, vec2(0.75, 0.75));
+
+        return
+            length(pixel - vec2(0.0, A.x)) < 0.02 ||
+            length(pixel - vec2(0.5, B.x)) < 0.02 ||
+            length(pixel - vec2(1.0, C.x)) < 0.02;
+    }
+
     vec4 SamplePixel(vec2 pixel, bool linearSampling) {
         // Bilinear sampling:
         // Hardware based bilinear sampling
@@ -85,11 +97,21 @@ const char *CShaderBilinearTest::GetFragmentShader()
         if (vTextureCoord.x < 0.995)
         {
             float pixel = vTextureCoord.x / 0.995;
+            if (PixelInControlPoint(vec2(pixel, vTextureCoord.y)))
+            {
+                outColor = vec4(1.0);
+                return;
+            }
             colorValue = SamplePixel(vec2(pixel), true);
         }
         else if (vTextureCoord.x > 1.005)
         {
             float pixel = fract(vTextureCoord.x - 0.005) / 0.995;
+            if (PixelInControlPoint(vec2(pixel, vTextureCoord.y)))
+            {
+                outColor = vec4(1.0);
+                return;
+            }
             colorValue = SamplePixel(vec2(pixel), false);
         }
         else
