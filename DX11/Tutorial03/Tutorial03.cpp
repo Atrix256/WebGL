@@ -1,3 +1,11 @@
+/*
+
+TODO:
+* better sized window (2x1 aspect ratio)
+* make a side by side bilinear test
+* try floating point textures and maybe make a floating point texture test as well
+*/
+
 //--------------------------------------------------------------------------------------
 // File: Tutorial03.cpp
 //
@@ -177,6 +185,9 @@ HRESULT CompileShaderFromFile( WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR sz
     return S_OK;
 }
 
+ID3D11Texture2D *g_pTexture = NULL;
+ID3D11ShaderResourceView *g_pTextureRV = NULL;
+ID3D11SamplerState* g_pSamplerLinear = NULL;
 
 //--------------------------------------------------------------------------------------
 // Create Direct3D device and swap chain
@@ -441,9 +452,36 @@ HRESULT InitDevice()
     tbsd.SysMemPitch = 2 * 4;
     tbsd.SysMemSlicePitch = 2*2 * 4; // Not needed since this is a 2d texture
 
-    ID3D11Texture2D *pTexture = NULL;
-    hr = g_pd3dDevice->CreateTexture2D(&desc, &tbsd, &pTexture);
+    hr = g_pd3dDevice->CreateTexture2D(&desc, &tbsd, &g_pTexture);
     if (FAILED(hr))
+        return hr;
+
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
+    memset( &SRVDesc, 0, sizeof( SRVDesc ) );
+    SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    SRVDesc.Texture1D.MipLevels = 1;
+
+    hr = g_pd3dDevice->CreateShaderResourceView(g_pTexture,
+                                                &SRVDesc,
+                                                &g_pTextureRV
+                                            );
+    if (FAILED(hr))
+        return hr;
+
+    // Create the sample state
+    D3D11_SAMPLER_DESC sampDesc;
+    ZeroMemory( &sampDesc, sizeof(sampDesc) );
+    sampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+    hr = g_pd3dDevice->CreateSamplerState( &sampDesc, &g_pSamplerLinear );
+    if( FAILED( hr ) )
         return hr;
 
     return S_OK;
@@ -513,20 +551,10 @@ void Render()
     // Render a triangle
 	g_pImmediateContext->VSSetShader( g_pVertexShader, nullptr, 0 );
 	g_pImmediateContext->PSSetShader( g_pPixelShader, nullptr, 0 );
+    g_pImmediateContext->PSSetShaderResources(0, 1, &g_pTextureRV);
+    g_pImmediateContext->PSSetSamplers(0, 1, &g_pSamplerLinear);
     g_pImmediateContext->Draw( 6, 0 );
 
     // Present the information rendered to the back buffer to the front buffer (the screen)
     g_pSwapChain->Present( 0, 0 );
 }
-
-
-/*
-
-TODO:
- * better sized window (2x1 aspect ratio)
- * make position passed to shader be a vec2?
- * make a side by side bilinear test
- ? floating point textures
- * remove the multiply pos by half in shader.
-
-*/
