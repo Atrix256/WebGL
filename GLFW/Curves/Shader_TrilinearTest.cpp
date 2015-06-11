@@ -112,7 +112,7 @@ const char *CShaderTrilinearTest::GetFragmentShader()
             float time = vTextureCoord.x / 0.995;
             if (PixelInControlPoint(vec2(time, vTextureCoord.y)))
             {
-                outColor = vec4(0.7, 0.7, 0.7, 1.0);
+                outColor = vec4(1.0);
                 return;
             }
             colorValue = SampleTime(vec3(time), true);
@@ -122,7 +122,7 @@ const char *CShaderTrilinearTest::GetFragmentShader()
             float time = fract(vTextureCoord.x - 0.005) / 0.995;
             if (PixelInControlPoint(vec2(time, vTextureCoord.y)))
             {
-                outColor = vec4(0.7, 0.7, 0.7, 1.0);
+                outColor = vec4(1.0);
                 return;
             }
             colorValue = SampleTime(vec3(time), false);

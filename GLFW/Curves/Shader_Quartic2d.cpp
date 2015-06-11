@@ -89,7 +89,7 @@ const char *CShaderQuartic2d::GetFragmentShader()
 
         return
             A * 1.0 * s2 +
-            B * 3.0 * s * t +
+            B * 2.0 * s * t +
             C * 1.0 * t2;
     }
 

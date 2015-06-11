@@ -1,3 +1,7 @@
+* direcx version
+
+* then start paper?
+
 
 ! Do texturefetch or texturegather for faked bilinear. Does it work in webgl? i think it's 4.0 and above.
 
