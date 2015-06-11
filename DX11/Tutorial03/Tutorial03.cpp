@@ -27,6 +27,7 @@ using namespace DirectX;
 struct SimpleVertex
 {
     XMFLOAT3 Pos;
+    XMFLOAT2 Tex;
 };
 
 
@@ -353,6 +354,7 @@ HRESULT InitDevice()
     D3D11_INPUT_ELEMENT_DESC layout[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 	UINT numElements = ARRAYSIZE( layout );
 
@@ -385,13 +387,13 @@ HRESULT InitDevice()
     // Create vertex buffer
     SimpleVertex vertices[] =
     {
-        XMFLOAT3(  1.0,  1.0, 0.5f), // upper right
-        XMFLOAT3(  1.0, -1.0, 0.5f), // lower right
-        XMFLOAT3( -1.0, -1.0, 0.5f), // lower left
+        {XMFLOAT3(  1.0,  1.0, 0.5f), XMFLOAT2( 1.0f, 1.0f )}, // upper right
+        {XMFLOAT3(  1.0, -1.0, 0.5f), XMFLOAT2( 1.0f, 0.0f )}, // lower right
+        {XMFLOAT3( -1.0, -1.0, 0.5f), XMFLOAT2( 0.0f, 0.0f )}, // lower left
 
-        XMFLOAT3(  1.0,  1.0, 0.5f), // upper right
-        XMFLOAT3( -1.0, -1.0, 0.5f), // lower left
-        XMFLOAT3( -1.0,  1.0, 0.5f), // upper left
+        {XMFLOAT3(  1.0,  1.0, 0.5f), XMFLOAT2( 1.0f, 1.0f )}, // upper right
+        {XMFLOAT3( -1.0, -1.0, 0.5f), XMFLOAT2( 0.0f, 0.0f )}, // lower left
+        {XMFLOAT3( -1.0,  1.0, 0.5f), XMFLOAT2( 0.0f, 1.0f )}, // upper left
 
     };
     D3D11_BUFFER_DESC bd;
@@ -486,3 +488,15 @@ void Render()
     // Present the information rendered to the back buffer to the front buffer (the screen)
     g_pSwapChain->Present( 0, 0 );
 }
+
+
+/*
+
+TODO:
+ * better sized window (2x1 aspect ratio)
+ * make position passed to shader be a vec2?
+ * make a side by side bilinear test
+ ? floating point textures
+ * remove the multiply pos by half in shader.
+
+*/
