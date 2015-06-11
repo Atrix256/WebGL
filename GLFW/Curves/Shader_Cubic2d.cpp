@@ -31,7 +31,6 @@ void CShaderCubic2d::Init()
     SetTextureData_uSampler(2, 4, {
         R[0], G[0], B[0], A[0],     R[1], G[1], B[1], A[1],
         R[1], G[1], B[1], A[1],     R[2], G[2], B[2], A[2],
-
         R[2], G[2], B[2], A[2],     R[3], G[3], B[3], A[3],
         0.0f, 0.0f, 0.0f, 0.0f,     0.0f, 0.0f, 0.0f, 0.0f,
     });
@@ -67,7 +66,7 @@ const char *CShaderCubic2d::GetFragmentShader()
         // Bilinear sampling:
         // Hardware based bilinear sampling
         if (linearSampling)
-            return texture(uSampler, (time + vec2(0.5, 0.5)) / vec2(2.0, 4.0));
+            return texture(uSampler, (time + 0.5) / vec2(2.0, 4.0));
 
         // Nearest sampling:
         // Software bilinear sampling (higher quality)

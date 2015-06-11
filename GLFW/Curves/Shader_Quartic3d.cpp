@@ -101,13 +101,13 @@ const char *CShaderQuartic3d::GetFragmentShader()
         if (vTextureCoord.x < 0.995)
         {
             float time = vTextureCoord.x / 0.995;
-            colorValue = SampleTime(vec3(time), true);
+            colorValue = SampleTime(vec3(time, time, time), true);
             colorValue = mix(colorValue, SampleTime(vec3(time, time + 1.0, time), true), time);
         }
         else if (vTextureCoord.x > 1.005)
         {
             float time = fract(vTextureCoord.x - 0.005) / 0.995;
-            colorValue = SampleTime(vec3(time), false);
+            colorValue = SampleTime(vec3(time, time, time), false);
             colorValue = mix(colorValue, SampleTime(vec3(time, time + 1.0, time), false), time);
         }
         else
