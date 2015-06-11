@@ -8,3 +8,7 @@
 *.pdb
 GLFW/Curves/Debug/*.*
 GLFW/Curves/Release/*.*
+DX11/Debug/*.*
+DX11/**/Debug/*.*
+DX11/Release/*.*
+DX11/**/Release/*.*

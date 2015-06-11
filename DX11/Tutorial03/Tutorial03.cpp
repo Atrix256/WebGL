@@ -385,14 +385,19 @@ HRESULT InitDevice()
     // Create vertex buffer
     SimpleVertex vertices[] =
     {
-        XMFLOAT3( 0.0f, 0.5f, 0.5f ),
-        XMFLOAT3( 0.5f, -0.5f, 0.5f ),
-        XMFLOAT3( -0.5f, -0.5f, 0.5f ),
+        XMFLOAT3(  1.0,  1.0, 0.5f), // upper right
+        XMFLOAT3(  1.0, -1.0, 0.5f), // lower right
+        XMFLOAT3( -1.0, -1.0, 0.5f), // lower left
+
+        XMFLOAT3(  1.0,  1.0, 0.5f), // upper right
+        XMFLOAT3( -1.0, -1.0, 0.5f), // lower left
+        XMFLOAT3( -1.0,  1.0, 0.5f), // upper left
+
     };
     D3D11_BUFFER_DESC bd;
 	ZeroMemory( &bd, sizeof(bd) );
     bd.Usage = D3D11_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof( SimpleVertex ) * 3;
+    bd.ByteWidth = sizeof(vertices);
     bd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = 0;
     D3D11_SUBRESOURCE_DATA InitData;
@@ -476,7 +481,7 @@ void Render()
     // Render a triangle
 	g_pImmediateContext->VSSetShader( g_pVertexShader, nullptr, 0 );
 	g_pImmediateContext->PSSetShader( g_pPixelShader, nullptr, 0 );
-    g_pImmediateContext->Draw( 3, 0 );
+    g_pImmediateContext->Draw( 6, 0 );
 
     // Present the information rendered to the back buffer to the front buffer (the screen)
     g_pSwapChain->Present( 0, 0 );
