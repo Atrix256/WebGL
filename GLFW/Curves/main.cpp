@@ -3,13 +3,10 @@
 //=============================================================================================================
 
 /*
-
 TODO:
-* make quartic3d
-* can we use vec2d etc? i think not (says it needs to be flat?)... keep trying to fight the precision problems though if you can.
-* make sure shader compile warnings go away
-* directx next?
-
+* finish quartic3d! important for verifying that things work like you say they do
+* directx next to verify it has precision problems too?
+* then start paper!
 */
 
 #include "utils.h"

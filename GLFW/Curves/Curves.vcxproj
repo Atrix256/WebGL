@@ -97,6 +97,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Shader_Quartic2d.cpp" />
+    <ClCompile Include="Shader_Quartic3d.cpp" />
     <ClCompile Include="Shader_TrilinearTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
