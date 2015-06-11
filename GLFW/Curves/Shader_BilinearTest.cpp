@@ -61,9 +61,9 @@ const char *CShaderBilinearTest::GetFragmentShader()
 
     bool PixelInControlPoint(vec2 pixel) {
 
-        vec4 A = texture(uSampler, vec2(0.25, 0.25));
-        vec4 B = texture(uSampler, vec2(0.75, 0.25));
-        vec4 C = texture(uSampler, vec2(0.75, 0.75));
+        vec4 A = texture(uSampler, vec2(0.5, 0.5) / 2.0);
+        vec4 B = texture(uSampler, vec2(1.5, 0.5) / 2.0);
+        vec4 C = texture(uSampler, vec2(1.5, 1.5) / 2.0);
 
         return
             length(pixel - vec2(0.0, A.x)) < 0.02 ||
@@ -99,7 +99,7 @@ const char *CShaderBilinearTest::GetFragmentShader()
             float time = vTextureCoord.x / 0.995;
             if (PixelInControlPoint(vec2(time, vTextureCoord.y)))
             {
-                outColor = vec4(1.0);
+                outColor = vec4(0.7, 0.7, 0.7, 1.0);
                 return;
             }
             colorValue = SampleTime(vec2(time), true);
@@ -109,7 +109,7 @@ const char *CShaderBilinearTest::GetFragmentShader()
             float time = fract(vTextureCoord.x - 0.005) / 0.995;
             if (PixelInControlPoint(vec2(time, vTextureCoord.y)))
             {
-                outColor = vec4(1.0);
+                outColor = vec4(0.7, 0.7, 0.7, 1.0);
                 return;
             }
             colorValue = SampleTime(vec2(time), false);

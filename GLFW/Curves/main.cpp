@@ -4,8 +4,20 @@
 
 /*
 TODO:
+* control point treatment needed:
+ * cubic2d (make each color!)
+ * cubic3d (ditto)
+ * quadratic2d
+ * quartic2d
+ * quartic3d
+
+? show control points to help figure out whats wrong with quartic3d?
 * finish quartic3d! important for verifying that things work like you say they do
+? maybe quartic 2d is wrong!
+* could work out some math on paper (or make a program) to compare the ways of doing it to make sure they are equivelant!
+
 * directx next to verify it has precision problems too?
+
 * then start paper!
 */
 

@@ -62,6 +62,20 @@ const char *CShaderCubic2d::GetFragmentShader()
 
     out vec4 outColor;
 
+    bool PixelInControlPoint(vec2 pixel) {
+
+        vec4 A = texture(uSampler, vec2(0.5, 0.5) / vec2(2.0, 4.0));
+        vec4 B = texture(uSampler, vec2(1.5, 0.5) / vec2(2.0, 4.0));
+        vec4 C = texture(uSampler, vec2(1.5, 1.5) / vec2(2.0, 4.0));
+        vec4 D = texture(uSampler, vec2(1.5, 2.5) / vec2(2.0, 4.0));
+
+        return
+            length(pixel - vec2(0.0, A.x)) < 0.02 ||
+            length(pixel - vec2(0.3, B.x)) < 0.02 ||
+            length(pixel - vec2(0.6, C.x)) < 0.02 ||
+            length(pixel - vec2(1.0, D.x)) < 0.02;
+    }
+
     vec4 SampleTime(vec2 time, bool linearSampling) {
         // Bilinear sampling:
         // Hardware based bilinear sampling
@@ -88,12 +102,22 @@ const char *CShaderCubic2d::GetFragmentShader()
         if (vTextureCoord.x < 0.995)
         {
             float time = vTextureCoord.x / 0.995;
+            if (PixelInControlPoint(vec2(time, vTextureCoord.y)))
+            {
+                outColor = vec4(0.7, 0.7, 0.7, 1.0);
+                return;
+            }
             colorValue = SampleTime(vec2(time), true);
             colorValue = mix(colorValue, SampleTime(vec2(time, time + 1.0), true), time);
         }
         else if (vTextureCoord.x > 1.005)
         {
             float time = fract(vTextureCoord.x - 0.005) / 0.995;
+            if (PixelInControlPoint(vec2(time, vTextureCoord.y)))
+            {
+                outColor = vec4(0.7, 0.7, 0.7, 1.0);
+                return;
+            }
             colorValue = SampleTime(vec2(time), false);
             colorValue = mix(colorValue, SampleTime(vec2(time, time + 1.0), false), time);
         }
