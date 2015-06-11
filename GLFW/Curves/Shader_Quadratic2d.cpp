@@ -23,13 +23,14 @@ void CShaderQuadratic2d::Init()
         -1.0,  1.0,
     });
 
-    float A = 0.5f;
-    float B = 0.2f;
-    float C = 0.8f;
+    const float R[] = { 0.5f , 0.0f, 0.75f };
+    const float G[] = { 0.0f, 1.0f, 0.25f };
+    const float B[] = { 0.2f, 0.0f, 1.00f };
+    const float A[] = { 0.75f, 0.0f, 0.29f };
 
     SetTextureData_uSampler(2, 2, {
-        A, 0.0f, 0.0f, 0.0f,     B, 0.0f, 0.0f, 0.0f,
-        B, 0.0f, 0.0f, 0.0f,     C, 0.0f, 0.0f, 0.0f
+        R[0], G[0], B[0], A[0],     R[1], G[1], B[1], A[1],
+        R[1], G[1], B[1], A[1],     R[2], G[2], B[2], A[2]
     });
 }
 
@@ -98,8 +99,10 @@ const char *CShaderQuadratic2d::GetFragmentShader()
             return;
         }
 
-        float value = step(vTextureCoord.y, colorValue.x);
-        outColor = vec4(0.0, 0.0, value, 1.0);
+        vec4 values = step(vTextureCoord.yyyy, colorValue);
+        values.xyz *= 0.5;
+        values.xyz += values.w * 0.5;
+        outColor = vec4(values.xyz, 1.0);
     }
     );
 }
