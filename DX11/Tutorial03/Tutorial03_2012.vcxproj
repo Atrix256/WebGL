@@ -27,7 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>Tutorial03</ProjectName>
+    <ProjectName>DXCurves</ProjectName>
     <ProjectGuid>{4D201D5F-2B78-4D13-9774-E77012EADEF1}</ProjectGuid>
     <RootNamespace>Tutorial03</RootNamespace>
     <Keyword>Win32Proj</Keyword>
