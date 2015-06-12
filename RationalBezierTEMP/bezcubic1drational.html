@@ -1,0 +1,389 @@
+
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>One Dimensional Rational Cubic Bezier Curve</title>
+<style type="text/css">
+body { color: #00FF00; background-color:black;}
+canvas.html5 {border:2px solid #00FF00;}
+</style>
+<script>
+/*==================================================
+
+Created by Alan Wolfe
+curvesdemo{at}demofox.org
+http://demofox.org
+
+June 2015
+
+TODO:
+* add boxes for curve weights
+* link to more appropriate blog post after you write it!
+* update f(x) function.  maybe get rid of indefinite integral.
+* update explanation and equations below curve
+* Do 2d rational curve
+* Then blog post?
+ * how do you do conics?
+ * i think you are literally dividing one curve by another?!
+ * mention homogeneous coordinates
+
+==================================================*/
+
+var A = 0.5;
+var B = 0.25;
+var C = 0.75;
+var D = 0.5
+
+var g_graphPanel;
+var g_canvas;
+var g_mousePos = [0,0];
+var g_pointDragged = 0;
+var g_lastDragPos = [0,0];
+
+function onPageLoaded()
+{
+	g_graphPanel = setupCanvas('Graph');
+	g_canvas = document.getElementById('Graph');
+	g_canvas.addEventListener('mousemove', function(evt) {OnMouseMove(evt);RedrawGraph();}, false);
+	g_canvas.addEventListener('mousedown', function() {OnMouseDown();RedrawGraph();}, false);
+	g_canvas.addEventListener('mouseup', function() {OnMouseUp();RedrawGraph();}, false);
+	RedrawGraph();
+}
+
+function setupCanvas(name)
+{
+  // Get a reference to the element.
+  var elem = document.getElementById(name);
+
+  // Always check for properties and methods, to make sure your code doesn't break 
+  // in other browsers.
+  if (elem)
+  {
+    if(elem.getContext)
+    {
+      // Get the 2d context.
+      // Remember: you can only initialize one context per element.
+      var context = elem.getContext('2d');
+
+      if (context)
+      {
+      	return {"elem":elem, "context":context, "clear":function(){ClearImageBuffer(context)}, "fill":function(color){FillImageBuffer(context, color)}};
+      }
+      else
+      {
+      	alert("Could not get html5 2d context, your browser doesn't support it! Try firefox or chrome");
+      }
+    }
+    else
+    {
+      alert("The getContext function was missing, your browser doesn't support it! Try firefox or chrome"); 
+    }
+  }
+  else
+  {
+    alert("Could not get element 'MainCanvas'");	
+  }
+
+  return false;
+}
+
+function GetMousePos(canvas, evt)
+{
+	var rect = g_canvas.getBoundingClientRect();
+	var pos =
+	[
+		evt.clientX - rect.left,
+		evt.clientY - rect.top
+	];
+	return pos;
+}
+
+function ScreenPointToMathPoint(x,y)
+{
+	x -= g_graphPanel.elem.width * 0.15;
+	y -= g_graphPanel.elem.height * 0.15;
+	return [x / (g_graphPanel.elem.width * 0.7), 1.0 - y / (g_graphPanel.elem.height * 0.7)];
+}
+
+function MathPointToScreenPoint(x,y)
+{
+	y = 1.0 - y;
+	return [x * (g_graphPanel.elem.width * 0.7) + g_graphPanel.elem.width * 0.15, y * (g_graphPanel.elem.height * 0.7) + g_graphPanel.elem.height * 0.15];
+}
+
+function OnMouseMove(evt)
+{
+	g_mousePos = GetMousePos(g_canvas, evt);
+	if (g_pointDragged == 0)
+		return;
+
+	var mouseMath = ScreenPointToMathPoint(g_mousePos[0], g_mousePos[1]);
+	var lastMath = ScreenPointToMathPoint(g_lastDragPos[0], g_lastDragPos[1]);
+	var delta = [mouseMath[0] - lastMath[0], mouseMath[1] - lastMath[1]];
+
+	g_lastDragPos = g_mousePos;
+
+	if (g_pointDragged == 1)
+	{
+		A += delta[1];
+		return;
+	}
+
+	if (g_pointDragged == 2)
+	{
+		B += delta[1];
+		return;
+	}
+	
+	if (g_pointDragged == 3)
+	{
+		C += delta[1];
+		return;
+	}		
+
+	if (g_pointDragged == 4)
+	{
+		D += delta[1];
+		return;
+	}		
+}
+
+function OnMouseDown()
+{
+	g_lastDragPos = g_mousePos;
+
+	var PointA = MathPointToScreenPoint(0.0, A);
+	var PointB = MathPointToScreenPoint(1/3, B);
+	var PointC = MathPointToScreenPoint(2/3, C);	
+	var PointD = MathPointToScreenPoint(1.0, D);	
+		
+	var dist = Math.sqrt((PointA[1]-g_mousePos[1])*(PointA[1]-g_mousePos[1]) + (PointA[0]-g_mousePos[0])*(PointA[0]-g_mousePos[0]));
+	if (dist < 23)
+	{
+		g_pointDragged = 1;
+		return;
+	}
+
+	dist = Math.sqrt((PointB[1]-g_mousePos[1])*(PointB[1]-g_mousePos[1]) + (PointB[0]-g_mousePos[0])*(PointB[0]-g_mousePos[0]));
+	if (dist < 23)
+	{
+		g_pointDragged = 2;
+		return;
+	}
+
+	dist = Math.sqrt((PointC[1]-g_mousePos[1])*(PointC[1]-g_mousePos[1]) + (PointC[0]-g_mousePos[0])*(PointC[0]-g_mousePos[0]));
+	if (dist < 23)
+	{
+		g_pointDragged = 3;
+		return;
+	}	
+
+	dist = Math.sqrt((PointD[1]-g_mousePos[1])*(PointD[1]-g_mousePos[1]) + (PointD[0]-g_mousePos[0])*(PointD[0]-g_mousePos[0]));
+	if (dist < 23)
+	{
+		g_pointDragged = 4;
+		return;
+	}		
+
+	g_pointDragged = 0;
+}
+
+function OnMouseUp()
+{
+	g_pointDragged = 0;
+}
+
+//hook up our event listener
+window.addEventListener('load', function(){onPageLoaded();}, false);
+
+function ClearImageBuffer(context)
+{
+	context.fillStyle   = "#000000";
+	context.fillRect(0, 0, g_graphPanel.elem.width, g_graphPanel.elem.height);
+}
+
+function FillImageBuffer(context, color)
+{
+	context.fillStyle   = color;
+	context.fillRect(0, 0, g_graphPanel.elem.width, g_graphPanel.elem.height);
+}
+
+function DrawControlPoint(X, Y, dragging)
+{
+	var dist = Math.sqrt((Y-g_mousePos[1])*(Y-g_mousePos[1]) +  (X-g_mousePos[0])*(X-g_mousePos[0]));
+	var highlite = dist < 23;
+
+	g_graphPanel.context.beginPath();
+	g_graphPanel.context.arc(X, Y, 10, 0, 2 * Math.PI, false);
+	g_graphPanel.context.fillStyle = dragging ? '#FF8888' : (highlite ? '#FF4030' : '#FF0000');
+	g_graphPanel.context.fill();
+	g_graphPanel.context.lineWidth = 3;
+	g_graphPanel.context.strokeStyle = dragging ? '#888888' : (highlite ? '#884030' : '#880000');
+	g_graphPanel.context.stroke();	
+}
+
+function F(X)
+{
+	return A*(1-X)*(1-X)*(1-X) + B*3*X*(1-X)*(1-X) + C*3*X*X*(1-X) + D*X*X*X;
+}
+
+function RedrawGraph()
+{
+	// clear the graph panel
+	g_graphPanel.clear();
+
+	// draw the graph graphics
+	g_graphPanel.context.strokeStyle='#0000FF';	
+	g_graphPanel.context.lineWidth = 1;
+	g_graphPanel.context.beginPath();
+
+	// draw Y axis
+	var min = MathPointToScreenPoint(0,-2);
+	var max = MathPointToScreenPoint(0, 2);
+	g_graphPanel.context.moveTo(min[0], min[1]);
+	g_graphPanel.context.lineTo(max[0], max[1]);
+
+	// draw X axis
+	min = MathPointToScreenPoint(-2, 0);
+	max = MathPointToScreenPoint( 2, 0);
+	g_graphPanel.context.moveTo(min[0], min[1]);
+	g_graphPanel.context.lineTo(max[0], max[1]);
+	g_graphPanel.context.stroke();
+
+	// draw a tick mark at x = 0.25, 0.5, 0.75, 1
+	g_graphPanel.context.strokeStyle='#00FFFF';	
+	g_graphPanel.context.lineWidth = 1;
+	g_graphPanel.context.beginPath();	
+	min = MathPointToScreenPoint(0.25, -0.02);
+	max = MathPointToScreenPoint(0.25,  0.02);
+	g_graphPanel.context.moveTo(min[0], min[1]);
+	g_graphPanel.context.lineTo(max[0], max[1]);
+
+	min = MathPointToScreenPoint(0.5, -0.02);
+	max = MathPointToScreenPoint(0.5,  0.02);
+	g_graphPanel.context.moveTo(min[0], min[1]);
+	g_graphPanel.context.lineTo(max[0], max[1]);
+
+	min = MathPointToScreenPoint(0.75, -0.02);
+	max = MathPointToScreenPoint(0.75,  0.02);
+	g_graphPanel.context.moveTo(min[0], min[1]);
+	g_graphPanel.context.lineTo(max[0], max[1]);
+
+	min = MathPointToScreenPoint(1, -0.05);
+	max = MathPointToScreenPoint(1,  0.05);
+	g_graphPanel.context.moveTo(min[0], min[1]);
+	g_graphPanel.context.lineTo(max[0], max[1]);	
+
+	// draw a tick mark at y = 0.25, 0.5, 0.75, 1
+	min = MathPointToScreenPoint(-0.02, 0.25);
+	max = MathPointToScreenPoint( 0.02, 0.25);
+	g_graphPanel.context.moveTo(min[0], min[1]);
+	g_graphPanel.context.lineTo(max[0], max[1]);
+
+	min = MathPointToScreenPoint(-0.02, 0.5);
+	max = MathPointToScreenPoint( 0.02, 0.5);
+	g_graphPanel.context.moveTo(min[0], min[1]);
+	g_graphPanel.context.lineTo(max[0], max[1]);
+
+	min = MathPointToScreenPoint(-0.02, 0.75);
+	max = MathPointToScreenPoint( 0.02, 0.75);
+	g_graphPanel.context.moveTo(min[0], min[1]);
+	g_graphPanel.context.lineTo(max[0], max[1]);
+
+	min = MathPointToScreenPoint(-0.05, 1);
+	max = MathPointToScreenPoint( 0.05, 1);
+	g_graphPanel.context.moveTo(min[0], min[1]);
+	g_graphPanel.context.lineTo(max[0], max[1]);
+
+
+    g_graphPanel.context.stroke();
+
+	// start the drawing
+	g_graphPanel.context.strokeStyle='#FFFF00';	
+	g_graphPanel.context.lineWidth = 1;
+	g_graphPanel.context.beginPath();
+
+	// render each horizontal pixel
+	for (var index = 0; index <= g_graphPanel.elem.width; ++index)
+	{
+		// calculate the point
+		var mathPoint = ScreenPointToMathPoint(index, 0);
+		mathPoint[1] = F(mathPoint[0]);
+		var point = MathPointToScreenPoint(mathPoint[0], mathPoint[1]);
+
+		// if it's the first point, move there
+		if (index == 0)
+			g_graphPanel.context.moveTo(point[0], point[1]);
+		// else, draw to there
+		else
+			g_graphPanel.context.lineTo(point[0], point[1]);
+	}	
+	
+	// finish the line
+	g_graphPanel.context.stroke();
+
+	// draw the control points
+	var PointA = MathPointToScreenPoint(0.0, A);
+	var PointB = MathPointToScreenPoint(1/3, B);
+	var PointC = MathPointToScreenPoint(2/3, C);	
+	var PointD = MathPointToScreenPoint(1.0, D);
+		
+	DrawControlPoint(PointA[0],PointA[1],g_pointDragged == 1);
+	DrawControlPoint(PointB[0],PointB[1],g_pointDragged == 2);
+	DrawControlPoint(PointC[0],PointC[1],g_pointDragged == 3);
+	DrawControlPoint(PointD[0],PointD[1],g_pointDragged == 4);
+
+	document.getElementById("function").innerHTML =
+		" A = " + (Math.round(A*100.0) / 100.0).toString() + " B = " + (Math.round(B*100.0) / 100.0).toString() + " C = " + (Math.round(C*100.0) / 100.0).toString() +
+		" D = " + (Math.round(D*100.0) / 100.0).toString() + "<br>" +
+		"f(x): y = " +
+		(Math.round(A*100.0) / 100.0).toString() + " * (1-x)^3 + " +
+		(Math.round(B*100.0) / 100.0).toString() + " * 3x(1-x)^2 + " +
+		(Math.round(C*100.0) / 100.0).toString() + " * 3x^2(1-x) + " + 
+		(Math.round(D*100.0) / 100.0).toString() + " * x^3" + 
+		"<br>" + 
+		"indefinite integral: y = " + 
+		(Math.round(A*100.0) / 100.0).toString() + " * (-x^4/4+x^3-(3 x^2)/2+x) + " +
+		(Math.round(B*100.0) / 100.0).toString() + " * ((3 x^4)/4-2 x^3+(3 x^2)/2) + " +
+		(Math.round(C*100.0) / 100.0).toString() + " * (x^3-(3 x^4)/4) + " + 
+		(Math.round(D*100.0) / 100.0).toString() + " * (x^4/4) + " +
+		"constant"
+		;
+
+		//y = A*(-x^4/4+x^3-(3 x^2)/2+x) + B*((3 x^4)/4-2 x^3+(3 x^2)/2) + C*(x^3-(3 x^4)/4) + D*(x^4/4) + constant<br>
+}
+
+</script>
+</head>
+<body>
+<h1>One Dimensional Rational Cubic Bezier Curve</h1>
+<h3>Click and drag control points to change curve.  Modify weights in boxes below the curve.</h3>
+For more information, check out the post on my blog: <a href="http://blog.demofox.org/2014/03/04/bezier-curves/">Bezier Curves</a>.<br>
+<br>
+<div id="function" style="color:blue"></div><br>
+<canvas class="html5" id="Graph" width="800" height="800">Your browser doesn't seem to support the necesary html5 features ):</canvas>
+<br>
+Cubic bezier curves have 4 control points and total up the values of the 4 functions below to get the final point at time t.<br>
+<ol>
+<li>A * (1-t)^3</li>
+<li>B * 3t(1-t)^2</li>
+<li>C * 3t^2(1-t)</li>
+<li>D * t^3</li>
+</ol>
+Parameters:<br>
+<b>t</b> - "time", but in our case we are going to use the x axis value for t.<br>
+<b>A</b> - The first control point, which is also the value of the function when x = 0.<br>
+<b>B</b> - The second control point.<br>
+<b>C</b> - The third control point.<br>
+<b>D</b> - The fourth control point, which is also the value of the function when x = 1.<br>
+<br>
+In this particular case, A, B and C are scalars, which makes the curve into the function:<br>
+y = A * (1-x)^3 + B * 3x(1-x)^2 + C * 3x^2(1-x) + D * x^3<br>
+<br>
+Indefinite Integral:<br>
+y = A*(-x^4/4+x^3-(3 x^2)/2+x) + B*((3 x^4)/4-2 x^3+(3 x^2)/2) + C*(x^3-(3 x^4)/4) + D*(x^4/4) + constant<br>
+<br>
+Note that this bezier curve is 1 dimensional because A,B,C,D are 1 dimensional, but you could use these same equations in any dimension.  Also,
+these control points range from 0 to 1 on the X axis, but you could scale the X axis and/or the Y axis to get a different range of values.<br>
+<br>
+</body></html>
