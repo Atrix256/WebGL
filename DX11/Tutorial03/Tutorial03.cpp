@@ -43,22 +43,24 @@ struct SimpleVertex
 //--------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------
-HINSTANCE               g_hInst = nullptr;
-HWND                    g_hWnd = nullptr;
-D3D_DRIVER_TYPE         g_driverType = D3D_DRIVER_TYPE_NULL;
-D3D_FEATURE_LEVEL       g_featureLevel = D3D_FEATURE_LEVEL_11_0;
-ID3D11Device*           g_pd3dDevice = nullptr;
-ID3D11Device1*          g_pd3dDevice1 = nullptr;
-ID3D11DeviceContext*    g_pImmediateContext = nullptr;
-ID3D11DeviceContext1*   g_pImmediateContext1 = nullptr;
-IDXGISwapChain*         g_pSwapChain = nullptr;
-IDXGISwapChain1*        g_pSwapChain1 = nullptr;
-ID3D11RenderTargetView* g_pRenderTargetView = nullptr;
-ID3D11VertexShader*     g_pVertexShader = nullptr;
-ID3D11PixelShader*      g_pPixelShader = nullptr;
-ID3D11InputLayout*      g_pVertexLayout = nullptr;
-ID3D11Buffer*           g_pVertexBuffer = nullptr;
-
+HINSTANCE                   g_hInst = nullptr;
+HWND                        g_hWnd = nullptr;
+D3D_DRIVER_TYPE             g_driverType = D3D_DRIVER_TYPE_NULL;
+D3D_FEATURE_LEVEL           g_featureLevel = D3D_FEATURE_LEVEL_11_0;
+ID3D11Device*               g_pd3dDevice = nullptr;
+ID3D11Device1*              g_pd3dDevice1 = nullptr;
+ID3D11DeviceContext*        g_pImmediateContext = nullptr;
+ID3D11DeviceContext1*       g_pImmediateContext1 = nullptr;
+IDXGISwapChain*             g_pSwapChain = nullptr;
+IDXGISwapChain1*            g_pSwapChain1 = nullptr;
+ID3D11RenderTargetView*     g_pRenderTargetView = nullptr;
+ID3D11VertexShader*         g_pVertexShader = nullptr;
+ID3D11PixelShader*          g_pPixelShader = nullptr;
+ID3D11InputLayout*          g_pVertexLayout = nullptr;
+ID3D11Buffer*               g_pVertexBuffer = nullptr;
+ID3D11Texture2D*            g_pTexture = nullptr;
+ID3D11ShaderResourceView*   g_pTextureRV = nullptr;
+ID3D11SamplerState*         g_pSamplerLinear = nullptr;
 
 //--------------------------------------------------------------------------------------
 // Forward declarations
@@ -185,10 +187,6 @@ HRESULT CompileShaderFromFile( WCHAR* szFileName, LPCSTR szEntryPoint, LPCSTR sz
 
     return S_OK;
 }
-
-ID3D11Texture2D *g_pTexture = NULL;
-ID3D11ShaderResourceView *g_pTextureRV = NULL;
-ID3D11SamplerState* g_pSamplerLinear = NULL;
 
 //--------------------------------------------------------------------------------------
 // Create Direct3D device and swap chain
@@ -435,7 +433,6 @@ HRESULT InitDevice()
     desc.Width = 2;
     desc.Height = 2;
     desc.MipLevels = desc.ArraySize = 1;
-    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     desc.SampleDesc.Count = 1;
     desc.Usage = D3D11_USAGE_DYNAMIC;
     desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
@@ -443,15 +440,30 @@ HRESULT InitDevice()
     desc.MiscFlags = 0;
 
     // info on creating a texture: https://msdn.microsoft.com/en-us/library/windows/desktop/ff476521(v=vs.85).aspx
+#if 0
     unsigned char buf[] = {
         128, 0, 0, 255,     50, 0, 0, 255,
          50, 0, 0, 255,    200, 0, 0, 255
     };
+    int bytesPerChannel = 1;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+#else
+    float A = 0.5f;
+    float B = 0.2f;
+    float C = 0.8f;
+    float buf[] = {
+        A, 0.0f, 0.0f, 0.0f,     B, 0.0f, 0.0f, 0.0f,
+        B, 0.0f, 0.0f, 0.0f,     C, 0.0f, 0.0f, 0.0f
+    };
+    int bytesPerChannel = 4;
+    desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+#endif
+
 
     D3D11_SUBRESOURCE_DATA tbsd;
     tbsd.pSysMem = (void *)buf;
-    tbsd.SysMemPitch = 2 * 4;
-    tbsd.SysMemSlicePitch = 2*2 * 4; // Not needed since this is a 2d texture
+    tbsd.SysMemPitch = desc.Width * bytesPerChannel * 4;
+    tbsd.SysMemSlicePitch = desc.Width * desc.Height * bytesPerChannel * 4; // Not needed since this is a 2d texture
 
     hr = g_pd3dDevice->CreateTexture2D(&desc, &tbsd, &g_pTexture);
     if (FAILED(hr))
@@ -460,7 +472,7 @@ HRESULT InitDevice()
 
     D3D11_SHADER_RESOURCE_VIEW_DESC SRVDesc;
     memset( &SRVDesc, 0, sizeof( SRVDesc ) );
-    SRVDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    SRVDesc.Format = desc.Format;
     SRVDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     SRVDesc.Texture1D.MipLevels = 1;
 
@@ -496,7 +508,10 @@ HRESULT InitDevice()
 void CleanupDevice()
 {
     if( g_pImmediateContext ) g_pImmediateContext->ClearState();
-
+    
+    if (g_pTexture) g_pTexture->Release();
+    if (g_pTextureRV) g_pTextureRV->Release();
+    if (g_pSamplerLinear) g_pSamplerLinear->Release();
     if( g_pVertexBuffer ) g_pVertexBuffer->Release();
     if( g_pVertexLayout ) g_pVertexLayout->Release();
     if( g_pVertexShader ) g_pVertexShader->Release();
