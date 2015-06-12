@@ -1,9 +1,10 @@
 /*
 
 TODO:
-* better sized window (2x1 aspect ratio)
 * make a side by side bilinear test
 * try floating point textures and maybe make a floating point texture test as well
+* remove the other tutorials, rename project?
+* remove MS copyright info??
 */
 
 //--------------------------------------------------------------------------------------
@@ -132,7 +133,7 @@ HRESULT InitWindow( HINSTANCE hInstance, int nCmdShow )
 
     // Create window
     g_hInst = hInstance;
-    RECT rc = { 0, 0, 800, 600 };
+    RECT rc = { 0, 0, 1000, 500 };
     AdjustWindowRect( &rc, WS_OVERLAPPEDWINDOW, FALSE );
     g_hWnd = CreateWindow( L"TutorialWindowClass", L"Direct3D 11 Tutorial 3: Shaders",
                            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
@@ -398,11 +399,11 @@ HRESULT InitDevice()
     // Create vertex buffer
     SimpleVertex vertices[] =
     {
-        {XMFLOAT3(  1.0,  1.0, 0.5f), XMFLOAT2( 1.0f, 1.0f )}, // upper right
-        {XMFLOAT3(  1.0, -1.0, 0.5f), XMFLOAT2( 1.0f, 0.0f )}, // lower right
+        {XMFLOAT3(  1.0,  1.0, 0.5f), XMFLOAT2( 2.0f, 1.0f )}, // upper right
+        {XMFLOAT3(  1.0, -1.0, 0.5f), XMFLOAT2( 2.0f, 0.0f )}, // lower right
         {XMFLOAT3( -1.0, -1.0, 0.5f), XMFLOAT2( 0.0f, 0.0f )}, // lower left
 
-        {XMFLOAT3(  1.0,  1.0, 0.5f), XMFLOAT2( 1.0f, 1.0f )}, // upper right
+        {XMFLOAT3(  1.0,  1.0, 0.5f), XMFLOAT2( 2.0f, 1.0f )}, // upper right
         {XMFLOAT3( -1.0, -1.0, 0.5f), XMFLOAT2( 0.0f, 0.0f )}, // lower left
         {XMFLOAT3( -1.0,  1.0, 0.5f), XMFLOAT2( 0.0f, 1.0f )}, // upper left
 
