@@ -1,7 +1,7 @@
 /*
 
 TODO:
-* try floating point textures and maybe make a floating point texture test as well
+* try floating point textures and maybe make a floating point texture test as well. or just make this floating point!
 * try higher precision texture coordinates etc too
 * remove the other tutorials, rename project?
 * remove MS copyright info??
