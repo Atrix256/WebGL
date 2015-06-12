@@ -1,8 +1,8 @@
 /*
 
 TODO:
-* make a side by side bilinear test
 * try floating point textures and maybe make a floating point texture test as well
+* try higher precision texture coordinates etc too
 * remove the other tutorials, rename project?
 * remove MS copyright info??
 */
