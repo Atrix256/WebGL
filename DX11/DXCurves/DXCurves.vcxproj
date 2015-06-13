@@ -29,7 +29,7 @@
   <PropertyGroup Label="Globals">
     <ProjectName>DXCurves</ProjectName>
     <ProjectGuid>{4D201D5F-2B78-4D13-9774-E77012EADEF1}</ProjectGuid>
-    <RootNamespace>Tutorial03</RootNamespace>
+    <RootNamespace>DXCurves</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -347,7 +347,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <FxCompile Include="Tutorial03.fx">
+    <FxCompile Include="DXCurves.fx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -355,7 +355,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </FxCompile>
-    <FxCompile Include="Tutorial03_PS.hlsl">
+    <FxCompile Include="DXCurves_PS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">PS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">4.0</ShaderModel>
@@ -375,7 +375,7 @@
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Release|x64'">4.0</ShaderModel>
     </FxCompile>
-    <FxCompile Include="Tutorial03_VS.hlsl">
+    <FxCompile Include="DXCurves_VS.hlsl">
       <EntryPointName Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">VS</EntryPointName>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">Vertex</ShaderType>
       <ShaderModel Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">4.0</ShaderModel>
@@ -397,11 +397,11 @@
     </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Tutorial03.cpp" />
+    <ClCompile Include="DXCurves.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CLInclude Include="resource.h" />
-    <ResourceCompile Include="Tutorial03.rc" />
+    <ResourceCompile Include="DXCurves.rc" />
   </ItemGroup>
   <ItemGroup>
   </ItemGroup>

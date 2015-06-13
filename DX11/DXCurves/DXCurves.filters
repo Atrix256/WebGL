@@ -11,25 +11,27 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Tutorial03.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <CLInclude Include="resource.h">
       <Filter>Resource Files</Filter>
     </CLInclude>
-    <ResourceCompile Include="Tutorial03.rc">
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="DXCurves.fx">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DXCurves_PS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DXCurves_VS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="DXCurves.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Tutorial03.fx">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Tutorial03_PS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="Tutorial03_VS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
+    <ClCompile Include="DXCurves.cpp" />
   </ItemGroup>
 </Project>

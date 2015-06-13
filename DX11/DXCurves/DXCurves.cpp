@@ -1,25 +1,5 @@
-/*
-
-TODO:
-* try floating point textures and maybe make a floating point texture test as well. or just make this floating point!
-* try higher precision texture coordinates etc too
-* remove the other tutorials, rename project?
-* remove MS copyright info??
-*/
-
 //--------------------------------------------------------------------------------------
-// File: Tutorial03.cpp
-//
-// This application displays a triangle using Direct3D 11
-//
-// http://msdn.microsoft.com/en-us/library/windows/apps/ff729720.aspx
-//
-// THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO
-// THE IMPLIED WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A
-// PARTICULAR PURPOSE.
-//
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// File: DXCurves.cpp
 //--------------------------------------------------------------------------------------
 #include <windows.h>
 #include <d3d11_1.h>
@@ -124,12 +104,12 @@ HRESULT InitWindow( HINSTANCE hInstance, int nCmdShow )
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
     wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon( hInstance, ( LPCTSTR )IDI_TUTORIAL1 );
+    wcex.hIcon = LoadIcon( hInstance, ( LPCTSTR )IDI_DXCURVES1 );
     wcex.hCursor = LoadCursor( nullptr, IDC_ARROW );
     wcex.hbrBackground = ( HBRUSH )( COLOR_WINDOW + 1 );
     wcex.lpszMenuName = nullptr;
-    wcex.lpszClassName = L"TutorialWindowClass";
-    wcex.hIconSm = LoadIcon( wcex.hInstance, ( LPCTSTR )IDI_TUTORIAL1 );
+    wcex.lpszClassName = L"DXCurvesWindowClass";
+    wcex.hIconSm = LoadIcon( wcex.hInstance, ( LPCTSTR )IDI_DXCURVES1 );
     if( !RegisterClassEx( &wcex ) )
         return E_FAIL;
 
@@ -137,7 +117,7 @@ HRESULT InitWindow( HINSTANCE hInstance, int nCmdShow )
     g_hInst = hInstance;
     RECT rc = { 0, 0, 1000, 500 };
     AdjustWindowRect( &rc, WS_OVERLAPPEDWINDOW, FALSE );
-    g_hWnd = CreateWindow( L"TutorialWindowClass", L"Direct3D 11 Tutorial 3: Shaders",
+    g_hWnd = CreateWindow( L"DXCurvesWindowClass", L"Bilinear Test",
                            WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
                            CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, nullptr, nullptr, hInstance,
                            nullptr );
@@ -311,7 +291,7 @@ HRESULT InitDevice()
         hr = dxgiFactory->CreateSwapChain( g_pd3dDevice, &sd, &g_pSwapChain );
     }
 
-    // Note this tutorial doesn't handle full-screen swapchains so we block the ALT+ENTER shortcut
+    // Note this doesn't handle full-screen swapchains so we block the ALT+ENTER shortcut
     dxgiFactory->MakeWindowAssociation( g_hWnd, DXGI_MWA_NO_ALT_ENTER );
 
     dxgiFactory->Release();
@@ -344,7 +324,7 @@ HRESULT InitDevice()
 
     // Compile the vertex shader
     ID3DBlob* pVSBlob = nullptr;
-    hr = CompileShaderFromFile( L"Tutorial03.fx", "VS", "vs_4_0", &pVSBlob );
+    hr = CompileShaderFromFile( L"dxcurves.fx", "VS", "vs_4_0", &pVSBlob );
     if( FAILED( hr ) )
     {
         MessageBox( nullptr,
@@ -380,7 +360,7 @@ HRESULT InitDevice()
 
 	// Compile the pixel shader
 	ID3DBlob* pPSBlob = nullptr;
-    hr = CompileShaderFromFile( L"Tutorial03.fx", "PS", "ps_4_0", &pPSBlob );
+    hr = CompileShaderFromFile( L"DXCurves.fx", "PS", "ps_4_0", &pPSBlob );
     if( FAILED( hr ) )
     {
         MessageBox( nullptr,
@@ -545,7 +525,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
         PostQuitMessage( 0 );
         break;
 
-        // Note that this tutorial does not handle resizing (WM_SIZE) requests,
+        // Note that this does not handle resizing (WM_SIZE) requests,
         // so we created the window without the resize border.
 
     default:
