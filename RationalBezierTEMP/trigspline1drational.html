@@ -1,8 +1,8 @@
-
 <!DOCTYPE html>
+<!-- saved from url=(0036)http://demofox.org/trigspline1d.html -->
 <html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<title>One Dimensional Rational Cubic Bezier Curve</title>
+<title>One Dimensional Rational Trigonometric Spline</title>
 <style type="text/css">
 body { color: #00FF00; background-color:black;}
 canvas.html5 {border:2px solid #00FF00;}
@@ -211,21 +211,33 @@ function DrawControlPoint(X, Y, dragging)
 	g_graphPanel.context.stroke();	
 }
 
-function F(t)
+function F(X)
 {
-	var s  = 1 - t;
-	var s2 = s * s;
-	var s3 = s * s * s;
-	var t2 = t * t;
-	var t3 = t * t * t;
+    // convert time from 0-1 to 0-pi/2
+    var T = X * Math.PI * 0.5;
+    
+    // pre-calculate sin and cosine
+    var snt = Math.sin(T);  // sin 0 = 0.  sin pi/2 = 1
+    var cst = Math.cos(T);  // cos 0 = 1.  cos pi/2 = 0
 
 	var W1 = parseFloat(document.getElementById("W1").value);
 	var W2 = parseFloat(document.getElementById("W2").value);
 	var W3 = parseFloat(document.getElementById("W3").value);
-	var W4 = parseFloat(document.getElementById("W4").value);
+	var W4 = parseFloat(document.getElementById("W4").value);    
 
-	return (A*W1*s3 + B*W2*3*t*s2 + C*W3*3*t2*s + D*W4*t3) /
-		   (  W1*s3 +   W2*3*t*s2 +   W3*3*t2*s +   W4*t3);
+    // return curve value
+    var value = 
+    	(A * W1 * (0.5*cst*(cst+1.0)) +
+    	B * W2 * (0.5*snt*(snt-1.0)) +
+    	C * W3 * (0.5*cst*(cst-1.0)) + 
+    	D * W4 * (0.5*snt*(snt+1.0))) /
+
+    	(W1 * (0.5*cst*(cst+1.0)) +
+    	W2 * (0.5*snt*(snt-1.0)) +
+    	W3 * (0.5*cst*(cst-1.0)) + 
+    	W4 * (0.5*snt*(snt+1.0)));    	
+
+    return value;
 }
 
 function RedrawGraph()
@@ -337,31 +349,32 @@ function RedrawGraph()
 	var W1 = parseFloat(document.getElementById("W1").value);
 	var W2 = parseFloat(document.getElementById("W2").value);
 	var W3 = parseFloat(document.getElementById("W3").value);
-	var W4 = parseFloat(document.getElementById("W4").value);
+	var W4 = parseFloat(document.getElementById("W4").value);	
 
 	document.getElementById("function").innerHTML =
 		" A = " + A.toFixed(2) + " B = " + B.toFixed(2) + " C = " + C.toFixed(2) + " D = " + D.toFixed(2) + "<br>" +
 		" W1 = " + W1.toFixed(2) + " W2 = " + W2.toFixed(2) + " W3 = " + W3.toFixed(2) + " W4 = " + W1.toFixed(2) + "<br>" +
 		"f(x): y = (" +
-		A.toFixed(2) + " * " + W1.toFixed(2) + " * (1-x)^3 + " +
-		B.toFixed(2) + " * " + W2.toFixed(2) + " * 3x(1-x)^2 + " +
-		C.toFixed(2) + " * " + W3.toFixed(2) + " * 3x^2(1-x) + " + 
-		D.toFixed(2) + " * " + W4.toFixed(2) + " * x^3) / (" +
-
-		W1.toFixed(2) + " * (1-x)^3 + " +
-		W2.toFixed(2) + " * 3x(1-x)^2 + " +
-		W3.toFixed(2) + " * 3x^2(1-x) + " + 
-		W4.toFixed(2) + " * x^3)";
+		A.toFixed(2) + " * " + W1 + " * (0.5*cos(x)*(cos(x)+1.0)) + " +
+		B.toFixed(2) + " * " + W2 + " * (0.5*sin(x)*(sin(x)-1.0)) + " +
+		C.toFixed(2) + " * " + W3 + " * (0.5*cos(x)*(cos(x)-1.0)) + " + 
+		D.toFixed(2) + " * " + W4 + " * (0.5*sin(x)*(sin(x)+1.0))) / (" + 
+		W1 + " * (0.5*cos(x)*(cos(x)+1.0)) + " +
+		W2 + " * (0.5*sin(x)*(sin(x)-1.0)) + " +
+		W3 + " * (0.5*cos(x)*(cos(x)-1.0)) + " + 
+		W4 + " * (0.5*sin(x)*(sin(x)+1.0)))" +		
+		"<br>" + 
+		"where x ranges from 0 to pi/2 instead of the usual 0 to 1";
 }
 
 </script>
 </head>
 <body>
-<h1>One Dimensional Rational Cubic Bezier Curve</h1>
+<h1>One Dimensional Rational Trigonometric Spline</h1>
 <h3>Click and drag control points to change curve.  Modify weights in boxes below the curve.</h3>
 For more information, check out the post on my blog: <a href="http://blog.demofox.org/2014/03/04/bezier-curves/">Bezier Curves</a>.<br>
 <br>
-<div id="function" style="color:blue"></div><br>
+<div id="function" style="color:blue"> A = 0.5 B = 0.25 C = 0.75 D = 0.5<br>f(x): y = 0.5 * (0.5*cos(x)*(cos(x)+1.0)) + 0.25 * (0.5*sin(x)*(sin(x)-1.0)) + 0.75 * (0.5*cos(x)*(cos(x)-1.0)) + 0.5 * (0.5*sin(x)*(sin(x)+1.0))<br>where x ranges from 0 to pi/2 instead of the usual 0 to 1</div><br>
 <canvas class="html5" id="Graph" width="600" height="600">Your browser doesn't seem to support the necesary html5 features ):</canvas>
 <br><br>
 W1: <input type="text" id="W1" value="1.0" onChange="this.value = parseFloat(this.value); if (isNaN(this.value)) this.value = '1.0'; RedrawGraph()"/>
@@ -369,36 +382,35 @@ W2: <input type="text" id="W2" value="1.0" onChange="this.value = parseFloat(thi
 W3: <input type="text" id="W3" value="1.0" onChange="this.value = parseFloat(this.value); if (isNaN(this.value)) this.value = '1.0'; RedrawGraph()"/>
 W4: <input type="text" id="W4" value="1.0" onChange="this.value = parseFloat(this.value); if (isNaN(this.value)) this.value = '1.0'; RedrawGraph()"/></br>
 <br>
-Rational cubic bezier curves have 4 control points, a weight per control point (4 total), and total up the values of the 4 functions below to get the final point at time t.<br>
+This rational trigonometric spline has 4 control points, a weight per control point (4 total), and total up the values of the 4 functions below to get the final point at time t.  t ranges from 0 to pi/2 instead of the usual 0 to 1.<br>
 <ol>
-<li>A * W1 * (1-t)^3</li>
-<li>B * W2 * 3t(1-t)^2</li>
-<li>C * W3 * 3t^2(1-t)</li>
-<li>D * W4 * t^3</li>
+<li>A * W1 * (0.5*cos(x)*(cos(x)+1.0))</li>
+<li>B * W2 * (0.5*sin(x)*(sin(x)-1.0))</li>
+<li>C * W3 * (0.5*cos(x)*(cos(x)-1.0))</li>
+<li>D * W4 * (0.5*sin(x)*(sin(x)+1.0))</li>
 </ol>
-They then divide that by the total of these 4 functions.<br>
+It then divides that by the total of these 4 functions.<br>
 <ol>
-<li>W1 * (1-t)^3</li>
-<li>W2 * 3t(1-t)^2</li>
-<li>W3 * 3t^2(1-t)</li>
-<li>W4 * t^3</li>
+<li>W1 * (0.5*cos(x)*(cos(x)+1.0))</li>
+<li>W2 * (0.5*sin(x)*(sin(x)-1.0))</li>
+<li>W3 * (0.5*cos(x)*(cos(x)-1.0))</li>
+<li>W4 * (0.5*sin(x)*(sin(x)+1.0))</li>
 </ol>
 Parameters:<br>
 <b>t</b> - "time", but in our case we are going to use the x axis value for t.<br>
 <b>A</b> - The first control point, which is also the value of the function when x = 0.<br>
 <b>B</b> - The second control point.<br>
 <b>C</b> - The third control point.<br>
-<b>D</b> - The fourth control point, which is also the value of the function when x = 1.<br>
+<b>D</b> - The fourth control point, which is also the value of the function when x = pi/2.<br>
 <b>W1</b> - The weighting of control point A.<br>
 <b>W2</b> - The weighting of control point B.<br>
 <b>W3</b> - The weighting of control point C.<br>
 <b>W4</b> - The weighting of control point D.<br>
 <br>
 In this particular case, A, B, C and D are scalars, which makes the curve into the function:<br>
-y = (A * W1 * (1-x)^3 + B * W2 * 3x(1-x)^2 + C * W3 * 3x^2(1-x) + D * W4 * x^3) / (W1 * (1-x)^3 + W2 * 3x(1-x)^2 + W3 * 3x^2(1-x) + W4 * x^3)<br>
+y = (A * W1 * (0.5*cos(x)*(cos(x)+1.0)) + B * W2 * (0.5*sin(x)*(sin(x)-1.0)) + C * W3 * (0.5*cos(x)*(cos(x)-1.0)) + D * W4 * (0.5*sin(x)*(sin(x)+1.0))) / (A * (0.5*cos(x)*(cos(x)+1.0)) + B * (0.5*sin(x)*(sin(x)-1.0)) + C * (0.5*cos(x)*(cos(x)-1.0)) + D * (0.5*sin(x)*(sin(x)+1.0)))<br>
 <br>
-<br>
-Note that this bezier curve is 1 dimensional because A,B,C,D are 1 dimensional, but you could use these same equations in any dimension.  Also,
-these control points range from 0 to 1 on the X axis, but you could scale the X axis and/or the Y axis to get a different range of values.<br>
+Note that this spline is 1 dimensional because A,B,C,D are 1 dimensional, but you could use these same equations in any dimension.  Also,
+these control points range from 0 to pi/2 on the X axis, but you could scale the X axis and/or the Y axis to get a different range of values.<br>
 <br>
 </body></html>

@@ -1,6 +1,10 @@
-* direcx version
+* rational demo in OpenGL version. for what... showing sine or something?
+ * divide one color channel by another to do the rational divide thing.
+ * note in paper how to do it
 
-* then start paper?
+* check into b-splines (knot vectors) to see if they should also be included in this
+
+* then start paper finally?
 
 
 ! Do texturefetch or texturegather for faked bilinear. Does it work in webgl? i think it's 4.0 and above.

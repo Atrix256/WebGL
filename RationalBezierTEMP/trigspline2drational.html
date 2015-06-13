@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<title>Rational 2D Trigonometric Spline</title>
+<style type="text/css">
+body { color: #00FF00; background-color:black;}
+canvas.html5 {border:2px solid #00FF00;}
+</style>
+<script>
+/*==================================================
+
+Created by Alan Wolfe
+curvesdemo{at}demofox.org
+http://demofox.org
+
+June 2015
+
+==================================================*/
+
+var g_numPoints = 100;
+
+var AX = 100;
+var AY = 300;
+
+var BX = 200;
+var BY = 100;
+
+var CX = 600;
+var CY = 100;
+
+var DX = 700;
+var DY = 300;
+
+
+var g_graphPanel;
+var g_canvas;
+var g_mousePos = [0,0];
+var g_pointDragged = 0;
+var g_lastDragPos = [0,0];
+
+function onPageLoaded()
+{	g_graphPanel = setupCanvas('Graph');
+	g_canvas = document.getElementById('Graph');
+
+	g_canvas.addEventListener('mousemove', function(evt) {OnMouseMove(evt);RedrawGraph();}, false);
+	g_canvas.addEventListener('mousedown', function() {OnMouseDown();RedrawGraph();}, false);
+	g_canvas.addEventListener('mouseup', function() {OnMouseUp();RedrawGraph();}, false);
+	RedrawGraph();
+}
+
+function setupCanvas(name)
+{
+  // Get a reference to the element.
+  var elem = document.getElementById(name);
+
+  // Always check for properties and methods, to make sure your code doesn't break 
+  // in other browsers.
+  if (elem)
+  {
+    if(elem.getContext)
+    {
+      // Get the 2d context.
+      // Remember: you can only initialize one context per element.
+      var context = elem.getContext('2d');
+
+      if (context)
+      {
+      	return {"elem":elem, "context":context, "clear":function(){ClearImageBuffer(context)}, "fill":function(color){FillImageBuffer(context, color)}};
+      }
+      else
+      {
+      	alert("Could not get html5 2d context, your browser doesn't support it! Try firefox or chrome");
+      }
+    }
+    else
+    {
+      alert("The getContext function was missing, your browser doesn't support it! Try firefox or chrome"); 
+    }
+  }
+  else
+  {
+    alert("Could not get element 'MainCanvas'");	
+  }
+
+  return false;
+}
+
+function GetMousePos(canvas, evt)
+{
+	var rect = g_canvas.getBoundingClientRect();
+	var pos =
+	[
+		evt.clientX - rect.left,
+		evt.clientY - rect.top
+	];
+	return pos;
+}
+
+function OnMouseMove(evt)
+{
+	g_mousePos = GetMousePos(g_canvas, evt);
+	if (g_pointDragged == 0)
+		return;
+
+	var deltaX = g_mousePos[0] - g_lastDragPos[0];
+	var deltaY = g_mousePos[1] - g_lastDragPos[1];
+
+	g_lastDragPos = g_mousePos;
+
+	if (g_pointDragged == 1)
+	{
+		AX += deltaX;
+		AY += deltaY;
+		return;
+	}
+
+	if (g_pointDragged == 2)
+	{
+		BX += deltaX;
+		BY += deltaY;
+		return;
+	}
+	
+	if (g_pointDragged == 3)
+	{
+		CX += deltaX;
+		CY += deltaY;
+		return;
+	}		
+
+	if (g_pointDragged == 4)
+	{
+		DX += deltaX;
+		DY += deltaY;
+		return;
+	}	
+}
+
+function OnMouseDown()
+{
+	g_lastDragPos = g_mousePos;
+		
+	var dist = Math.sqrt((AY-g_mousePos[1])*(AY-g_mousePos[1]) +  (AX-g_mousePos[0])*(AX-g_mousePos[0]));
+	if (dist < 23)
+	{
+		g_pointDragged = 1;
+		return;
+	}
+
+	dist = Math.sqrt((BY-g_mousePos[1])*(BY-g_mousePos[1]) +  (BX-g_mousePos[0])*(BX-g_mousePos[0]));
+	if (dist < 23)
+	{
+		g_pointDragged = 2;
+		return;
+	}
+
+	dist = Math.sqrt((CY-g_mousePos[1])*(CY-g_mousePos[1]) +  (CX-g_mousePos[0])*(CX-g_mousePos[0]));
+	if (dist < 23)
+	{
+		g_pointDragged = 3;
+		return;
+	}	
+
+	dist = Math.sqrt((DY-g_mousePos[1])*(DY-g_mousePos[1]) +  (DX-g_mousePos[0])*(DX-g_mousePos[0]));
+	if (dist < 23)
+	{
+		g_pointDragged = 4;
+		return;
+	}	
+
+	g_pointDragged = 0;
+}
+
+function OnMouseUp()
+{
+	g_pointDragged = 0;
+}
+
+//hook up our event listener
+window.addEventListener('load', function(){onPageLoaded();}, false);
+
+function ClearImageBuffer(context)
+{
+	context.fillStyle   = "#000000";
+	context.fillRect(0, 0, g_graphPanel.elem.width, g_graphPanel.elem.height);
+}
+
+function FillImageBuffer(context, color)
+{
+	context.fillStyle   = color;
+	context.fillRect(0, 0, g_graphPanel.elem.width, g_graphPanel.elem.height);
+}
+
+function DrawControlPoint(X, Y, dragging)
+{
+	var dist = Math.sqrt((Y-g_mousePos[1])*(Y-g_mousePos[1]) +  (X-g_mousePos[0])*(X-g_mousePos[0]));
+	var highlite = dist < 23;
+
+	g_graphPanel.context.beginPath();
+	g_graphPanel.context.arc(X, Y, 10, 0, 2 * Math.PI, false);
+	g_graphPanel.context.fillStyle = dragging ? '#FF8888' : (highlite ? '#FF4030' : '#FF0000');
+	g_graphPanel.context.fill();
+	g_graphPanel.context.lineWidth = 3;
+	g_graphPanel.context.strokeStyle = dragging ? '#888888' : (highlite ? '#884030' : '#880000');
+	g_graphPanel.context.stroke();	
+}
+
+function CurvePoint(T)
+{
+    // convert time from 0-1 to 0-pi/2
+    T = T * Math.PI * 0.5;
+    
+    // pre-calculate sin and cosine
+    var snt = Math.sin(T);  // sin 0 = 0.  sin pi/2 = 1
+    var cst = Math.cos(T);  // cos 0 = 1.  cos pi/2 = 0
+
+	var W1 = parseFloat(document.getElementById("W1").value);
+	var W2 = parseFloat(document.getElementById("W2").value);
+	var W3 = parseFloat(document.getElementById("W3").value);
+	var W4 = parseFloat(document.getElementById("W4").value);   
+
+    // return curve value
+    var valueX = 
+    	(AX * W1 * (0.5*cst*(cst+1.0)) +
+    	BX * W2 * (0.5*snt*(snt-1.0)) +
+    	CX * W3 * (0.5*cst*(cst-1.0)) + 
+    	DX * W4 * (0.5*snt*(snt+1.0))) /
+
+    	(W1 * (0.5*cst*(cst+1.0)) +
+    	W2 * (0.5*snt*(snt-1.0)) +
+    	W3 * (0.5*cst*(cst-1.0)) + 
+    	W4 * (0.5*snt*(snt+1.0)));
+
+    var valueY = 
+    	AY * W1 * (0.5*cst*(cst+1.0)) +
+    	BY * W2 * (0.5*snt*(snt-1.0)) +
+    	CY * W3 * (0.5*cst*(cst-1.0)) + 
+    	DY * W4 * (0.5*snt*(snt+1.0)) /
+
+    	(W1 * (0.5*cst*(cst+1.0)) +
+    	W2 * (0.5*snt*(snt-1.0)) +
+    	W3 * (0.5*cst*(cst-1.0)) + 
+    	W4 * (0.5*snt*(snt+1.0)));
+
+    return [valueX, valueY];
+
+}
+
+function RedrawGraph()
+{
+	// clear the graph panel
+	g_graphPanel.clear();
+
+	// start the drawing
+	g_graphPanel.context.strokeStyle='#FFFF00';	
+	g_graphPanel.context.lineWidth = 1;
+	g_graphPanel.context.beginPath();
+
+	// render each section
+	for (var index = 0; index <= g_numPoints; ++index)
+	{
+		// calculate the point
+		var point = CurvePoint(index / g_numPoints);
+
+		// if it's the first point, move there
+		if (index == 0)
+			g_graphPanel.context.moveTo(point[0], point[1]);
+		// else, draw to there
+		else
+			g_graphPanel.context.lineTo(point[0], point[1]);
+	}	
+	
+	// finish the line
+	g_graphPanel.context.stroke();
+
+	// draw the control points
+	DrawControlPoint(AX,AY,g_pointDragged == 1);
+	DrawControlPoint(BX,BY,g_pointDragged == 2);
+	DrawControlPoint(CX,CY,g_pointDragged == 3);	
+	DrawControlPoint(DX,DY,g_pointDragged == 4);	
+}
+
+</script>
+</head>
+<body>
+<h1>Rational 2D Trigonometric Spline</h1>
+<h3>Click and drag control points to change curve.  Modify weights in boxes below the curve.</h3>
+For more information, check out the post on my blog: <a href="http://blog.demofox.org/2014/03/04/bezier-curves/">Bezier Curves</a>.<br>
+<canvas class="html5" id="Graph" width="800" height="400">Your browser doesn't seem to support the necesary html5 features ):</canvas>
+<br><br>
+W1: <input type="text" id="W1" value="1.0" onChange="this.value = parseFloat(this.value); if (isNaN(this.value)) this.value = '1.0'; RedrawGraph()"/>
+W2: <input type="text" id="W2" value="1.0" onChange="this.value = parseFloat(this.value); if (isNaN(this.value)) this.value = '1.0'; RedrawGraph()"/></br>
+W3: <input type="text" id="W3" value="1.0" onChange="this.value = parseFloat(this.value); if (isNaN(this.value)) this.value = '1.0'; RedrawGraph()"/>
+W4: <input type="text" id="W4" value="1.0" onChange="this.value = parseFloat(this.value); if (isNaN(this.value)) this.value = '1.0'; RedrawGraph()"/></br>
+<br>
+This rational trigonometric spline has 4 control points, a weight per control point (4 total), and total up the values of the 4 functions below to get the final point at time t.  t ranges from 0 to pi/2 instead of the usual 0 to 1.<br>
+<ol>
+<li>A * W1 * (0.5*cos(x)*(cos(x)+1.0))</li>
+<li>B * W2 * (0.5*sin(x)*(sin(x)-1.0))</li>
+<li>C * W3 * (0.5*cos(x)*(cos(x)-1.0))</li>
+<li>D * W4 * (0.5*sin(x)*(sin(x)+1.0))</li>
+</ol>
+It then divides that by the total of these 4 functions.<br>
+<ol>
+<li>W1 * (0.5*cos(x)*(cos(x)+1.0))</li>
+<li>W2 * (0.5*sin(x)*(sin(x)-1.0))</li>
+<li>W3 * (0.5*cos(x)*(cos(x)-1.0))</li>
+<li>W4 * (0.5*sin(x)*(sin(x)+1.0))</li>
+</ol>
+Parameters:<br>
+<b>t</b> - "Time", this value goes from 0 to pi/2 to generate each point on the curve<br>
+<b>A</b> - The first control point, also the starting point of the curve.<br>
+<b>B</b> - The second control point.<br>
+<b>C</b> - The third control point.<br>
+<b>D</b> - The fourth control point, also the ending point of the curve.<br>
+<b>W1</b> - The weighting of control point A.<br>
+<b>W2</b> - The weighting of control point B.<br>
+<b>W3</b> - The weighting of control point C.<br>
+<b>W4</b> - The weighting of control point D.<br>
+<br>
+In other words, if you have 4 control points A,B,C and D, 4 weights W1,W2,W3,W4 and a time t:<br>
+CurvePoint = (A*W1*(0.5*cos(t)*(cos(t)+1.0)) + B*W2*(0.5*sin(t)*(sin(t)-1.0)) + C*W2*(0.5*cos(t)*(cos(t)-1.0)) + D*W3*(0.5*sin(t)*(sin(t)+1.0)))/(W1*(0.5*cos(t)*(cos(t)+1.0)) + W2*(0.5*sin(t)*(sin(t)-1.0)) + W2*(0.5*cos(t)*(cos(t)-1.0)) + W3*(0.5*sin(t)*(sin(t)+1.0)))<br>
+<br>
+Note that this spline is 2 dimensional because A,B,C,D are 2 dimensional, but you could use these same equations in any dimenion!<br>
+<br>
+</body></html>
