@@ -109,56 +109,54 @@ const char *CShaderRationalTest::GetFragmentShader()
             return;
         }
 
+        // we want to process all 4 quadrants between texture coordinates 0 and 1
         float origTime = time;
-
         time *= 4.0;
         int quadrant = int(floor(time));
         time = fract(time);
 
-        switch (quadrant)
-        {
-        case 1:
-        case 3: time = 1.0 - time;
-        }
+        // reverse time in quadrant 1 and 3
+        if (quadrant == 1 || quadrant == 3)
+            time = 1.0 - time;
 
         // sample the curves in R,G,B,A
         colorValue = SampleTime(vec2(time), linearSampling);
 
-        // Calculate rational sin curve in R,G, and also the actual true sine value
-        float sineValue = colorValue.x / colorValue.y;
+        // Calculate rational sin curve in R,G, and rational cosine curve in B,A
+        vec2 scValue = vec2(colorValue.x / colorValue.y, colorValue.z / colorValue.w);
 
-        switch (quadrant)
-        {
-        case 0:
-        case 1: sineValue = sineValue / 2.0 + 0.5; break;
-        case 2:
-        case 3: sineValue = (1.0 - (sineValue / 2.0 + 0.5)); break;
-        }
-        sineValue = sineValue * 0.9 + 0.05;
+        // calculate actual sine and cosine values
+        vec2 actualscValue = vec2(sin(origTime * 6.28), cos(origTime * 6.28));
 
-        float actualSineValue = sin(origTime * 6.28) * 0.5 + 0.5;
-        actualSineValue = actualSineValue * 0.9 + 0.05;
+        // scale / offset to make the screen's 0-1 map to -1 to 1 for the graphs
+        scValue = scValue * 0.5 + 0.5;
+        actualscValue = actualscValue * 0.5 + 0.5;
 
-        vec2 slope = dFdx(vec2(sineValue, actualSineValue)) / dFdx(vTextureCoord.x);
+        // sine needs to be flipped over in quadrant 2 and 3 (III and IV)
+        if (quadrant == 2 || quadrant == 3)
+            scValue.x = 1.0 - scValue.x;
 
-        sineValue = smoothstep(0.01, 0.0, abs(vTextureCoord.y - sineValue) / length(vec2(slope.x, -1.0)));
-        actualSineValue = smoothstep(0.003, 0.0, abs(vTextureCoord.y - actualSineValue) / length(vec2(slope.y, -1.0)));
+        // cosine needs to be flipped over in quadrant 1 and 2 (II and III)
+        if (quadrant == 1 || quadrant == 2)
+            scValue.y = 1.0 - scValue.y;
 
-        outColor = vec4(sineValue, actualSineValue, actualSineValue, 1.0);
+        // scale to 90% size
+        scValue = scValue * 0.9 + 0.05;
+        actualscValue = actualscValue * 0.9 + 0.05;
 
-        // calculate the rational cos curve in B,A and also the actual true cosine value
-        float cosValue = colorValue.z / colorValue.w;
-        cosValue = cosValue * 0.9 + 0.05;
+        // calculate the slopes
+        vec2 slope = dFdx(scValue) / dFdx(vTextureCoord.x);
+        vec2 actualSlope = dFdx(actualscValue) / dFdx(vTextureCoord.x);
 
-        float actualCosineValue = cos(origTime * 6.28) * 0.5 + 0.5;
-        actualCosineValue = actualCosineValue * 0.9 + 0.05;
-        
-        slope = dFdx(vec2(cosValue, actualCosineValue)) / dFdx(vTextureCoord.x);
+        // smoothstep to make it a line with width, using the gradient (from slope) to estimate distance from pixel to graph
+        scValue.x = smoothstep(0.01, 0.0, abs(vTextureCoord.y - scValue.x) / length(vec2(slope.x, -1.0)));
+        scValue.y = smoothstep(0.01, 0.0, abs(vTextureCoord.y - scValue.y) / length(vec2(slope.y, -1.0)));
+        actualscValue.x = smoothstep(0.003, 0.0, abs(vTextureCoord.y - actualscValue.x) / length(vec2(actualSlope.x, -1.0)));
+        actualscValue.y = smoothstep(0.003, 0.0, abs(vTextureCoord.y - actualscValue.y) / length(vec2(actualSlope.y, -1.0)));
 
-        cosValue = smoothstep(0.01, 0.0, abs(vTextureCoord.y - cosValue) / length(vec2(slope.x, -1.0)));
-        actualCosineValue = smoothstep(0.003, 0.0, abs(vTextureCoord.y - actualCosineValue) / length(vec2(slope.y, -1.0)));
-
-        //outColor += vec4(cosValue, actualCosineValue, actualCosineValue, 1.0);
+        // color pixel based on values
+        outColor = vec4(scValue.x, actualscValue.x, actualscValue.x, 1.0);
+        outColor += vec4(actualscValue.y, scValue.y, actualscValue.y, 1.0);
 
         // clamp the output color
         outColor = vec4(clamp(outColor, 0.0, 1.0));
