@@ -1,60 +1,30 @@
-* rational demo in OpenGL version. for what... showing sine or something?
- * divide one color channel by another to do the rational divide thing.
- * note in paper how to do it
 
 * check into b-splines (knot vectors) to see if they should also be included in this
 
 * then start paper finally?
 
 
-! Do texturefetch or texturegather for faked bilinear. Does it work in webgl? i think it's 4.0 and above.
-
 "Description: 9 texture samples taken to make 8 curves end to end for each color channel, where each curve is order 8. Then the R,G,B,A curves are combined with the cubic bezier curve function, to end up with one curve that is order 11. The source texture dimensions are 16x8."
 - i don't think that is correct! the curve has 89 control points!! i think maybe they are multiplied
 
-* then directx version maybe just in case?
- * or not needed because it's confirmed 24.8?
-
 ? how does order work with trilinear? i don't think it works the same way. possibly related to above question.
+
 
 ? where did IQ get his 24.8 knowledge from?
  * http://iquilezles.org/www/articles/hwinterpolation/hwinterpolation.htm
  * http://iquilezles.org/www/articles/texture/texture.htm
-
-* clean up GLFW code.
-* make trilinear sampling work for cubic curves
- * not sure if it's a command line param to this program of what to do or what??
-
-
+ * couldn't really find that out!
 
 * ask nvidia developer forums if this is just a hardware limitation w/ no way to get around
  * also ask if bilinear, trilinear, quadrilinear are done in hardware.
-
-
-? is it that the texture coordinates are low precision
-
-
-
-* get floating point textures working on both the flag demo, and the generic curves demo!
-
-* try higher bit depth texture in WebGL, i think it ought to be easy to do.
- * see if that gets rid of the jaggies
- * even if it does, there should be a better way to get better bilinear results... maybe will find it in C++ port.
-
-NEXT: C++ GL demos.  see if it has the same bilinear precision or not.
-
-
+ * no answer!
 
 * should you reference quicunx or 4 rook anti aliasing in paper?
+ * i don't think so
 
-* if doing c++ version, check if precision highp etc helps the bilinear texture read stuff.
-
+* mention in paper that you could do animated curves?
  * animated cubic in 2x1 (lerp control point positions) and 2x2 (quadratic curve control point positions)
  * could even use this to describe a surface (put this in paper if it turns out to be useful)
-
-? is there such thing as higher quality bilinear sampling in newer hardware?
-
-* C++ opengl version of these demos? do we need it? would help profile... but do we care? depends on if you are texture bound or not...
 
 * look into animating curves?
  * lerp results over time (actual time, not t!)
@@ -62,27 +32,19 @@ NEXT: C++ GL demos.  see if it has the same bilinear precision or not.
  * mention this in the paper
  * see about animating some objects in the vector graphics demos
 
-* make something that uses the curves for non vector graphics -> like shinyness on an object or something? particle color over lifetime etc.
-
 * webgl demo.html -> in polar mode, i think we need to do something else to get distance than the dfdx setup i have. it looks wrong
 
 * compare to 1x16 curve bake out lerp version somehow (and any other competing methods you can find?)
  * could make a "1x16 baked" version for the demos? or the paper?
 
-* make sure that C++ version also has "trilinear" sampling mode, with volume textures
-
-* read papers in paper notes section
-
 * do 2d curve rendering for quadratic bezier curves?
  * http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html?m=1
-
-* Make C++ opengl versions
- * need to do perf analasys between methods.
- ! use glfw library? whats the standard way to provide c++ source for OpenGL these days?
+ * can't. we don't have control points when we sample like this!
 
 * show rick details when you have perf info.
 
 ? does this have play with bezier surfaces and pascals pyramid etc?
+ * future work
 
 * L1 norm of pascal triangle row is 2^N where N is the row number: https://math.stackexchange.com/questions/1272085/is-this-sequence-significant
 * calculating Nth row of pascal triangle: http://stackoverflow.com/questions/15580291/how-to-efficiently-calculate-a-row-in-pascals-triangle
@@ -90,38 +52,13 @@ NEXT: C++ GL demos.  see if it has the same bilinear precision or not.
 * pascals triangle: http://en.wikipedia.org/wiki/Pascal%27s_triangle
 * binomial coefficients: https://en.wikipedia.org/wiki/Binomial_coefficient
 
-? how does the # of taps change when using bilinear vs trilinear, quadrilinear and beyond?
-
-? could we sample the texture in curve, vertex or geometry shader? if so, better vector / 3d graphics applications
-
 ? can we do different weighting besides u==v to get higher order curves?  like get a cubic curve where B==C, so it has 3 control points but is cubic?
+ * future work
 
 ? is any of this stuff extendable to bsplines or nurbs? (possible future work).  or hermite / catmull rom etc?
 
 ? how does this stuff work in DXT compressed textures?  does it work ok?
-
-? can we minimized unused pixel sections in trilinear?
-
-trilinear:
- A B   B C
- B C   C D
- C D   D E
- E F   E F
- F G   F G
-* area between every other row is unused. can we fix that? i don't think so unfortunately ):
- * if we could specify volume texture as "interlaced" (kind of) we could tell it...
-  1) "trilinear sample" the first 2 pixels
-  2) "trilinear sample" the 2nd and 3rd pixel
-  3) etc.  then we wouldn't need two slices!
-
-? in opengl, you might be able to do quadrilinear filtering??
- * https://www.opengl.org/discussion_boards/showthread.php/141302-How-to-use-Bilinear-Trilinear-Filtering
- * "GL_LINEAR is bilinear, and GL_LINEAR_MIPMAP_LINEAR is trilinear filtering."
- ? what if you specify that for a volume texture?
- ! i think yes, you can do quadrilinear filtering in opengl.
-  ? is it supported by hardware?!
-
-? how does mipmapping work? if it does bilinear / trilinear in advance, it might be a way to get higher order curves with fewer texture reads!
+ * future work
 
 === comparison info===
 
@@ -130,6 +67,10 @@ compare speed vs sending control points in a constant buffer.  also vs hard code
 compare quality (and speed?) vs baking curve as 1x16?
 
  =====Paper Notes=====
+
+* mention rational curves - one color channel has the W information.  You pre-multiply the other color channels by the weights.
+ * you can have 3 rational curves per pixel if you use the same weights for those curves, else 2 rational curves.
+ * limitation: can use weighting only up to 1.0 for texture formats that want normalized colors.
 
 ! updated video drivers got better bilinear sampling accuracy?!
 
@@ -142,8 +83,9 @@ compare quality (and speed?) vs baking curve as 1x16?
 * distance textures were shown at siggraph 2007
 
 * floating point textures - do they have better bilinear / trilinear texture filtering?
+ * no, don't seem to
 
- * can mirror curves around axis for more efficiency.  Can also repeat it N times (especially for polar curves)
+* can mirror curves around axis for more efficiency.  Can also repeat it N times (especially for polar curves)
 
 * note that we could get smaller textures with cubic (trilinear) if we could choose whcih pixels in a 2d texture to sample.
 
@@ -227,6 +169,8 @@ G->H->A
 ! can put the same upper right value as lower left and use texture wrap to make it looping?
 
 ! future quadrilinear (and beyond?) texture sampling means fewer texture lookups for this technique.
+
+future work: bsplines? nurbs? hermite? others?
 
 ! size of bezier needed = M*2, N-1
  * M = # of curves end to end you want
