@@ -23,9 +23,9 @@ void CShaderRationalTest::Init()
         -1.0,  1.0,
     });
 
-    float A = 0.0f;
-    float B = 1.0f;
-    float C = 1.0f;
+    float A1 = 0.0f;
+    float B1 = 1.0f;
+    float C1 = 1.0f;
 
     float A2 = 1.0f;
     float B2 = 1.0f;
@@ -35,9 +35,19 @@ void CShaderRationalTest::Init()
     float W2 = 1.0f / sqrtf(2.0);
     float W3 = 1.0f;
 
+    A1 *= W1;
+    B1 *= W2;
+    C1 *= W3;
+
+    A2 *= W1;
+    B2 *= W2;
+    C2 *= W3;
+
+    // Note - the B channel is empty, we could encode a 3rd rational curve in there, so long
+    // as it used the same W weights! (:
     SetTextureData_uSampler(2, 2, {
-        A * W1, W1, A2 * W1, W1,     B * W2, W2, B2 * W2, W2,
-        B * W2, W2, B2 * W2, W2,     C * W3, W3, C2 * W3, W3
+        A1, A2, 0.0f, W1,     B1, B2, 0.0f, W2,
+        B1, B2, 0.0f, W2,     C1, C2, 0.0f, W3
     });
 }
 
@@ -122,8 +132,8 @@ const char *CShaderRationalTest::GetFragmentShader()
         // sample the curves in R,G,B,A
         colorValue = SampleTime(vec2(time), linearSampling);
 
-        // Calculate rational sin curve in R,G, and rational cosine curve in B,A
-        vec2 scValue = vec2(colorValue.x / colorValue.y, colorValue.z / colorValue.w);
+        // Calculate rational sin curve in R,A (x,w) and rational cosine curve in G,A (y,w)
+        vec2 scValue = vec2(colorValue.x / colorValue.w, colorValue.y / colorValue.w);
 
         // calculate actual sine and cosine values
         vec2 actualscValue = vec2(sin(origTime * 6.28), cos(origTime * 6.28));
@@ -167,9 +177,7 @@ const char *CShaderRationalTest::GetFragmentShader()
 /*
 
 TODO:
-* cosine needs quadrant treatment
- * we change "time" for when we sample sine.  i don't think it's valid to do the same for cosine (diff quadrantnrules)
-  * might be able to work it so that the time we sample is the correct one.  i hope so!
- * also need to flip y over and half them etc.
+ * make this use the same "W only" curve, instead of filling all 4 color channels.
+ * make another rational test that has 3 random curves divided by a 4th "W only" curve.
 
 */
