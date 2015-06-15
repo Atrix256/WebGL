@@ -1,0 +1,32 @@
+TODO:
+! finish this.  make sure and finish cleaning up notes in other folder.
+ * also review demos, look for anything not mentioned
+
+* bucket the items to cover in importance buckets
+
+* come up with a layout of the paper with the topics
+
+? gather future work here
+
+? will need to gather the other papers to cite
+
+=========================================DONE=========================================
+
+Things we want to cover, in no particular order:
+* 1d texture case as an explanation?
+* 2d texture case
+* 3d texture case
+* talk about mixing de casteljeau's algorithm with bernstein form
+* explicitly show how bilinear interpolation can be mathematically equivelant to bernstein form.
+* talk about size of textures needed with each case of texture dimensions
+* mention thgat quadrilinear (and beyond) has further improvements.  show the formula for # of taps per dimension going up etc.
+* hw bilinear / hw linear & sw linear/ sw bilinear -> quality differences and how floating point RGBA textures didn't seem to help
+* mention perf at all?
+* mention usage cases: specular maps, particle color etc (no more "single value" but parametric values).  parameterizable by many things: viewing angle, time, etc.
+* talk about combining R,G,B,A for fewer, higher order curves if desired
+* mention rotationally encoding curves?
+* talk about using anti aliasing to help jaggies?
+* mention that curves could be animated -> lerp between two curves over time = same as lerping between control points.
+* rational curves. mention 3 rational curves if they share the A, else 2 rational curves if they each want their own weights.
+ * limitation: can only use weighting up to 1.0 for etxture formats that want normalized colors. or you can normalize after multiplication (shrink curve)
+

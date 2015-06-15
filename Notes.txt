@@ -1,78 +1,22 @@
 
-* check into b-splines (knot vectors) to see if they should also be included in this
 
 * then start paper finally?
 
 
+
+? do i need a 1x16 curve bake out in the demos to compare my technique to?
+
 "Description: 9 texture samples taken to make 8 curves end to end for each color channel, where each curve is order 8. Then the R,G,B,A curves are combined with the cubic bezier curve function, to end up with one curve that is order 11. The source texture dimensions are 16x8."
 - i don't think that is correct! the curve has 89 control points!! i think maybe they are multiplied
-
 ? how does order work with trilinear? i don't think it works the same way. possibly related to above question.
-
-
-? where did IQ get his 24.8 knowledge from?
- * http://iquilezles.org/www/articles/hwinterpolation/hwinterpolation.htm
- * http://iquilezles.org/www/articles/texture/texture.htm
- * couldn't really find that out!
-
-* ask nvidia developer forums if this is just a hardware limitation w/ no way to get around
- * also ask if bilinear, trilinear, quadrilinear are done in hardware.
- * no answer!
-
-* should you reference quicunx or 4 rook anti aliasing in paper?
- * i don't think so
-
-* mention in paper that you could do animated curves?
- * animated cubic in 2x1 (lerp control point positions) and 2x2 (quadratic curve control point positions)
- * could even use this to describe a surface (put this in paper if it turns out to be useful)
-
-* look into animating curves?
- * lerp results over time (actual time, not t!)
- ? is this the same as lerping over control points? yes! what other operations are there that can be done like that?
- * mention this in the paper
- * see about animating some objects in the vector graphics demos
-
-* webgl demo.html -> in polar mode, i think we need to do something else to get distance than the dfdx setup i have. it looks wrong
-
-* compare to 1x16 curve bake out lerp version somehow (and any other competing methods you can find?)
- * could make a "1x16 baked" version for the demos? or the paper?
-
-* do 2d curve rendering for quadratic bezier curves?
- * http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html?m=1
- * can't. we don't have control points when we sample like this!
 
 * show rick details when you have perf info.
 
-? does this have play with bezier surfaces and pascals pyramid etc?
- * future work
 
-* L1 norm of pascal triangle row is 2^N where N is the row number: https://math.stackexchange.com/questions/1272085/is-this-sequence-significant
-* calculating Nth row of pascal triangle: http://stackoverflow.com/questions/15580291/how-to-efficiently-calculate-a-row-in-pascals-triangle
 
-* pascals triangle: http://en.wikipedia.org/wiki/Pascal%27s_triangle
-* binomial coefficients: https://en.wikipedia.org/wiki/Binomial_coefficient
-
-? can we do different weighting besides u==v to get higher order curves?  like get a cubic curve where B==C, so it has 3 control points but is cubic?
- * future work
-
-? is any of this stuff extendable to bsplines or nurbs? (possible future work).  or hermite / catmull rom etc?
-
-? how does this stuff work in DXT compressed textures?  does it work ok?
- * future work
-
-=== comparison info===
-
-compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
-
-compare quality (and speed?) vs baking curve as 1x16?
 
  =====Paper Notes=====
 
-* mention rational curves - one color channel has the W information.  You pre-multiply the other color channels by the weights.
- * you can have 3 rational curves per pixel if you use the same weights for those curves, else 2 rational curves.
- * limitation: can use weighting only up to 1.0 for texture formats that want normalized colors.
-
-! updated video drivers got better bilinear sampling accuracy?!
 
  notes for paper:
  * putting the control points in RGBA is a way to get a smoother curve with only a single texture read (1x1). can get 1 cubic, or two linear, or a quadratic curve, and a scalar value.
@@ -80,10 +24,7 @@ compare quality (and speed?) vs baking curve as 1x16?
  * could use a volume texture and animate them on a cubic curve instead.
  * could also do more reads to make higher order curve, or higher order control point control.
 
-* distance textures were shown at siggraph 2007
 
-* floating point textures - do they have better bilinear / trilinear texture filtering?
- * no, don't seem to
 
 * can mirror curves around axis for more efficiency.  Can also repeat it N times (especially for polar curves)
 
@@ -132,7 +73,7 @@ C->D->E
 E->F->G
 G->H->A
 
-! compare quality to doing 1x16
+
 
 ? is bilinear sampling "free" (need citation)
 ? what's the cost of 3 neighboring "nearest pixel" pixel samples, is it also "free"?
@@ -141,20 +82,13 @@ G->H->A
  * http://research.microsoft.com/en-us/um/people/cloop/loopblinn05.pdf
  * http://research.microsoft.com/en-us/um/people/hoppe/ravg.pdf
 
-* can do 4 1d curves, 2 2d curves, a 3d curve and a 1d curve, or a 4d curve
 
-* usage case: particle properties over time
- * could possibly use R,G,B and encode this in A maybe?
 
-* usage case: specular maps, etc? no more "single value", could put things on curves. parametrized by what though? viewing angle and other things?
 
-* comapre volume texture cubic curve vs not volume texture (c++ opengl)
 
-* Explicitly say that bilinear texture filtering can evaluate the equation of bilin interp (quadratic bezier)
 
-* could sneak in that smoothstep is 0,0,1,1 cubic curve!
 
-! mention that the "multi tear" approach is de casteljeaus algorithm
+
 
 * benefits of end to end curves vs a higher degree curve
  * less computation to evaluate
@@ -162,26 +96,129 @@ G->H->A
  * technically, could also make it not even share control points!
  * higher degree curves = more texture sampels needed.  End to end curves = fewer.
 
-* mention perf - maybe one measurement but maybe mention that it depends on how many texture reads other code is doing etc.
 
-! cubic. don't need 4x2 image... it has the same coordinates next to eachother! 3x2 does it!
 
-! can put the same upper right value as lower left and use texture wrap to make it looping?
 
-! future quadrilinear (and beyond?) texture sampling means fewer texture lookups for this technique.
 
-future work: bsplines? nurbs? hermite? others?
 
-! size of bezier needed = M*2, N-1
- * M = # of curves end to end you want
- * N = # of control points you want on your curve (degree)
- * this is with bilinear sampling only, what about trilinear and beyond? (step up the pascal triangle. one less texture lookup)
 
-future work
-? see if this stuff can be extended to bezier triangles or rectangular bezier patches?  Or other 3d uses
+
+
+
+
+
+
+
+
+
+=====FUTURE WORK=====
+? does this have application to bsplines/nurbs? hermite? others?
+? how about 3d surfaces instead of only 2d curves? bezier triangles (pascals pyramid) or rectangular bezier patches.
+? other sues in 3d?
+? can we do different weighting besides u==v to get higher order curves?  like get a cubic curve where B==C, so it has 3 control points but is cubic?
+
+=====REFERECES=====
+
+* distance textures were shown at siggraph 2007
 
 =====DEMO NOTES=====
 * chrome disable vsync
  * run with --disable-gpu-vsync
  * https://cesiumjs.org/2014/12/01/WebGL-Profiling-Tips/
  * didn't seem to work?!
+
+
+=====INCLUDED IN PAPER NOTES=====
+
+! size of bezier needed = M*2, N-1
+ * M = # of curves end to end you want
+ * N = # of control points you want on your curve (degree)
+ * this is with bilinear sampling only, what about trilinear and beyond? (step up the pascal triangle. one less texture lookup)
+
+! future quadrilinear (and beyond?) texture sampling means fewer texture lookups for this technique.
+
+! cubic. don't need 4x2 image... it has the same coordinates next to eachother! 3x2 does it!
+
+* mention perf - maybe one measurement but maybe mention that it depends on how many texture reads other code is doing etc.
+
+! mention that the "multi tear" approach is de casteljeaus algorithm
+
+* comapre volume texture cubic curve vs not volume texture (c++ opengl)
+* Explicitly say that bilinear texture filtering can evaluate the equation of bilin interp (quadratic bezier)
+
+* usage case: particle properties over time
+ * could possibly use R,G,B and encode this in A maybe?
+* usage case: specular maps, etc? no more "single value", could put things on curves. parametrized by what though? viewing angle and other things?
+
+* can do 4 1d curves, 2 2d curves, a 3d curve and a 1d curve, or a 4d curve
+
+! compare quality to doing 1x16
+
+* ask nvidia developer forums if this is just a hardware limitation w/ no way to get around
+ * also ask if bilinear, trilinear, quadrilinear are done in hardware.
+ * no answer!
+
+* should you reference quicunx or 4 rook anti aliasing in paper?
+ * i don't think so
+
+* mention in paper that you could do animated curves?
+ * animated cubic in 2x1 (lerp control point positions) and 2x2 (quadratic curve control point positions)
+ * could even use this to describe a surface (put this in paper if it turns out to be useful)
+
+* look into animating curves?
+ * lerp results over time (actual time, not t!)
+ ? is this the same as lerping over control points? yes! what other operations are there that can be done like that?
+ * mention this in the paper
+ * see about animating some objects in the vector graphics demos
+
+* compare to 1x16 curve bake out lerp version somehow (and any other competing methods you can find?)
+ * could make a "1x16 baked" version for the demos? or the paper?
+
+
+* mention rational curves - one color channel has the W information.  You pre-multiply the other color channels by the weights.
+ * you can have 3 rational curves per pixel if you use the same weights for those curves, else 2 rational curves.
+ * limitation: can use weighting only up to 1.0 for texture formats that want normalized colors.
+
+* floating point textures - do they have better bilinear / trilinear texture filtering?
+ * no, don't seem to
+
+
+======================NOT REALLY RELEVANT ANYMORE======================
+* check into b-splines (knot vectors) to see if they should also be included in this
+ * going to punt and put in future work
+! can put the same upper right value as lower left and use texture wrap to make it looping?
+ * meh
+
+? where did IQ get his 24.8 knowledge from?
+ * http://iquilezles.org/www/articles/hwinterpolation/hwinterpolation.htm
+ * http://iquilezles.org/www/articles/texture/texture.htm
+ * couldn't really find that out! won't cite anything specific
+
+* could sneak in that smoothstep is 0,0,1,1 cubic curve!
+ * nah
+
+* webgl demo.html -> in polar mode, i think we need to do something else to get distance than the dfdx setup i have. it looks wrong
+ * meh... we'll see if anyone reviewing corrects it!
+
+* do 2d curve rendering for quadratic bezier curves?
+ * http://blog.gludion.com/2009/08/distance-to-quadratic-bezier-curve.html?m=1
+ * can't. we don't have control points when we sample like this!
+
+* meh
+ * L1 norm of pascal triangle row is 2^N where N is the row number: https://math.stackexchange.com/questions/1272085/is-this-sequence-significant
+ * calculating Nth row of pascal triangle: http://stackoverflow.com/questions/15580291/how-to-efficiently-calculate-a-row-in-pascals-triangle
+ * pascals triangle: http://en.wikipedia.org/wiki/Pascal%27s_triangle
+ * binomial coefficients: https://en.wikipedia.org/wiki/Binomial_coefficient
+
+? is any of this stuff extendable to bsplines or nurbs? (possible future work).  or hermite / catmull rom etc?
+? how does this stuff work in DXT compressed textures?  does it work ok?
+ * future work
+compare speed vs sending control points in a constant buffer.  also vs hard coded control points.
+
+compare quality (and speed?) vs baking curve as 1x16?
+
+* check with dxt compression?
+ * meh -> see if someone else suggests that
+
+! updated video drivers got better bilinear sampling accuracy?!
+ * meh
