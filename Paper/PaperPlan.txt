@@ -1,6 +1,10 @@
 TODO:
 
-* write abstract!
+! avoid first person!
+
+* might need to test a high order curve vs baked out curve to see how it fares vs baked out curve.
+ * like... 8th order curve, or end to end curves.  vs baked out same number of pixels
+
 
 ? re-read "how to write a research paper" link
  * http://research.microsoft.com/en-us/um/people/simonpj/papers/giving-a-talk/writing-a-paper-slides.pdf
@@ -9,9 +13,7 @@ TODO:
 
 * come up with a layout of the paper with the topics
 
-? do i need a 1x16 curve bake out in the demos to compare my technique to maybe? find out if that's what rick is doing!
-
-* show rick details when you have perf info.
+* show rick details at some point (when reviewing paper?)
 * another journal if needed: http://tog.acm.org/
 
 ! might need some shots of interesting graphics things done where the parameters are on curves.
@@ -71,6 +73,7 @@ Things we want to cover, in no particular order:
  * can have discontinuities (dont share tangents) if desired (sometimes desired, more flexibility)
  * technically, could also make it not even share control points!
  * higher degree curves = more texture sampels needed.  End to end curves = fewer.
+* compare to baked out curves that use same number of pixels. is this really apples to apples though? can bake out abitrarily complex curve
 
 =========================================PRIORITIES=========================================
 
@@ -96,6 +99,7 @@ Things we want to cover, in no particular order:
  * can have discontinuities (dont share tangents) if desired (sometimes desired, more flexibility)
  * technically, could also make it not even share control points!
  * higher degree curves = more texture sampels needed.  End to end curves = fewer.
+* compare to baked out curves that use same number of pixels. is this really apples to apples though? can bake out abitrarily complex curve.
 
 ----------------------Not as important----------------------
 * 1d texture case as an explanation?
@@ -117,9 +121,17 @@ Things we want to cover, in no particular order:
 4. what follows from my solution?     It gives a way for writers of fragment shaders to easily and efficiently put values on customizable curves.
 
 
-There is a desire in modern graphics to expose parameters of visual effects.
+Modern graphics techniques expose internal parameters to allow re-use and to help seperate the technical implementation from the artistic implementation.
 
+When exposing parameters as a customizable curve, the curve is often quantized into a texture for efficiency, leading to lower quality results, or more resources being
+used to accomodate higher resolution quantization.
 
+The technique presented in this paper leverages the multidimensional linear interpolation capabilities of texture samplers in modern graphics hardware to allow efficient
+storage and evaluation of both integral and rational Bezier curves.
+
+Using this technique, much higher fidelity is possible using the same resource and computational footprints.
+
+The paper also touches on some limited applications towards vector graphics.
 
 
 
