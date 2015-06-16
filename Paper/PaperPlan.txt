@@ -10,7 +10,45 @@ TODO:
 
 ? will need to gather the other papers to cite
 
+
+? do i need a 1x16 curve bake out in the demos to compare my technique to?
+
+"Description: 9 texture samples taken to make 8 curves end to end for each color channel, where each curve is order 8. Then the R,G,B,A curves are combined with the cubic bezier curve function, to end up with one curve that is order 11. The source texture dimensions are 16x8."
+- i don't think that is correct! the curve has 89 control points!! i think maybe they are multiplied
+? how does order work with trilinear? i don't think it works the same way. possibly related to above question.
+
+* show rick details when you have perf info.
+* another journal if needed: http://tog.acm.org/
+
+? can we get derivative or integral (without dfdx?) check formulas and find out
+
+* read other papers from http://jcgt.org/ to get an idea of the average published paper
+
+===========REFERENCES===========
+* distance textures were shown at siggraph 2007
+? possibly related and reference-able
+ * http://research.microsoft.com/en-us/um/people/cloop/loopblinn05.pdf
+ * http://research.microsoft.com/en-us/um/people/hoppe/ravg.pdf
+
+
+* read these... possibly related and maybe reference-able?
+ * http://research.microsoft.com/en-us/um/people/cloop/loopblinn05.pdf   <--- similar but different. uses bilinear texture coordinate interpolation.
+ * http://http.developer.nvidia.com/GPUGems3/gpugems3_ch25.html
+ * http://commaexcess.com/articles/6/vector-graphics-on-the-gpu
+
+* some references here:
+ * http://algorithmist.net/docs/subdivision.pdf
+
+===========FUTURE WORK===========
+
+? does this have application to bsplines/nurbs? hermite? others?
+? how about 3d surfaces instead of only 2d curves? bezier triangles (pascals pyramid) or rectangular bezier patches.
+? other uses in 2d vector graphics or 3d?
+? can we do different weighting besides u==v to get higher order curves?  like get a cubic curve where B==C, so it has 3 control points but is cubic?
+
 =========================================DONE=========================================
+
+
 
 Things we want to cover, in no particular order:
 * 1d texture case as an explanation?
@@ -23,10 +61,17 @@ Things we want to cover, in no particular order:
 * hw bilinear / hw linear & sw linear/ sw bilinear -> quality differences and how floating point RGBA textures didn't seem to help
 * mention perf at all?
 * mention usage cases: specular maps, particle color etc (no more "single value" but parametric values).  parameterizable by many things: viewing angle, time, etc.
-* talk about combining R,G,B,A for fewer, higher order curves if desired
+* talk about combining R,G,B,A for fewer, higher order curves if desired. smoother curves for less texture reads too!
 * mention rotationally encoding curves?
 * talk about using anti aliasing to help jaggies?
 * mention that curves could be animated -> lerp between two curves over time = same as lerping between control points.
 * rational curves. mention 3 rational curves if they share the A, else 2 rational curves if they each want their own weights.
  * limitation: can only use weighting up to 1.0 for etxture formats that want normalized colors. or you can normalize after multiplication (shrink curve)
-
+* not ideal for vector graphics because this is just good for getting curve point at time t, and not having knowledge of control points.
+ * decent for 1d curves, or polar rendered curves, but limited use cases for those.
+* end to end curves
+* benefits of end to end curves vs a higher degree curve
+ * less computation to evaluate
+ * can have discontinuities (dont share tangents) if desired (sometimes desired, more flexibility)
+ * technically, could also make it not even share control points!
+ * higher degree curves = more texture sampels needed.  End to end curves = fewer.
