@@ -239,24 +239,24 @@
                 "   //Apply a cubic curve (smoothstep) to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
                 "   //smoothstep is otherwise known as 3x^2 - 2x^3\n" +
                 "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
-                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   p = p*myTexResolution;\n\n" +
                 "   vec2 i = floor(p);\n" +
                 "   vec2 f = p - i;\n" +
                 "   f = smoothstep(0.0, 1.0, f);\n" +
                 "   p = i + f;\n\n" +
-                "   p = (p - 0.5)/myTexResolution;\n" +
+                "   p = p/myTexResolution;\n" +
                 "   return texture2D(uSampler, p)" + postSample + ";\n}\n\n";            
         }
         else if (samplingMode == "bilinearQuintic") {
             shaderSource +=
                 "   //Apply a quintic curve to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
                 "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
-                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   p = p*myTexResolution;\n\n" +
                 "   vec2 i = floor(p);\n" +
                 "   vec2 f = p - i;\n" +
                 "   f = f*f*f*(f*(f*6.0-15.0)+10.0);\n" +
                 "   p = i + f;\n\n" +
-                "   p = (p - 0.5)/myTexResolution;\n" +
+                "   p = p/myTexResolution;\n" +
                 "   return texture2D(uSampler, p)" + postSample + ";\n}\n\n";                  
         }
         else if (samplingMode == "bilinearsw") {
