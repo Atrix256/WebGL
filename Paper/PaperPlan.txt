@@ -1,5 +1,7 @@
 TODO:
 
+* write abstract!
+
 ? re-read "how to write a research paper" link
  * http://research.microsoft.com/en-us/um/people/simonpj/papers/giving-a-talk/writing-a-paper-slides.pdf
 
@@ -12,7 +14,13 @@ TODO:
 * show rick details when you have perf info.
 * another journal if needed: http://tog.acm.org/
 
+! might need some shots of interesting graphics things done where the parameters are on curves.
+ * particle color over lifetime
+ ? what else
 
+* ask graphics friends:
+ ? what are some interesting graphics techniques that use curves? (gradients? particle color over lifetime, etc)
+ ? do you currently use curves in your shaders? if so, how do you do that?  are they hard coded values, shader constants, baked out in textures?
 
 ===========REFERENCES===========
 * distance textures were shown at siggraph 2007
@@ -96,11 +104,20 @@ Things we want to cover, in no particular order:
 * mention that curves could be animated -> lerp between two curves over time = same as lerping between control points.
 
 
+=========================================ABSTRACT=========================================
+
+1. State the problem
+2. Say why it’s an interesting problem
+3. Say what your solution achieves
+4. Say what follows from your solution
+
+1. problem = ??                       There is a desire for graphical parameters to be put onto customizablle curves to get tunable effects.
+2. why is it an interesting problem?  You can make really nice looking things that is tuneable by artists.
+3. What does my solution achieve?     It leverages core features of the GPU to both efficiently store and evaluate integral and rational Bezier curves of any degree.
+4. what follows from my solution?     It gives a way for writers of fragment shaders to easily and efficiently put values on customizable curves.
 
 
-
-
-
+There is a desire in modern graphics to expose parameters of visual effects.
 
 
 
