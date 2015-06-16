@@ -48,6 +48,9 @@ GLenum GLType<double>()
         m_attr_##NAME## = glGetAttribLocation(m_program, #NAME); \
         m_attr_##NAME##_buffer = -1; \
         glEnableVertexAttribArray(m_attr_##NAME##);
+#define SHADER_UNIFORM(NAME) \
+        m_uniform_##NAME## = glGetUniformLocation(m_program, #NAME); \
+        m_uniform_value_##NAME## = 0.0f;
 #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE) \
         m_uniform_##NAME## = glGetUniformLocation(m_program, #NAME); \
         m_texture_##NAME## = -1;
@@ -63,6 +66,7 @@ GLenum GLType<double>()
     CShader##NAME##::~CShader##NAME##() { \
         glDeleteProgram(m_program);
 #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
+#define SHADER_UNIFORM(NAME)
 #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE) \
         glDeleteTextures(1, &m_texture_##NAME##);
 #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE) \
@@ -74,18 +78,21 @@ GLenum GLType<double>()
 // ----- MAKE RENDER FUNCTIONS -----
 #define SHADER_BEGIN(NAME) \
     void CShader##NAME##::Render() { \
-        glUseProgram(m_program);
+        glUseProgram(m_program); \
+        GLuint texIndex = 0;
 #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE) \
         glBindBuffer(GL_ARRAY_BUFFER, m_attr_##NAME##_buffer); \
         glVertexAttribPointer(m_attr_##NAME##, ELEMENTSIZE, GLType<TYPE>(), false, 0, 0);
+#define SHADER_UNIFORM(NAME) \
+        glUniform1f(m_uniform_##NAME##, m_uniform_value_##NAME##);
 #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE) \
-        glActiveTexture(GL_TEXTURE0); \
+        glActiveTexture(GL_TEXTURE0 + texIndex); \
         glBindTexture(GL_TEXTURE_2D, m_texture_##NAME##); \
-        glUniform1i(m_uniform_##NAME##, 0);
+        glUniform1i(m_uniform_##NAME##, texIndex++);
 #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE) \
-        glActiveTexture(GL_TEXTURE0); \
+        glActiveTexture(GL_TEXTURE0 + texIndex); \
         glBindTexture(GL_TEXTURE_3D, m_texture_##NAME##); \
-        glUniform1i(m_uniform_##NAME##, 0);
+        glUniform1i(m_uniform_##NAME##, texIndex++);
 #define SHADER_END() \
         glDrawArrays(GL_TRIANGLES, 0, m_numTriangles); \
     } 

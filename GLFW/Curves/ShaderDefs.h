@@ -5,6 +5,7 @@
 //        SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
 //        SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
 //        SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
+//        SHADER_UNIFORM(NAME)
 //    SHADER_END()
 //
 //    SHADER_BEGIN(NAME)
@@ -18,6 +19,10 @@
 //    to set data for this attribute.
 //
 //    TYPE can be float or double.
+//
+//    SHADER_UNIFORM(NAME)
+//
+//    Lets you set a uniform in the shader.  NAME is the name of the uniform.  Assumed to be a float!
 //
 //    SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
 //    SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
@@ -41,6 +46,22 @@ SHADER_BEGIN(TrilinearTest)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 3, double)
     SHADER_UNIFORM_TEXTURE_3D(uSampler, float)
+SHADER_END()
+
+SHADER_BEGIN(BilinearBakeTest)
+    SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
+    SHADER_UNIFORM_TEXTURE_2D(uSampler, float)
+    SHADER_UNIFORM_TEXTURE_2D(uBakedSampler, float)
+    SHADER_UNIFORM(uBakeSamples)
+SHADER_END()
+
+SHADER_BEGIN(TrilinearBakeTest)
+    SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 3, double)
+    SHADER_UNIFORM_TEXTURE_3D(uSampler, float)
+    SHADER_UNIFORM_TEXTURE_2D(uBakedSampler, float)
+    SHADER_UNIFORM(uBakeSamples)
 SHADER_END()
 
 SHADER_BEGIN(RationalTest)
@@ -81,6 +102,7 @@ SHADER_END()
 
 #undef SHADER_BEGIN
 #undef SHADER_VERTEX_ATTRIBUTE
+#undef SHADER_UNIFORM
 #undef SHADER_UNIFORM_TEXTURE_2D
 #undef SHADER_UNIFORM_TEXTURE_3D
 #undef SHADER_END

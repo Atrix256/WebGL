@@ -66,6 +66,7 @@ int main(void)
     // init our shaders
     #define SHADER_BEGIN(NAME) CShader##NAME shader##NAME##;  shader##NAME##.Init();
     #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
+    #define SHADER_UNIFORM(NAME)
     #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
     #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
     #define SHADER_END()
@@ -83,6 +84,7 @@ int main(void)
         switch (g_whichTest){
         #define SHADER_BEGIN(NAME) case e_shader##NAME: shader##NAME##.Render(); glfwSetWindowTitle(window, #NAME " - Arrow keys to cycle test"); break;
         #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
+        #define SHADER_UNIFORM(NAME)
         #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
         #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
         #define SHADER_END()

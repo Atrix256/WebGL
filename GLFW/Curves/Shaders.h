@@ -25,6 +25,13 @@
             m_numTriangles = data.size() / ELEMENTSIZE; \
         }
 
+#define SHADER_UNIFORM(NAME) \
+    private: \
+        GLuint m_uniform_##NAME##; \
+        float m_uniform_value_##NAME##; \
+    public: \
+        void SetUniformData_##NAME##(float value) {m_uniform_value_##NAME## = value;} 
+
 #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE) \
     private: \
         GLuint m_uniform_##NAME##; \
@@ -55,6 +62,7 @@
 enum EShaderTest {
     #define SHADER_BEGIN(NAME) e_shader##NAME,
     #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
+    #define SHADER_UNIFORM(NAME)
     #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
     #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
     #define SHADER_END()

@@ -84,6 +84,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="shaders.cpp" />
+    <ClCompile Include="Shader_BilinearBakeTest.cpp" />
     <ClCompile Include="Shader_BilinearTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
@@ -100,6 +101,7 @@
     <ClCompile Include="Shader_Quartic2d.cpp" />
     <ClCompile Include="Shader_Quartic3d.cpp" />
     <ClCompile Include="Shader_RationalTest.cpp" />
+    <ClCompile Include="Shader_TrilinearBakeTest.cpp" />
     <ClCompile Include="Shader_TrilinearTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
