@@ -2,6 +2,13 @@ TODO:
 
 ! avoid first person!
 
+? should i try to do a 4d texture demo??
+ * would also want a quadrilinear test then
+ * also a quadrilinear baked test.
+
+! do perf test.  hw vs sw bilinear, vs hwsw bilinear
+ ? other perf tests?
+
 * might need to test a high order curve vs baked out curve to see how it fares vs baked out curve.
  * like... 8th order curve, or end to end curves.  vs baked out same number of pixels
 
@@ -24,7 +31,138 @@ TODO:
  ? what are some interesting graphics techniques that use curves? (gradients? particle color over lifetime, etc)
  ? do you currently use curves in your shaders? if so, how do you do that?  are they hard coded values, shader constants, baked out in textures?
 
+! need perf and accuracy information (already have accuracy, need perf)
+
+--- goals from JCGT guidelines ---
+* Understand how it differs from alternatives
+* Know the advantages AND limitations that will likely be encountered in practice
+* Immediately integrate it into a production workflow
+
+-----OTHER PAPER OUTLINES-----
+
+http://jcgt.org/published/0004/02/04/
+Practical Layered Reconstruction for Defocus and Motion Blur : 14 pages, 10 images, 3 tables (some equations), 15 references
+--pg 1--
+Title + Image
+Abstract
+1.Introduction
+--pg 2--
+2.Summary of the LRDM algorithm
+--pg 3--
+3. Algorithm Load Balancing
+4. Filter Setup Otpimizations
+--pg 4--
+5. Reprojection
+--pg 5--
+6. Accelerated Anisotropic Gaussian Filtering
+6.1 Hardware Texture Filtering
+--pg 7--
+6.2 Sheared Screen-Space Filtering
+--pg 9--
+7.Results
+--pg 11--
+8.Conclusions and Future Work
+--pg 13--
+Acknowledgements
+References
+--pg 14--
+author contact information
+
+
+http://jcgt.org/published/0004/02/03/
+Interpreting Alpha : 15 pages, 8 images, 0 tables (lots of equations though), 5 references
+--pg 1--
+Title + Image
+Abstract
+1. Introduction
+--pg 3--
+2. Preliminaries
+--pg 5--
+3. Opacity and Coverage
+--pg 7--
+4. Composition
+--pg 8--
+5. Finding F_k and F_0
+5.1 Coverage
+--pg 9--
+5.2 Opacity
+--pg 11--
+6. Picturing Alpha
+--pg 14--
+7. Conclusion
+Acknowledgments
+References
+--pg 15--
+Author Contact Information
+
+
+http://jcgt.org/published/0004/02/02/
+Procedural Modeling of Cave-like Channels : 20 pages, 13 images, 6 tables, 15 references
+--pg 1--
+Title + Image
+Abstract
+1.Introduction
+--pg 2--
+2. Background and Previous Work
+2.1 Modeling of caves
+--pg 3--
+2.2 Formation of Subterranean Channels by Dissolution
+--pg 5--
+2.3 More Mechanisms Producing Cave-like Channels and Features
+--pg 6--
+3. Model and Simulation
+--pg 7--
+3.1 Protochannel Stage
+--pg 8--
+3.2 Channel Growth and Linkage Stage
+--pg 11--
+4. Results and Evaluation
+--pg 12--
+4.1 Caves Created Using Two Stage Simulation
+--pg 15--
+4.2 Evaluation of results
+--pg 16--
+5. Implementation and Performance
+--pg 17--
+6. Conclusion
+--pg 18--
+references
+--pg 19--
+Index of Supplemental Materials
+--pg 20--
+Author Contact Information
+
+
+http://jcgt.org/published/0004/02/01/
+Modeling Real-World Terrain with Exponentially Distributed Noise : 8 pages, 5 images, 1 table, 7 references
+--pg 1--
+Title + image
+Abstract
+1.Introduction
+--pg 2--
+2.Gradient Analysis w/ 4 images
+--pg 5--
+3.The Terrain Generator w/ 1 table + 1 image
+--pg 7--
+4. Conclusion and Further Work
+References
+--pg 8--
+Index of supplemental materials
+Author Contact info
+
+===========USAGE CASES===========
+
+* particle color over lifetime
+* color gradients
+* 1d curve vector art
+* polar encoded vector art
+? need more!!
+
 ===========REFERENCES===========
+! this: bsplines on gpu (for texture interpolation)
+ * http://www.mate.tue.nl/mate/pdfs/10318.pdf
+ * also look at references for references.
+
 * distance textures were shown at siggraph 2007
 ? possibly related and reference-able
  * http://research.microsoft.com/en-us/um/people/cloop/loopblinn05.pdf
@@ -56,7 +194,7 @@ Things we want to cover, in no particular order:
 * talk about size of textures needed with each case of texture dimensions
 * mention that quadrilinear (and beyond) has further improvements.  show the formula for # of taps per dimension going up etc.
 * hw bilinear / hw linear & sw linear/ sw bilinear / also read control points (3 instead of 4!)-> quality differences and how floating point RGBA textures didn't seem to help
-* mention perf at all?
+* perf results
 * mention usage cases: specular maps, particle color etc (no more "single value" but parametric values).  parameterizable by many things: viewing angle, time, etc.  also can be color gradients.
 * talk about combining R,G,B,A for fewer, higher order curves if desired. smoother curves for less texture reads too!
 * mention rotationally encoding curves?
@@ -78,6 +216,7 @@ Things we want to cover, in no particular order:
 =========================================PRIORITIES=========================================
 
 ----------------------Important----------------------
+* 1d texture case as basic explanation
 * 2d texture case
 * 3d texture case
 * talk about mixing de casteljeau's algorithm with bernstein form
@@ -100,15 +239,15 @@ Things we want to cover, in no particular order:
  * technically, could also make it not even share control points!
  * higher degree curves = more texture sampels needed.  End to end curves = fewer.
 * compare to baked out curves that use same number of pixels. is this really apples to apples though? can bake out abitrarily complex curve.
+* perf results
 
 ----------------------Not as important----------------------
-* 1d texture case as an explanation?
-* mention perf at all?
+
 * talk about using anti aliasing to help jaggies?
 * mention that curves could be animated -> lerp between two curves over time = same as lerping between control points.
 
 
-=========================================ABSTRACT=========================================
+=========================================ABSTRACT V1=========================================
 
 1. State the problem
 2. Say why it’s an interesting problem
@@ -123,29 +262,44 @@ Things we want to cover, in no particular order:
 
 Modern graphics techniques expose internal parameters to allow re-use and to help seperate the technical implementation from the artistic implementation.
 
-When exposing parameters as a customizable curve, the curve is often quantized into a texture for efficiency, leading to lower quality results, or more resources being
-used to accomodate higher resolution quantization.
+A popular choice is to expose parameters as a customizable curve, but when doing so, the curve is often quantized into a texture for efficiency, leading
+to lower quality results, or more resources being used to accomodate higher resolution quantization.
 
 The technique presented in this paper leverages the multidimensional linear interpolation capabilities of texture samplers in modern graphics hardware to allow efficient
-storage and evaluation of both integral and rational Bezier curves.
+storage and evaluation of both integral and rational Bezier curves of any order.
 
-Using this technique, much higher fidelity is possible using the same resource and computational footprints.
+Using this technique, much higher fidelity is possible using the same resource and computational footprints, and there is also limited application towards vector
+graphics.
 
-The paper also touches on some limited applications towards vector graphics.
+=========================================Outline=========================================
 
+GPU Efficient Texture Based Bezier Curve Evaluation (?) (remove "evaluation"?)
 
+Title + Image
+Abstract
 
+1. Introduction
+2. One Dimensionsal Textures
+ 2.1 ?
+3. Two Dimensional Textures
+ 3.1 ?
+4. Three Dimensional Textures (and beyond?)
+ 4.1 ?
+5. Texture Dimensionality and Curve Order Comparisons
+ 5.1 ?  (texture size changes, # of taps, etc)
+6. Combining Color Channels
+7. Rational Curves
+8. Accuracy Issues (and ways to deal with it)
+9. End-to-End curves and their pros and cons
+10. Limited Applications to Vector Graphics
+11. Comparison with other techniques (baked out curves, uniform constants)
+12. Performance results
+13. Future Work
 
-
-
-
-
-
-
-
-
-
-
+Acknowledgements
+References
+Index of Supplemental Materials
+author contact information
 
 
 
