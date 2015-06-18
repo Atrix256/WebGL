@@ -64,7 +64,7 @@ int main(void)
     printf("Using OpenGL %s\n", glGetString(GL_VERSION));
 
     // init our shaders
-    #define SHADER_BEGIN(NAME) CShader##NAME shader##NAME##;  shader##NAME##.Init();
+    #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) CShader##NAME shader##NAME##;  shader##NAME##.Init();
     #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
     #define SHADER_UNIFORM(NAME)
     #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
@@ -81,6 +81,26 @@ int main(void)
     bool updateTitle = false;
     while (!glfwWindowShouldClose(window))
     {
+
+        // if we changed which test we are viewing, we need to make sure the title gets updated, and also to change the window size if needed
+        
+        if (g_whichTest != lastTest) {
+            lastTest = g_whichTest;
+            updateTitle = true;
+
+            int width, height;
+            switch (g_whichTest){
+            #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) case e_shader##NAME: shader##NAME##.GetWidthHeight(width,height); break;
+            #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
+            #define SHADER_UNIFORM(NAME)
+            #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
+            #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
+            #define SHADER_END()
+            #include "ShaderDefs.h"
+            }
+            glfwSetWindowSize(window, width, height);
+        }
+
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         glViewport(0, 0, width, height);
@@ -99,15 +119,10 @@ int main(void)
             updateTitle = true;
         }
 
-        if (g_whichTest != lastTest) {
-            lastTest = g_whichTest;
-            updateTitle = true;
-        }
-
         // update the title bar if we should
         if (updateTitle) {
             switch (g_whichTest){
-            #define SHADER_BEGIN(NAME) case e_shader##NAME: sprintf(title,"%s %s",#NAME " - Arrow keys to cycle test", FPS);glfwSetWindowTitle(window, title); break;
+            #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) case e_shader##NAME: sprintf(title,"%s %s",#NAME " - Arrow keys to cycle test", FPS);glfwSetWindowTitle(window, title); break;
             #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
             #define SHADER_UNIFORM(NAME)
             #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
@@ -115,11 +130,12 @@ int main(void)
             #define SHADER_END()
             #include "ShaderDefs.h"
             }
+            updateTitle = false;
         }
 
         // render the right shader
         switch (g_whichTest){
-        #define SHADER_BEGIN(NAME) case e_shader##NAME: shader##NAME##.Render(); break;
+        #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) case e_shader##NAME: shader##NAME##.Render(); break;
         #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
         #define SHADER_UNIFORM(NAME)
         #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)

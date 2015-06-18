@@ -41,7 +41,7 @@ GLenum GLType<double>()
 //=============================================================================================================
 
 // ----- MAKE CONSTRUCTORS ----- 
-#define SHADER_BEGIN(NAME) \
+#define SHADER_BEGIN(NAME, WIDTH, HEIGHT) \
     CShader##NAME##::CShader##NAME##() { \
         m_program = LoadShader(*this);
 #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE) \
@@ -62,7 +62,7 @@ GLenum GLType<double>()
 #include "ShaderDefs.h"
 
 // ----- MAKE DESTRUCTORS -----
-#define SHADER_BEGIN(NAME) \
+#define SHADER_BEGIN(NAME, WIDTH, HEIGHT) \
     CShader##NAME##::~CShader##NAME##() { \
         glDeleteProgram(m_program);
 #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
@@ -76,7 +76,7 @@ GLenum GLType<double>()
 #include "ShaderDefs.h"
 
 // ----- MAKE RENDER FUNCTIONS -----
-#define SHADER_BEGIN(NAME) \
+#define SHADER_BEGIN(NAME, WIDTH, HEIGHT) \
     void CShader##NAME##::Render() { \
         glUseProgram(m_program); \
         GLuint texIndex = 0;

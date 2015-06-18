@@ -5,7 +5,7 @@
 #include <vector>
 #include "utils.h"
 
-#define SHADER_BEGIN(NAME) \
+#define SHADER_BEGIN(NAME, WIDTH, HEIGHT) \
     class CShader##NAME## { \
     public: \
         CShader##NAME##(); \
@@ -14,6 +14,7 @@
         void Init(); \
         static const char *GetVertexShader(); \
         static const char *GetFragmentShader(); \
+        static void GetWidthHeight(int &width, int &height) {width=WIDTH; height=HEIGHT;}
 
 #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE) \
     private: \
@@ -60,7 +61,7 @@
 
 // shader enum
 enum EShaderTest {
-    #define SHADER_BEGIN(NAME) e_shader##NAME,
+    #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) e_shader##NAME,
     #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
     #define SHADER_UNIFORM(NAME)
     #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)

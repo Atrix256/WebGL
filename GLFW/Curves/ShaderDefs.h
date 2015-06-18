@@ -1,16 +1,16 @@
 //=============================================================================================================
 //    Macros to declare shaders
 //
-//    SHADER_BEGIN(NAME)
+//    SHADER_BEGIN(NAME, WIDTH, HEIGHT)
 //        SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
 //        SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
 //        SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
 //        SHADER_UNIFORM(NAME)
 //    SHADER_END()
 //
-//    SHADER_BEGIN(NAME)
+//    SHADER_BEGIN(NAME, WIDTH, HEIGHT)
 //
-//    Defines a new shader class CShader<NAME>
+//    Defines a new shader class CShader<NAME>, and specifies the dimensions that it wants to run at
 //
 //    SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
 //
@@ -36,19 +36,19 @@
 //
 //=============================================================================================================
 
-SHADER_BEGIN(BilinearTest)
+SHADER_BEGIN(BilinearTest, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float)
 SHADER_END()
 
-SHADER_BEGIN(TrilinearTest)
+SHADER_BEGIN(TrilinearTest, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 3, double)
     SHADER_UNIFORM_TEXTURE_3D(uSampler, float)
 SHADER_END()
 
-SHADER_BEGIN(BilinearBakeTest)
+SHADER_BEGIN(BilinearBakeTest, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float)
@@ -56,7 +56,7 @@ SHADER_BEGIN(BilinearBakeTest)
     SHADER_UNIFORM(uBakeSamples)
 SHADER_END()
 
-SHADER_BEGIN(TrilinearBakeTest)
+SHADER_BEGIN(TrilinearBakeTest, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 3, double)
     SHADER_UNIFORM_TEXTURE_3D(uSampler, float)
@@ -64,37 +64,37 @@ SHADER_BEGIN(TrilinearBakeTest)
     SHADER_UNIFORM(uBakeSamples)
 SHADER_END()
 
-SHADER_BEGIN(RationalTest)
+SHADER_BEGIN(RationalTest, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float)
 SHADER_END()
 
-SHADER_BEGIN(Quadratic2d)
+SHADER_BEGIN(Quadratic2d, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float)
 SHADER_END()
 
-SHADER_BEGIN(Cubic2d)
+SHADER_BEGIN(Cubic2d, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float)
 SHADER_END()
 
-SHADER_BEGIN(Cubic3d)
+SHADER_BEGIN(Cubic3d, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 3, double)
     SHADER_UNIFORM_TEXTURE_3D(uSampler, float)
 SHADER_END()
 
-SHADER_BEGIN(Quartic2d)
+SHADER_BEGIN(Quartic2d, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float)
 SHADER_END()
 
-SHADER_BEGIN(Quartic3d)
+SHADER_BEGIN(Quartic3d, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 3, double)
     SHADER_UNIFORM_TEXTURE_3D(uSampler, float)
