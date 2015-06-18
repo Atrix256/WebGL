@@ -50,7 +50,7 @@ int main(void)
         exit(EXIT_FAILURE);
     }
     glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
     glfwSetKeyCallback(window, key_callback);
 
     GLenum err = glewInit();
@@ -73,6 +73,12 @@ int main(void)
     #include "ShaderDefs.h"
 
     // render loop
+    char FPS[64];
+    sprintf(FPS, "(FPS: -- / ms: --)");
+    int frameCount = 0;
+    double lastFPSTime = glfwGetTime();
+    EShaderTest lastTest = e_shaderInvalid;
+    bool updateTitle = false;
     while (!glfwWindowShouldClose(window))
     {
         int width, height;
@@ -80,9 +86,40 @@ int main(void)
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        char title[256];
+        ++frameCount;
+
+        double currentTime = glfwGetTime();
+        if (currentTime - lastFPSTime > 1.0) {
+            double elapsed = currentTime - lastFPSTime;
+            float fps = float(frameCount) / float(elapsed);
+            sprintf(FPS, "(FPS: %0.1f / ms: %0.2f", fps, 1000.0 / fps);
+            lastFPSTime = currentTime;
+            frameCount = 0;
+            updateTitle = true;
+        }
+
+        if (g_whichTest != lastTest) {
+            lastTest = g_whichTest;
+            updateTitle = true;
+        }
+
+        // update the title bar if we should
+        if (updateTitle) {
+            switch (g_whichTest){
+            #define SHADER_BEGIN(NAME) case e_shader##NAME: sprintf(title,"%s %s",#NAME " - Arrow keys to cycle test", FPS);glfwSetWindowTitle(window, title); break;
+            #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
+            #define SHADER_UNIFORM(NAME)
+            #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
+            #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
+            #define SHADER_END()
+            #include "ShaderDefs.h"
+            }
+        }
+
         // render the right shader
         switch (g_whichTest){
-        #define SHADER_BEGIN(NAME) case e_shader##NAME: shader##NAME##.Render(); glfwSetWindowTitle(window, #NAME " - Arrow keys to cycle test"); break;
+        #define SHADER_BEGIN(NAME) case e_shader##NAME: shader##NAME##.Render(); break;
         #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
         #define SHADER_UNIFORM(NAME)
         #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
