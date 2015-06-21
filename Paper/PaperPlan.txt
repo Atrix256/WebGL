@@ -296,40 +296,46 @@ Abstract
 2. Mathematical Basis
  * mixing de casteljeau's algorithm bernstein form
  * show how lerp and bilinear (and above) is equivelant.
-3. One Dimensional Texture Details
- 3.1 ?
-4. Two Dimensional Texture Details
- 4.1 ?
-5. Three Dimensional Texture Details (and beyond?)
- 5.1 ?
-6. Texture Dimensionality and Curve Order Comparisons
- 6.1 ?  (texture size changes, # of taps per dimensionality, etc)
+3. Implications of Texture Dimensionality
+ 3.1 One Dimensional Texture Details
+  * ?
+ 3.2 Two Dimensional Texture Details
+  * ?
+ 3.3 Three Dimensional Texture Details (and beyond?)
+  * ?
+ 3.4 Summary of Implications of Texture Dimensionality 
+  * dimensionality / curve order comparisons
+  * texture size changes (and # of pixels used)
+  * # of taps per dimensionality for each order curve
+  * etc
   * mention quadrilinear and above?
-7. Combining Color Channels
-8. Rational Curves
- * show that it's one curve divided by another and how to do it.
- * mention 3 rational curves if they share the A, else 2 rational curves if they each want their own weights.
- * limitation: can only use weighting up to 1.0 for etxture formats that want normalized colors. or you can normalize after multiplication (shrink curve)
-9. Accuracy Issues (and ways to deal with it)
+4. Extensions
+ 4.1 Combining Color Channels
+ 4.2 Piecewise curves
+  * less computation to evaluate
+  * can have discontinuities (dont share tangents) if desired (sometimes desired, more flexibility)
+  * technically, could also make it not even share control points!
+  * higher degree curves = more texture sampels needed.  End to end curves = fewer
+  ? maybe this is where b-splines could come in. mention that splines can be converted to piecewixse curves with that algorithm.
+ 4.3 Rational Curves
+  * show that it's one curve divided by another and how to do it.
+  * mention 3 rational curves if they share the A, else 2 rational curves if they each want their own weights.
+  * limitation: can only use weighting up to 1.0 for etxture formats that want normalized colors. or you can normalize after multiplication (shrink curve)
+ 4.4 Multidimensional Curves
+5. Accuracy Issues (and ways to deal with it)
  * hw bilinear vs sw bilinear vs hw/sw bilinear, vs read in control points and do yourself.
  * mention that floating point textures didn't seem to help.  cite that other paper / nvidia
  * combining R,G,B,A for fewer higher order curves with same number of texture samples
-10. End-to-End curves and their pros and cons
- * less computation to evaluate
- * can have discontinuities (dont share tangents) if desired (sometimes desired, more flexibility)
- * technically, could also make it not even share control points!
- * higher degree curves = more texture sampels needed.  End to end curves = fewer
- ? maybe this is where b-splines could come in
-11. Limited Applications to Vector Graphics
+6. Limited Applications to Vector Graphics
  * 1d curves
  * polar curves
  * not ideal for vector graphics because this is just good for getting curve point at time t, and not having knowledge of control points.
   * decent for 1d curves, or polar rendered curves, but limited use cases for those.
   * can also do affine transformations to curve point out, or control points before they go in texture.  same result either way.  translation, rotation, scaling (uniform and not), shearing, paralel projection, etc.  not central projection (perspective projection)
-12. Comparison with other techniques (baked out curves, uniform constants)
+7. Comparison with other techniques (baked out curves, uniform constants)
   * is baked out apples to apples? you could bake out arbitrary curve.
-13. Performance results
-14. Future Work
+8. Performance results
+9. Future Work
 
 Acknowledgements
 References
