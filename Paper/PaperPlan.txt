@@ -1,5 +1,18 @@
 TODO:
 
+? benefit of texture curves = don't need to know or care what type of curve created baked out data
+ * this technique needs the shader program to know what type of curve unfortunately.
+ * unless you are just aproximating curve data with some general thing (like... 3 end to end cubic curves always)
+
+? is "uniform constants" an API agnostic term?  If not need to replace it.  Used in Introduction.
+
+? can you pass data buffers to fragment shaders directly? What about with latest APIs?
+ * If so, need to update Intro.
+
+? why is your technique ever preferable to uniform constants?
+ * asked MJP from gamedev.net why they opted to use textures instead of uniform constants
+
+
 ! avoid first person!
 
 ? should i try to do a 4d texture demo??
@@ -15,8 +28,6 @@ TODO:
 
 ? re-read "how to write a research paper" link
  * http://research.microsoft.com/en-us/um/people/simonpj/papers/giving-a-talk/writing-a-paper-slides.pdf
-
-* read other papers from http://jcgt.org/ to get an idea of the average published paper
 
 * come up with a layout of the paper with the topics
 
