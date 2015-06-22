@@ -1,0 +1,24 @@
+\documentclass{article}
+\usepackage{tikz}
+\definecolor{darkgreen}{RGB}{0,192,0}
+\title{Cartesian closed categories and the price of eggs}
+\author{Jane Doe}
+\date{September 1994}
+\begin{document}
+
+	\usetikzlibrary{arrows.meta}
+	\tikzset{>={Latex[width=3mm,length=3mm]}}
+
+	\begin{figure}
+		\begin{tikzpicture}[x=12.5cm,y=4cm]
+			% raw texture, bilinear sampled texture, curve results
+		    \node[anchor=south west,inner sep=0] at (0,0) {\includegraphics[width=4cm,height=4cm]{Figure2Texture.png}};
+		    \node[anchor=south west,inner sep=0] at (4.125cm,0) {\includegraphics[width=4cm,height=4cm]{Figure2Bilinear.png}};
+		    \node[anchor=south west,inner sep=0] at (8.25cm,0) {\includegraphics[width=4cm,height=4cm]{Figure2Curves.png}};
+		    % representative line for where the quadratic bezier curve lives
+		    \draw[yellow,->,line width=0.5mm]    (5.125cm,1cm) -- (7.125cm,3cm);    
+		\end{tikzpicture}	
+		\caption{Left: a 2x2 texture storing control points for a quadratic Bezier curve in each color channel.  Center: The same texture as viewed when using bilinear texture sampling.  The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. Right: The curve resulting from sampling along the yellow line.}		
+	\end{figure}	
+
+\end{document}
