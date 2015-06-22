@@ -1,5 +1,8 @@
 TODO:
 
+
+
+
 ? benefit of texture curves = don't need to know or care what type of curve created baked out data
  * this technique needs the shader program to know what type of curve unfortunately.
  * unless you are just aproximating curve data with some general thing (like... 3 end to end cubic curves always)
@@ -341,3 +344,15 @@ Acknowledgements
 References
 Index of Supplemental Materials
 author contact information
+
+
+======THROW AWAY NOTES======
+
+--quadratic bezier
+y = A*s^2 + B*2*s*t + Ct^2
+A = 0
+B = 1
+C = 0
+2*(1-x)*x
+2x(1-x)
+2x-2x^2
