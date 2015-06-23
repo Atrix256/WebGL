@@ -1,0 +1,59 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Left: 2x2 texture containing control points for a quadratic Bezier curve per color channel. Middle: The texture as viewed with bilinear sampling. Right: The resulting curves when sampling along the yellow line (Alpha curve omitted).\relax }}{1}{figure.1}}
+\newlabel{fig:teaser}{{1}{1}{Left: 2x2 texture containing control points for a quadratic Bezier curve per color channel. Middle: The texture as viewed with bilinear sampling. Right: The resulting curves when sampling along the yellow line (Alpha curve omitted).\relax }{figure.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}}
+\newlabel{sec:introduction}{{1}{1}{Introduction}{section.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Left: A quadratic Bezier curve written to the green channel, and it's baked out equivelant using 4 pixels written to the red channel. Right: The technique from this paper also using 4 pixels, written to the green channel, and the baked out equivelant written to the red channel again for comparison. \relax }}{2}{figure.caption.2}}
+\newlabel{fig:sampleconfig}{{2}{2}{Left: A quadratic Bezier curve written to the green channel, and it's baked out equivelant using 4 pixels written to the red channel. Right: The technique from this paper also using 4 pixels, written to the green channel, and the baked out equivelant written to the red channel again for comparison. \relax }{figure.caption.2}{}}
+\newlabel{fig:quickcomparison}{{2}{2}{Left: A quadratic Bezier curve written to the green channel, and it's baked out equivelant using 4 pixels written to the red channel. Right: The technique from this paper also using 4 pixels, written to the green channel, and the baked out equivelant written to the red channel again for comparison. \relax }{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}The Technique}{3}{section.2}}
+\newlabel{sec:thetechnique}{{2}{3}{The Technique}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Intuition}{3}{subsection.2.1}}
+\newlabel{lst:GLSLDeCasteljeau}{{1}{3}{GLSL De Casteljeau Algorithm For a Quadratic Bezier Curve}{lstlisting.1}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}GLSL De Casteljeau Algorithm For a Quadratic Bezier Curve}{3}{lstlisting.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Left: A quadratic Bezier curve evaluated at {\bf  {t}}=0.6 for control points A,B,C using the De Casteljeau algorithm. Right: The De Casteljeau algorithm using bilinear interpolation. Note that in this case, the X axis is evaluated before the Y, but the Y axis could be evaluated before the X for the same results.\relax }}{4}{figure.caption.3}}
+\newlabel{fig:decasteljeauBilinear}{{3}{4}{Left: A quadratic Bezier curve evaluated at {\bf {t}}=0.6 for control points A,B,C using the De Casteljeau algorithm. Right: The De Casteljeau algorithm using bilinear interpolation. Note that in this case, the X axis is evaluated before the Y, but the Y axis could be evaluated before the X for the same results.\relax }{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Mathematical Basis}{4}{subsection.2.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Left: a 2x2 texture storing control points for a quadratic Bezier curve in each color channel. Center: The same texture as viewed when using bilinear texture sampling. The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. Right: The curves resulting from sampling along the yellow line (Alpha curve ommited).\relax }}{5}{figure.caption.4}}
+\newlabel{fig:texbilcurve}{{4}{5}{Left: a 2x2 texture storing control points for a quadratic Bezier curve in each color channel. Center: The same texture as viewed when using bilinear texture sampling. The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. Right: The curves resulting from sampling along the yellow line (Alpha curve ommited).\relax }{figure.caption.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}The Technique}{5}{section.3}}
+\newlabel{sec:thetechnique}{{3}{5}{The Technique}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}One Dimensional Textures}{5}{subsection.3.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Two Dimensional Textures}{6}{subsection.3.2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Three Dimensional Textures}{6}{subsection.3.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Summary of Implications of Texture Dimensionality}{6}{subsection.3.4}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Extensions}{6}{section.4}}
+\newlabel{sec:extensions}{{4}{6}{Extensions}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Combining Color Channels}{6}{subsection.4.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Piecewise Curves}{7}{subsection.4.2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Rational Bezier Curves}{7}{subsection.4.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Multidimensional Bezier Curves}{7}{subsection.4.4}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Addressing Accuracy Issues}{7}{section.5}}
+\newlabel{sec:addressingaccuracyissues}{{5}{7}{Addressing Accuracy Issues}{section.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Limited Applications for Vector Graphics}{7}{section.6}}
+\newlabel{sec:limitedapplicationsforvectorgraphics}{{6}{7}{Limited Applications for Vector Graphics}{section.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Comparisons With Other Techniques}{7}{section.7}}
+\newlabel{sec:comparisonswithothertechniques}{{7}{7}{Comparisons With Other Techniques}{section.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Performance Characteristics}{7}{section.8}}
+\newlabel{sec:performancecharacteristics}{{8}{7}{Performance Characteristics}{section.8}{}}
+\newlabel{sec:futurework}{{8}{7}{Future Work}{section*.5}{}}
+\newlabel{sec:acknowledgements}{{8}{8}{Acknowledgements}{section*.6}{}}
+\newlabel{sec:references}{{8}{8}{References}{section*.7}{}}
+\newlabel{sec:indexofsupplementalmaterials}{{8}{8}{Index of Supplemental Materials}{section*.8}{}}

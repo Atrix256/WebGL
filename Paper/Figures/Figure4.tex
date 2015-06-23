@@ -14,11 +14,15 @@
 			% border
 			\draw (0cm,0cm) -- (12.5cm,0cm) -- (12.5cm,4.25cm) -- (0cm,4.25cm) -- (0cm, 0cm);		
 			% raw texture, bilinear sampled texture, curve results
-		    \node[anchor=south west,inner sep=0] at (0.125cm,0.125cm) {\includegraphics[width=4cm,height=4cm]{Figure2Texture.png}};
-		    \node[anchor=south west,inner sep=0] at (4.25cm,0.125cm) {\includegraphics[width=4cm,height=4cm]{Figure2Bilinear.png}};
-		    \node[anchor=south west,inner sep=0] at (8.375cm,0.125cm) {\includegraphics[width=4cm,height=4cm]{Figure2Curves.png}};
+		    \node[anchor=south west,inner sep=0] at (0.125cm,0.125cm) {\includegraphics[width=4cm,height=4cm]{Figure4Texture.png}};
+		    \node[anchor=south west,inner sep=0] at (4.25cm,0.125cm) {\includegraphics[width=4cm,height=4cm]{Figure4Bilinear.png}};
+		    \node[anchor=south west,inner sep=0] at (8.375cm,0.125cm) {\includegraphics[width=4cm,height=4cm]{Figure4Curves.png}};
 		    % representative line for where the quadratic bezier curve lives
 		    \draw[yellow,->,line width=0.5mm]    (5.25cm,1.125cm) -- (7.25cm,3.125cm);    
+		    \draw (0.08,0.25) node[] {\Huge{A}};
+		    \draw (0.25,0.25) node[] {\Huge{B}};
+		    \draw (0.08,0.75) node[] {\Huge{B}};
+		    \draw (0.25,0.75) node[] {\Huge{C}};    		    
 		\end{tikzpicture}
 		\caption{Left: a 2x2 texture storing control points for a quadratic Bezier curve in each color channel.  Center: The same texture as viewed when using bilinear texture sampling.  The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. Right: The curves resulting from sampling along the yellow line (Alpha curve ommited).}		
 	\end{figure}	

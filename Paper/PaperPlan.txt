@@ -1,5 +1,9 @@
 TODO:
 
+* check log file for warnings, it looks like there are some!
+
+! combine the figure2 images into one image.
+ * make figure2.tex use it?
 
 
 
@@ -122,8 +126,7 @@ Abstract
 --pg 3--
 2.2 Formation of Subterranean Channels by Dissolution
 --pg 5--
-2.3 More Mechanisms Producing Cave-like Channels and Features
---pg 6--
+2.3 More Mechanisms Producing Cave-like Channels and Features--pg 6--
 3. Model and Simulation
 --pg 7--
 3.1 Protochannel Stage
@@ -148,8 +151,7 @@ Author Contact Information
 
 
 http://jcgt.org/published/0004/02/01/
-Modeling Real-World Terrain with Exponentially Distributed Noise : 8 pages, 5 images, 1 table, 7 references
---pg 1--
+Modeling Real-World Terrain with Exponentially Distributed Noise : 8 pages, 5 images, 1 table, 7 references--pg 1--
 Title + image
 Abstract
 1.Introduction
