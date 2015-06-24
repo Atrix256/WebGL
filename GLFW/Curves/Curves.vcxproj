@@ -101,6 +101,9 @@
     <ClCompile Include="Shader_Quartic2d.cpp" />
     <ClCompile Include="Shader_Quartic3d.cpp" />
     <ClCompile Include="Shader_RationalTest.cpp" />
+    <ClCompile Include="Shader_Texture1d.cpp" />
+    <ClCompile Include="Shader_Texture2d.cpp" />
+    <ClCompile Include="Shader_Texture3d.cpp" />
     <ClCompile Include="Shader_TrilinearBakeTest.cpp" />
     <ClCompile Include="Shader_TrilinearTest.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

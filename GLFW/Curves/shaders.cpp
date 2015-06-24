@@ -54,6 +54,9 @@ GLenum GLType<double>()
 #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE) \
         m_uniform_##NAME## = glGetUniformLocation(m_program, #NAME); \
         m_texture_##NAME## = -1;
+#define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE) \
+        m_uniform_##NAME## = glGetUniformLocation(m_program, #NAME); \
+        m_texture_##NAME## = -1;
 #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE) \
         m_uniform_##NAME## = glGetUniformLocation(m_program, #NAME); \
         m_texture_##NAME## = -1;
@@ -67,6 +70,8 @@ GLenum GLType<double>()
         glDeleteProgram(m_program);
 #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
 #define SHADER_UNIFORM(NAME)
+#define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE) \
+        glDeleteTextures(1, &m_texture_##NAME##);
 #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE) \
         glDeleteTextures(1, &m_texture_##NAME##);
 #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE) \
@@ -85,6 +90,10 @@ GLenum GLType<double>()
         glVertexAttribPointer(m_attr_##NAME##, ELEMENTSIZE, GLType<TYPE>(), false, 0, 0);
 #define SHADER_UNIFORM(NAME) \
         glUniform1f(m_uniform_##NAME##, m_uniform_value_##NAME##);
+#define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE) \
+        glActiveTexture(GL_TEXTURE0 + texIndex); \
+        glBindTexture(GL_TEXTURE_1D, m_texture_##NAME##); \
+        glUniform1i(m_uniform_##NAME##, texIndex++);
 #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE) \
         glActiveTexture(GL_TEXTURE0 + texIndex); \
         glBindTexture(GL_TEXTURE_2D, m_texture_##NAME##); \

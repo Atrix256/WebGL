@@ -81,7 +81,35 @@ GLuint MakeBuffer<float>(const std::vector<float>& data)
 
 //=============================================================================================================
 template<>
-GLuint MakeTexture<unsigned char>(GLsizei width, GLsizei height, const std::vector<unsigned char>& data)
+GLuint MakeTexture1D<unsigned char>(GLsizei width, const std::vector<unsigned char>& data)
+{
+    GLuint texture = 0;
+    glCreateTextures(GL_TEXTURE_1D, 1, &texture);
+    glBindTexture(GL_TEXTURE_1D, texture);
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, width, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_1D, NULL);
+    return texture;
+}
+
+//=============================================================================================================
+template<>
+GLuint MakeTexture1D<float>(GLsizei width, const std::vector<float>& data)
+{
+    GLuint texture = 0;
+    glCreateTextures(GL_TEXTURE_1D, 1, &texture);
+    glBindTexture(GL_TEXTURE_1D, texture);
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, width, 0, GL_RGBA, GL_FLOAT, &data[0]);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_1D, NULL);
+    return texture;
+}
+
+//=============================================================================================================
+template<>
+GLuint MakeTexture2D<unsigned char>(GLsizei width, GLsizei height, const std::vector<unsigned char>& data)
 {
     GLuint texture = 0;
     glCreateTextures(GL_TEXTURE_2D, 1, &texture);
@@ -95,7 +123,7 @@ GLuint MakeTexture<unsigned char>(GLsizei width, GLsizei height, const std::vect
 
 //=============================================================================================================
 template<>
-GLuint MakeTexture<float>(GLsizei width, GLsizei height, const std::vector<float>& data)
+GLuint MakeTexture2D<float>(GLsizei width, GLsizei height, const std::vector<float>& data)
 {
     GLuint texture = 0;
     glCreateTextures(GL_TEXTURE_2D, 1, &texture);

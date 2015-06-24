@@ -33,13 +33,22 @@
     public: \
         void SetUniformData_##NAME##(float value) {m_uniform_value_##NAME## = value;} 
 
+#define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE) \
+    private: \
+        GLuint m_uniform_##NAME##; \
+        GLuint m_texture_##NAME##; \
+    public: \
+        void SetTextureData_##NAME##(GLsizei width, const std::vector<TYPE>& data) { \
+            m_texture_##NAME## = MakeTexture1D<TYPE>(width, data); \
+        }
+
 #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE) \
     private: \
         GLuint m_uniform_##NAME##; \
         GLuint m_texture_##NAME##; \
     public: \
         void SetTextureData_##NAME##(GLsizei width, GLsizei height, const std::vector<TYPE>& data) { \
-            m_texture_##NAME## = MakeTexture<TYPE>(width, height, data); \
+            m_texture_##NAME## = MakeTexture2D<TYPE>(width, height, data); \
         }
 
 #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE) \
@@ -64,6 +73,7 @@ enum EShaderTest {
     #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) e_shader##NAME,
     #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
     #define SHADER_UNIFORM(NAME)
+    #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE)
     #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
     #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
     #define SHADER_END()
