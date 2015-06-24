@@ -1,5 +1,7 @@
 TODO:
 
+* put $ around all the symbols? control points, t,u, etc!
+
 * check log file for warnings, it looks like there are some!
 
 * perf

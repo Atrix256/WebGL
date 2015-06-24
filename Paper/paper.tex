@@ -90,7 +90,7 @@ The pattern continues for higher dimensionality textures, and curves of lower de
 
 \subsection{Intuition}
 
-The De Casteljeau algorithm shows us that we can find points on a Bezier curve by evaluating a hierarchy of linear interpolations.  For example, a quadratic curve is the linear interpolation between the linear interpolation of {$\overline{AB}$} and {$\overline{BC}$}, using the same time t for each interpolation (\autoref{lst:GLSLDeCasteljeau})
+The De Casteljeau algorithm shows us that we can find points on a Bezier curve by evaluating a hierarchy of linear interpolations.  For example, a quadratic curve is the linear interpolation between the linear interpolation of {$\overline{AB}$} and {$\overline{BC}$}, using the same time $t$ for each interpolation (\autoref{lst:GLSLDeCasteljeau})
 
 \begin{lstlisting}[caption={GLSL De Casteljeau Algorithm For a Quadratic Bezier Curve}, label={lst:GLSLDeCasteljeau}]
 float QuadraticBezier (
@@ -159,9 +159,9 @@ From this, we have an idea of how to set up the points in our texture so that wh
     \label{fig:decasteljeauBilinear}
   \end{figure}
 
-Since we need to linearly interpolate between {$\overline{AB}$} and {$\overline{BC}$}, and between those results, all by the same time t, we need to ensure that our u coordinate equals our v coordinate.
+Since we need to linearly interpolate between {$\overline{AB}$} and {$\overline{BC}$}, and between those results, all by the same time $t$, we need to ensure that our $u$ coordinate equals our $v$ coordinate.
 
-It can be seen that the actual pixel value in a bilinear sampled texture is in the middle of a pixel.  That means that when calculating our texture coordinates we must sample between pixel location (0.5,0.5) and pixel location (1.5,1.5) to get the correct results.
+It can be seen that the actual pixel value in a bilinear sampled texture is in the middle of a pixel.  That means that when calculating our texture coordinates we must sample between pixel location $(0.5,0.5)$ and pixel location $(1.5,1.5)$ to get the correct results.
 
 The common pixel formats contain four color channels – Red, Green, Blue and Alpha – which allows us to be able to evaluate four curves with a single texture read.
 
@@ -188,38 +188,74 @@ The common pixel formats contain four color channels – Red, Green, Blue and Al
 
 \subsection{Mathematical Basis}
 
-The De Casteljeau algorithm is equivelant to the Bernstein form of Bezier curves (\autoref{eqn:bernsteinform}) which means that the Bernstein form must be able to be eqvaluated by linear, bilinear, trilinear, and N-Linear interpolation.
+The De Casteljeau algorithm is equivelant to the Bernstein form of Bezier curves.
 
 \begin{equation}
-\bf{P} = \sum\limits_{i=0}^n\binom {n} {i}s^{n-i}t^i\text{\bf{P}}_i
+\bf{P(t)} = \sum\limits_{i=0}^n\binom {n} {i}(1-t)^{n-i}t^i\text{\bf{P}}_i
 \label{eqn:bernsteinform}
 \end{equation}
 
-When n is 1, to make a linear Bezier curve, the equation we get out is in fact just linear interpolation (\autoref{eqn:bernsteinformn1}).  Note that in the Berntstein form, s is equivelant to 1-t.
+That they are equivelant means that the Bernstein form for a given $n$ must also be able to be evaluated by $n$-Linear interpolation.  A linear curve should be able to be evaluated by linear interpolation, a quadratic curve should be able to be evaluated by bilinear interpolation, a cubic curve should be able to be evaluated by trilinear interpolation, and so on.
+
+When $n$ is $1$, to make a linear Bezier curve, the equation we get out is in fact just linear interpolation, so we can see that it's true in that case.
 
 \begin{equation}
-\bf{P} = s*P_0 + t*P_1
+\bf{P(t)} = P_0(1-t) + P_1t
 \label{eqn:bernsteinformn1}
 \end{equation}
 
-When n is 2, to make a quadratic Bezier curve, things are not quite as obvious:
+When $n$ is $2$, to make a quadratic Bezier curve with bilinear interpolation, the relationship is not as obvious.
 
+\begin{equation}
+\bf{P(t)} = P_0(1-t)^2 + P_12(1-t)t + P_2t^2
+\label{eqn:bernsteinformn2}
+\end{equation}
 
+To see how that equation can be the same as bilinear interpolation, let's start with the equation for bilinear interpolation, which is just a linear interpolation between two other linear interpolations.  We'll use $t$ and $u$ as the interpolation weights of each interpolation.
 
-TODO: finish this section.
-TODO: show linear, bilinear, trilinear interpolation to be equivelant!
-TODO: How to prove for N dimensions?
+\begin{equation}
+\begin{split}
+\bf{E(u)} = P_0*(1-u) + P_1*u \\
+\bf{F(u)} = P_2*(1-u) + P_3*u \\
+\bf{P(t,u)} = E(u)*(1-t) + F(u)*t \\
+\bf{P(t,u)} = (P_0*(1-u) + P_1*u)*(1-t) + (P_2*(1-u) + P_3*u)*t
+\end{split}
+\label{eqn:bilinearinterpolation}
+\end{equation}
+
+In our usage case of bilinear interpolation to evaluate Bernstein polynomials, $P_0$ will be $A$, $P_1$ and $P_2$ will both be $B$, and $P_3$ will be $C$.  Also, $t$ and $u$ are the same in our usage case so we'll just replace $u$ with $t$.  We will also replace $(1-t)$ with $s$ for readability.
+
+\begin{equation}
+\begin{split}
+\bf{P(t)} = (A*s+B*t)*s + (B*s+C*t)*t \\
+\bf{P(t)} = A*s^2+B*st + B*st+C*t^2 \\
+\bf{P(t)} = A*s^2+B*2st+C*t^2
+\end{split}
+\label{eqn:bilinearinterpolation2}
+\end{equation}
+
+If we replace $A$,$B$,$C$ with $P_0$, $P_1$, $P_2$, and $s$ with $(1-t)$ we then get the familiar equation back out.
+
+\begin{equation}
+\bf{P(t)} = P_0(1-t)^2+P_12(1-t)t+P_2t^2
+\label{eqn:bilinearinterpolation3}
+\end{equation}
+
+This pattern continues for trilinear interpolation and beyond
+
+TODO: How to prove for N dimensions?  This section needs help
 
 \subsection{Accuracy}
 
-TODO: find where this text belongs.
 While the Bernstein form of Bezier curves is equivelant to evaluating a Bezier curve with the De Casteljeau algorithm, in practice there are differences that come up between the two.  For instance, it is well known that the De Casteljeau algorithm is slower but more numerically robust than evaluating the Bernstein form.
 
-The technique presented in this paper is no different.  While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures.
+The technique presented in this paper also has numeric differences in practice.  While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures.
+
+As shown in \autoref{fig:texbilcurve}, the quality can be significantly higher than a baked out curve for the same number of pixels however.  There is more information on addressing accuracy in \autoref{sec:addressingaccuracyissues}.
 
 TODO: give the details of the architecture and cite the two papers cited from the other place!
 
-TODO: show accuracy in practice vs calculated in shader program.  Mention that it's "ok" in practice, better than standard texture baking, and reference the section that gives more information on this accuracy issue and how to improve it?
+TODO: Show a zoomed in version of curves with this technique, vs the real curve
 
 %-------------------------------------------------------------------------
 \section{The Technique}
