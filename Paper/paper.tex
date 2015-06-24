@@ -1,5 +1,6 @@
 \documentclass{jcgt}
 \usepackage{tikz}
+\usepackage{amsmath}
 \definecolor{darkgreen}{RGB}{0,192,0}
 
 \setciteauthor{Alan Wolfe}
@@ -187,8 +188,29 @@ The common pixel formats contain four color channels – Red, Green, Blue and Al
 
 \subsection{Mathematical Basis}
 
-TODO: this section.
-TODO: show linear, bilinear, trilinear interpolation to be equivelant!  How to prove for N dimensions?
+The De Casteljeau algorithm is equivelant to the Bernstein form of Bezier curves (\autoref{eqn:bernsteinform}) which means that the Bernstein form must be able to be eqvaluated by linear, bilinear, trilinear, and N-Linear interpolation.
+
+\begin{equation}
+\bf{P} = \sum\limits_{i=0}^n\binom {n} {i}s^{n-i}t^i\text{\bf{P}}_i
+\label{eqn:bernsteinform}
+\end{equation}
+
+When n is 1, to make a linear Bezier curve, the equation we get out is in fact just linear interpolation (\autoref{eqn:bernsteinformn1}).  Note that in the Berntstein form, s is equivelant to 1-t.
+
+\begin{equation}
+\bf{P} = s*P_0 + t*P_1
+\label{eqn:bernsteinformn1}
+\end{equation}
+
+When n is 2, to make a quadratic Bezier curve, things are not quite as obvious:
+
+
+
+TODO: finish this section.
+TODO: show linear, bilinear, trilinear interpolation to be equivelant!
+TODO: How to prove for N dimensions?
+
+\subsection{Accuracy}
 
 TODO: find where this text belongs.
 While the Bernstein form of Bezier curves is equivelant to evaluating a Bezier curve with the De Casteljeau algorithm, in practice there are differences that come up between the two.  For instance, it is well known that the De Casteljeau algorithm is slower but more numerically robust than evaluating the Bernstein form.

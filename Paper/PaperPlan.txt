@@ -2,19 +2,14 @@ TODO:
 
 * check log file for warnings, it looks like there are some!
 
-! combine the figure2 images into one image.
- * make figure2.tex use it?
-
-
+* perf
+ * get cost of 1d vs 2d vs 3d texture sampling.
+ * compare linear vs nearest too
+ * get numbers from laptop as well as work computer
 
 ? benefit of texture curves = don't need to know or care what type of curve created baked out data
  * this technique needs the shader program to know what type of curve unfortunately.
  * unless you are just aproximating curve data with some general thing (like... 3 end to end cubic curves always)
-
-? is "uniform constants" an API agnostic term?  If not need to replace it.  Used in Introduction.
-
-? can you pass data buffers to fragment shaders directly? What about with latest APIs?
- * If so, need to update Intro.
 
 ? why is your technique ever preferable to uniform constants?
  * asked MJP from gamedev.net why they opted to use textures instead of uniform constants
@@ -35,8 +30,6 @@ TODO:
 
 ? re-read "how to write a research paper" link
  * http://research.microsoft.com/en-us/um/people/simonpj/papers/giving-a-talk/writing-a-paper-slides.pdf
-
-* come up with a layout of the paper with the topics
 
 * show rick details at some point (when reviewing paper?)
 * another journal if needed: http://tog.acm.org/

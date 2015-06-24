@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  22 JUN 2015 21:01
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  24 JUN 2015 07:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -622,21 +622,21 @@ LaTeX Warning: Label `sec:thetechnique' multiply defined.
 )
 \openout1 = `paper.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 19.
-LaTeX Font Info:    ... okay on input line 19.
-LaTeX Font Info:    Try loading font information for OT1+ptm on input line 19.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 20.
+LaTeX Font Info:    ... okay on input line 20.
+LaTeX Font Info:    Try loading font information for OT1+ptm on input line 20.
  (d:/texlive/2015/texmf-dist/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
@@ -675,7 +675,7 @@ Package caption Info: rotating package is loaded.
 Package caption Info: End \AtBeginDocument code.
 \c@lstlisting=\count145
 \AtBeginShipoutBox=\box43
-Package hyperref Info: Link coloring ON on input line 19.
+Package hyperref Info: Link coloring ON on input line 20.
 
 (d:/texlive/2015/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
@@ -685,9 +685,9 @@ Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
 )
 \c@section@level=\count146
 )
-LaTeX Info: Redefining \ref on input line 19.
-LaTeX Info: Redefining \pageref on input line 19.
-LaTeX Info: Redefining \nameref on input line 19.
+LaTeX Info: Redefining \ref on input line 20.
+LaTeX Info: Redefining \pageref on input line 20.
+LaTeX Info: Redefining \nameref on input line 20.
 
 ABD: EveryShipout initializing macros
 (d:/texlive/2015/texmf-dist/tex/generic/pgf/libraries/pgflibraryarrows.meta.cod
@@ -698,22 +698,22 @@ File: pgflibraryarrows.meta.code.tex 2013/12/13 v3.0.0 (rcs-revision 1.12)
 \pgfarrowwidth=\dimen180
 \pgfarrowlinewidth=\dimen181
 )
-LaTeX Font Info:    Try loading font information for OT1+phv on input line 44.
+LaTeX Font Info:    Try loading font information for OT1+phv on input line 45.
  (d:/texlive/2015/texmf-dist/tex/latex/psnfss/ot1phv.fd
 File: ot1phv.fd 2001/06/04 scalable font definitions for OT1/phv.
 )
 LaTeX Font Info:    Font shape `OT1/phv/m/n' will be
-(Font)              scaled to size 15.55188pt on input line 44.
+(Font)              scaled to size 15.55188pt on input line 45.
 LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <17.28> not available
-(Font)              Font shape `OT1/phv/b/n' tried instead on input line 44.
+(Font)              Font shape `OT1/phv/b/n' tried instead on input line 45.
 LaTeX Font Info:    Font shape `OT1/phv/b/n' will be
-(Font)              scaled to size 15.55188pt on input line 44.
-LaTeX Font Info:    Try loading font information for U+msa on input line 44.
+(Font)              scaled to size 15.55188pt on input line 45.
+LaTeX Font Info:    Try loading font information for U+msa on input line 45.
 
 (d:/texlive/2015/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 44.
+LaTeX Font Info:    Try loading font information for U+msb on input line 45.
 
 (d:/texlive/2015/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -721,7 +721,7 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 <Teaser.png, id=7, 1505.625pt x 501.875pt>
 File: Teaser.png Graphic file (type png)
  <use Teaser.png>
-Package pdftex.def Info: Teaser.png used on input line 44.
+Package pdftex.def Info: Teaser.png used on input line 45.
 (pdftex.def)             Requested size: 361.33441pt x 122.85706pt.
 Missing character: There is no p in font nullfont!
 Missing character: There is no t in font nullfont!
@@ -736,41 +736,41 @@ Missing character: There is no t in font nullfont!
 
 
 Package caption Warning: The option `hypcap=true' will be ignored for this
-(caption)                particular \caption on input line 44.
+(caption)                particular \caption on input line 45.
 See the caption package documentation for explanation.
 
 LaTeX Font Info:    Font shape `OT1/phv/m/n' will be
-(Font)              scaled to size 8.99994pt on input line 44.
+(Font)              scaled to size 8.99994pt on input line 45.
 LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <10> not available
-(Font)              Font shape `OT1/phv/b/n' tried instead on input line 44.
+(Font)              Font shape `OT1/phv/b/n' tried instead on input line 45.
 LaTeX Font Info:    Font shape `OT1/phv/b/n' will be
-(Font)              scaled to size 8.99994pt on input line 44.
+(Font)              scaled to size 8.99994pt on input line 45.
 LaTeX Font Info:    Font shape `OT1/phv/m/n' will be
-(Font)              scaled to size 10.79993pt on input line 46.
+(Font)              scaled to size 10.79993pt on input line 47.
 LaTeX Font Info:    Font shape `OT1/phv/bx/n' in size <12> not available
-(Font)              Font shape `OT1/phv/b/n' tried instead on input line 53.
+(Font)              Font shape `OT1/phv/b/n' tried instead on input line 54.
 LaTeX Font Info:    Font shape `OT1/phv/b/n' will be
-(Font)              scaled to size 10.79993pt on input line 53.
+(Font)              scaled to size 10.79993pt on input line 54.
 
-Package xcolor Warning: Incompatible color definition on input line 58.
+Package xcolor Warning: Incompatible color definition on input line 59.
 
 [1{d:/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
 
  <./Teaser.png>] <Figure2.png, id=23, 753.5653pt x 377.91188pt>
 File: Figure2.png Graphic file (type png)
  <use Figure2.png>
-Package pdftex.def Info: Figure2.png used on input line 62.
+Package pdftex.def Info: Figure2.png used on input line 63.
 (pdftex.def)             Requested size: 361.34999pt x 181.2111pt.
-LaTeX Font Info:    Try loading font information for OMS+ptm on input line 69.
+LaTeX Font Info:    Try loading font information for OMS+ptm on input line 70.
 
 (d:/texlive/2015/texmf-dist/tex/latex/psnfss/omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10.95> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 69.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 70.
 
 
-Package xcolor Warning: Incompatible color definition on input line 74.
+Package xcolor Warning: Incompatible color definition on input line 75.
 
 
 Package Fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -780,17 +780,17 @@ Package Fancyhdr Warning: \headheight is too small (12.0pt):
 
 [2 <./Figure2.png (PNG copy)>]
 
-Package xcolor Warning: Incompatible color definition on input line 76.
+Package xcolor Warning: Incompatible color definition on input line 77.
 
 
-Package xcolor Warning: Incompatible color definition on input line 92.
+Package xcolor Warning: Incompatible color definition on input line 93.
 
-LaTeX Font Info:    Try loading font information for OT1+pcr on input line 94.
+LaTeX Font Info:    Try loading font information for OT1+pcr on input line 95.
 (d:/texlive/2015/texmf-dist/tex/latex/psnfss/ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
 
-Package xcolor Warning: Incompatible color definition on input line 107.
+Package xcolor Warning: Incompatible color definition on input line 108.
 
 Missing character: There is no p in font nullfont!
 Missing character: There is no t in font nullfont!
@@ -803,11 +803,11 @@ Missing character: There is no t in font nullfont!
 Missing character: There is no p in font nullfont!
 Missing character: There is no t in font nullfont!
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10.95> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 122.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 123.
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 157.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 158.
 
-Package xcolor Warning: Incompatible color definition on input line 162.
+Package xcolor Warning: Incompatible color definition on input line 163.
 
 [3]
 Missing character: There is no â in font ptmr7t!
@@ -818,32 +818,38 @@ Missing character: There is no € in font ptmr7t!
 Missing character: There is no “ in font ptmr7t!
 
 
-Package xcolor Warning: Incompatible color definition on input line 167.
+Package xcolor Warning: Incompatible color definition on input line 168.
 
 <Figure4Texture.png, id=54, 501.875pt x 501.875pt>
 File: Figure4Texture.png Graphic file (type png)
  <use Figure4Texture.png>
-Package pdftex.def Info: Figure4Texture.png used on input line 174.
+Package pdftex.def Info: Figure4Texture.png used on input line 175.
 (pdftex.def)             Requested size: 113.80533pt x 113.80533pt.
 
 <Figure4Bilinear.png, id=55, 501.875pt x 501.875pt>
 File: Figure4Bilinear.png Graphic file (type png)
  <use Figure4Bilinear.png>
-Package pdftex.def Info: Figure4Bilinear.png used on input line 175.
+Package pdftex.def Info: Figure4Bilinear.png used on input line 176.
 (pdftex.def)             Requested size: 113.80533pt x 113.80533pt.
 
 <Figure4Curves.png, id=56, 501.875pt x 501.875pt>
 File: Figure4Curves.png Graphic file (type png)
  <use Figure4Curves.png>
-Package pdftex.def Info: Figure4Curves.png used on input line 176.
+Package pdftex.def Info: Figure4Curves.png used on input line 177.
 (pdftex.def)             Requested size: 113.80533pt x 113.80533pt.
 
 
-Package xcolor Warning: Incompatible color definition on input line 200.
+Package xcolor Warning: Incompatible color definition on input line 191.
+
+
+Package xcolor Warning: Incompatible color definition on input line 198.
+
+
+Package xcolor Warning: Incompatible color definition on input line 209.
 
 [4]
 
-Package xcolor Warning: Incompatible color definition on input line 224.
+Package xcolor Warning: Incompatible color definition on input line 234.
 
 [5 <./Figure4Texture.png> <./Figure4Bilinear.png> <./Figure4Curves.png>]
 
@@ -851,76 +857,84 @@ Package xcolor Warning: Incompatible color definition on input line 266.
 
 [6]
 
-Package xcolor Warning: Incompatible color definition on input line 323.
+Package xcolor Warning: Incompatible color definition on input line 316.
 
 [7]
 
-Package xcolor Warning: Incompatible color definition on input line 342.
+Package xcolor Warning: Incompatible color definition on input line 364.
 
 
-Package xcolor Warning: Incompatible color definition on input line 349.
+Package xcolor Warning: Incompatible color definition on input line 371.
 
 
-Package xcolor Warning: Incompatible color definition on input line 350.
+Package xcolor Warning: Incompatible color definition on input line 372.
 
 
-Overfull \hbox (18.30946pt too wide) in paragraph at lines 337--353
+Overfull \hbox (18.30946pt too wide) in paragraph at lines 359--375
  [] 
  []
 
 
-Package xcolor Warning: Incompatible color definition on input line 355.
+Package xcolor Warning: Incompatible color definition on input line 377.
 
 
-Underfull \hbox (badness 10000) in alignment at lines 355--355
+Package xcolor Warning: Incompatible color definition on input line 377.
+
+[8]
+Underfull \hbox (badness 10000) in alignment at lines 377--377
 [][] [] []
  []
 
 
-Package xcolor Warning: Incompatible color definition on input line 355.
+Package xcolor Warning: Incompatible color definition on input line 377.
 
-<CC-BY-ND.png, id=105, 97.0827pt x 33.9669pt>
+<CC-BY-ND.png, id=125, 97.0827pt x 33.9669pt>
 File: CC-BY-ND.png Graphic file (type png)
  <use CC-BY-ND.png>
-Package pdftex.def Info: CC-BY-ND.png used on input line 355.
+Package pdftex.def Info: CC-BY-ND.png used on input line 377.
 (pdftex.def)             Requested size: 71.13188pt x 24.8884pt.
 
 
-Package xcolor Warning: Incompatible color definition on input line 357.
+Package xcolor Warning: Incompatible color definition on input line 379.
 
-[8 <./CC-BY-ND.png>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 357.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 357.
+[9 <./CC-BY-ND.png>]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 379.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 379.
  (./paper.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 357.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 357.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 379.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 379.
 
 
 LaTeX Warning: There were multiply-defined labels.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 357.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 379.
  ) 
 Here is how much of TeX's memory you used:
- 19399 strings out of 493089
- 357602 string characters out of 6138425
- 419142 words of memory out of 5000000
- 22483 multiletter control sequences out of 15000+600000
- 32639 words of font info for 71 fonts, out of 8000000 for 9000
+ 19422 strings out of 493089
+ 357881 string characters out of 6138425
+ 419229 words of memory out of 5000000
+ 22497 multiletter control sequences out of 15000+600000
+ 36547 words of font info for 81 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  54i,12n,65p,756b,1072s stack positions out of 5000i,500n,10000p,200000b,80000s
 {d:/texlive/2015/texmf-dist/fonts/enc/dvips/base/8r.enc}<d:/texlive/2015/texm
-f-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><d:/texlive/2015/texmf-dist/fo
-nts/type1/public/amsfonts/cm/cmmi8.pfb><d:/texlive/2015/texmf-dist/fonts/type1/
-public/amsfonts/cm/cmsy10.pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/couri
-er/ucrr8a.pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb><
-d:/texlive/2015/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb><d:/texlive/2015
-/texmf-dist/fonts/type1/urw/times/utmb8a.pfb><d:/texlive/2015/texmf-dist/fonts/
-type1/urw/times/utmr8a.pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/times/ut
-mri8a.pfb>
-Output written on paper.pdf (8 pages, 672095 bytes).
+f-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><d:/texlive/2015/texmf-dist/fo
+nts/type1/public/amsfonts/cm/cmbx8.pfb><d:/texlive/2015/texmf-dist/fonts/type1/
+public/amsfonts/cm/cmex10.pfb><d:/texlive/2015/texmf-dist/fonts/type1/public/am
+sfonts/cm/cmmi10.pfb><d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm
+/cmmi8.pfb><d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb
+><d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><d:/texliv
+e/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><d:/texlive/2015/te
+xmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><d:/texlive/2015/texmf-dist/f
+onts/type1/urw/courier/ucrr8a.pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/h
+elvetic/uhvb8a.pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.
+pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/times/utmb8a.pfb><d:/texlive/20
+15/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><d:/texlive/2015/texmf-dist/font
+s/type1/urw/times/utmri8a.pfb>
+Output written on paper.pdf (9 pages, 719974 bytes).
 PDF statistics:
- 160 PDF objects out of 1000 (max. 8388607)
- 128 compressed objects within 2 object streams
- 46 named destinations out of 1000 (max. 500000)
+ 195 PDF objects out of 1000 (max. 8388607)
+ 156 compressed objects within 2 object streams
+ 50 named destinations out of 1000 (max. 500000)
  43 words of extra memory for PDF output out of 10000 (max. 10000000)
 
