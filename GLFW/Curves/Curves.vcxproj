@@ -89,6 +89,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Shader_BilinearTest2.cpp" />
+    <ClCompile Include="Shader_BilinearTest3.cpp" />
     <ClCompile Include="Shader_Cubic2d.cpp" />
     <ClCompile Include="Shader_Cubic3d.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -109,6 +111,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Shader_TrilinearTest2.cpp" />
+    <ClCompile Include="Shader_TrilinearTest3.cpp" />
     <ClCompile Include="utils.cpp" />
   </ItemGroup>
   <ItemGroup>

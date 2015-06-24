@@ -12,13 +12,13 @@ template<typename T>
 GLuint MakeBuffer(const std::vector<T>& data);
 
 template<typename T>
-GLuint MakeTexture1D(GLsizei width, const std::vector<T>& data);
+GLuint MakeTexture1D(GLsizei width, bool lerpSample, const std::vector<T>& data);
 
 template<typename T>
-GLuint MakeTexture2D(GLsizei width, GLsizei height, const std::vector<T>& data);
+GLuint MakeTexture2D(GLsizei width, GLsizei height, bool lerpSample, const std::vector<T>& data);
 
 template<typename T>
-GLuint MakeTexture3D(GLsizei width, GLsizei height, GLsizei depth, const std::vector<T>& data);
+GLuint MakeTexture3D(GLsizei width, GLsizei height, GLsizei depth, bool lerpSample, const std::vector<T>& data);
 
 //=============================================================================================================
 // Template Specializations
@@ -30,17 +30,17 @@ template<>
 GLuint MakeBuffer<float>(const std::vector<float>& data);
 
 template<>
-GLuint MakeTexture1D<unsigned char>(GLsizei width, const std::vector<unsigned char>& data);
+GLuint MakeTexture1D<unsigned char>(GLsizei width, bool lerpSample, const std::vector<unsigned char>& data);
 template<>
-GLuint MakeTexture1D<float>(GLsizei width, const std::vector<float>& data);
+GLuint MakeTexture1D<float>(GLsizei width, bool lerpSample, const std::vector<float>& data);
 
 template<>
-GLuint MakeTexture2D<unsigned char>(GLsizei width, GLsizei height, const std::vector<unsigned char>& data);
+GLuint MakeTexture2D<unsigned char>(GLsizei width, GLsizei height, bool lerpSample, const std::vector<unsigned char>& data);
 template<>
-GLuint MakeTexture2D<float>(GLsizei width, GLsizei height, const std::vector<float>& data);
+GLuint MakeTexture2D<float>(GLsizei width, GLsizei height, bool lerpSample, const std::vector<float>& data);
 
 template<>
-GLuint MakeTexture3D<unsigned char>(GLsizei width, GLsizei height, GLsizei depth, const std::vector<unsigned char>& data);
+GLuint MakeTexture3D<unsigned char>(GLsizei width, GLsizei height, GLsizei depth, bool lerpSample, const std::vector<unsigned char>& data);
 template<>
-GLuint MakeTexture3D<float>(GLsizei width, GLsizei height, GLsizei depth, const std::vector<float>& data);
+GLuint MakeTexture3D<float>(GLsizei width, GLsizei height, GLsizei depth, bool lerpSample, const std::vector<float>& data);
 

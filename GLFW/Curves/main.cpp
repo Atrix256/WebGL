@@ -67,9 +67,9 @@ int main(void)
     #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) CShader##NAME shader##NAME##;  shader##NAME##.Init();
     #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
     #define SHADER_UNIFORM(NAME)
-    #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE)
-    #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
-    #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
+    #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE, LERP)
+    #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE, LERP)
+    #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE, LERP)
     #define SHADER_END()
     #include "ShaderDefs.h"
 
@@ -94,9 +94,9 @@ int main(void)
             #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) case e_shader##NAME: shader##NAME##.GetWidthHeight(width,height); break;
             #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
             #define SHADER_UNIFORM(NAME)
-            #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE)
-            #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
-            #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
+            #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE, LERP)
+            #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE, LERP)
+            #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE, LERP)
             #define SHADER_END()
             #include "ShaderDefs.h"
             }
@@ -115,7 +115,7 @@ int main(void)
         if (currentTime - lastFPSTime > 1.0) {
             double elapsed = currentTime - lastFPSTime;
             float fps = float(frameCount) / float(elapsed);
-            sprintf(FPS, "(FPS: %0.1f / ms: %0.2f", fps, 1000.0 / fps);
+            sprintf(FPS, "(FPS: %0.1f / ms: %0.4f", fps, 1000.0 / fps);
             lastFPSTime = currentTime;
             frameCount = 0;
             updateTitle = true;
@@ -127,9 +127,9 @@ int main(void)
             #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) case e_shader##NAME: sprintf(title,"%s %s",#NAME " - Arrow keys to cycle test", FPS);glfwSetWindowTitle(window, title); break;
             #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
             #define SHADER_UNIFORM(NAME)
-            #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE)
-            #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
-            #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
+            #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE, LERP)
+            #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE, LERP)
+            #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE, LERP)
             #define SHADER_END()
             #include "ShaderDefs.h"
             }
@@ -141,9 +141,9 @@ int main(void)
         #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) case e_shader##NAME: shader##NAME##.Render(); break;
         #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
         #define SHADER_UNIFORM(NAME)
-        #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE)
-        #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
-        #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
+        #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE, LERP)
+        #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE, LERP)
+        #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE, LERP)
         #define SHADER_END()
         #include "ShaderDefs.h"
         }

@@ -33,31 +33,31 @@
     public: \
         void SetUniformData_##NAME##(float value) {m_uniform_value_##NAME## = value;} 
 
-#define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE) \
+#define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE, LERP) \
     private: \
         GLuint m_uniform_##NAME##; \
         GLuint m_texture_##NAME##; \
     public: \
         void SetTextureData_##NAME##(GLsizei width, const std::vector<TYPE>& data) { \
-            m_texture_##NAME## = MakeTexture1D<TYPE>(width, data); \
+            m_texture_##NAME## = MakeTexture1D<TYPE>(width, LERP, data); \
         }
 
-#define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE) \
+#define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE, LERP) \
     private: \
         GLuint m_uniform_##NAME##; \
         GLuint m_texture_##NAME##; \
     public: \
         void SetTextureData_##NAME##(GLsizei width, GLsizei height, const std::vector<TYPE>& data) { \
-            m_texture_##NAME## = MakeTexture2D<TYPE>(width, height, data); \
+            m_texture_##NAME## = MakeTexture2D<TYPE>(width, height, LERP, data); \
         }
 
-#define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE) \
+#define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE, LERP) \
     private: \
         GLuint m_uniform_##NAME##; \
         GLuint m_texture_##NAME##; \
     public: \
         void SetTextureData_##NAME##(GLsizei width, GLsizei height, GLsizei depth, const std::vector<TYPE>& data) { \
-            m_texture_##NAME## = MakeTexture3D<TYPE>(width, height, depth, data); \
+            m_texture_##NAME## = MakeTexture3D<TYPE>(width, height, depth, LERP, data); \
         }
 
 #define SHADER_END() \
@@ -73,9 +73,9 @@ enum EShaderTest {
     #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) e_shader##NAME,
     #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
     #define SHADER_UNIFORM(NAME)
-    #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE)
-    #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE)
-    #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE)
+    #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE, LERP)
+    #define SHADER_UNIFORM_TEXTURE_2D(NAME, TYPE, LERP)
+    #define SHADER_UNIFORM_TEXTURE_3D(NAME, TYPE, LERP)
     #define SHADER_END()
     #include "ShaderDefs.h"
 

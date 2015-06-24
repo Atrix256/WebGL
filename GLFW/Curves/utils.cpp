@@ -81,84 +81,90 @@ GLuint MakeBuffer<float>(const std::vector<float>& data)
 
 //=============================================================================================================
 template<>
-GLuint MakeTexture1D<unsigned char>(GLsizei width, const std::vector<unsigned char>& data)
+GLuint MakeTexture1D<unsigned char>(GLsizei width, bool lerpSample, const std::vector<unsigned char>& data)
 {
+    GLint sampling = lerpSample ? GL_LINEAR : GL_NEAREST;
     GLuint texture = 0;
     glCreateTextures(GL_TEXTURE_1D, 1, &texture);
     glBindTexture(GL_TEXTURE_1D, texture);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA, width, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, sampling);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, sampling);
     glBindTexture(GL_TEXTURE_1D, NULL);
     return texture;
 }
 
 //=============================================================================================================
 template<>
-GLuint MakeTexture1D<float>(GLsizei width, const std::vector<float>& data)
+GLuint MakeTexture1D<float>(GLsizei width, bool lerpSample, const std::vector<float>& data)
 {
+    GLint sampling = lerpSample ? GL_LINEAR : GL_NEAREST;
     GLuint texture = 0;
     glCreateTextures(GL_TEXTURE_1D, 1, &texture);
     glBindTexture(GL_TEXTURE_1D, texture);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGBA32F, width, 0, GL_RGBA, GL_FLOAT, &data[0]);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, sampling);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, sampling);
     glBindTexture(GL_TEXTURE_1D, NULL);
     return texture;
 }
 
 //=============================================================================================================
 template<>
-GLuint MakeTexture2D<unsigned char>(GLsizei width, GLsizei height, const std::vector<unsigned char>& data)
+GLuint MakeTexture2D<unsigned char>(GLsizei width, GLsizei height, bool lerpSample, const std::vector<unsigned char>& data)
 {
+    GLint sampling = lerpSample ? GL_LINEAR : GL_NEAREST;
     GLuint texture = 0;
     glCreateTextures(GL_TEXTURE_2D, 1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, sampling);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, sampling);
     glBindTexture(GL_TEXTURE_2D, NULL);
     return texture;
 }
 
 //=============================================================================================================
 template<>
-GLuint MakeTexture2D<float>(GLsizei width, GLsizei height, const std::vector<float>& data)
+GLuint MakeTexture2D<float>(GLsizei width, GLsizei height, bool lerpSample, const std::vector<float>& data)
 {
+    GLint sampling = lerpSample ? GL_LINEAR : GL_NEAREST;
     GLuint texture = 0;
     glCreateTextures(GL_TEXTURE_2D, 1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGBA, GL_FLOAT, &data[0]);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, sampling);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, sampling);
     glBindTexture(GL_TEXTURE_2D, NULL);
     return texture;
 }
 
 //=============================================================================================================
 template<>
-GLuint MakeTexture3D<unsigned char>(GLsizei width, GLsizei height, GLsizei depth, const std::vector<unsigned char>& data)
+GLuint MakeTexture3D<unsigned char>(GLsizei width, GLsizei height, GLsizei depth, bool lerpSample, const std::vector<unsigned char>& data)
 {
+    GLint sampling = lerpSample ? GL_LINEAR : GL_NEAREST;
     GLuint texture = 0;
     glCreateTextures(GL_TEXTURE_3D, 1, &texture);
     glBindTexture(GL_TEXTURE_3D, texture);
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, &data[0]);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, sampling);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, sampling);
     glBindTexture(GL_TEXTURE_3D, NULL);
     return texture;
 }
 
 //=============================================================================================================
 template<>
-GLuint MakeTexture3D<float>(GLsizei width, GLsizei height, GLsizei depth, const std::vector<float>& data)
+GLuint MakeTexture3D<float>(GLsizei width, GLsizei height, GLsizei depth, bool lerpSample, const std::vector<float>& data)
 {
+    GLint sampling = lerpSample ? GL_LINEAR : GL_NEAREST;
     GLuint texture = 0;
     glCreateTextures(GL_TEXTURE_3D, 1, &texture);
     glBindTexture(GL_TEXTURE_3D, texture);
     glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA32F, width, height, depth, 0, GL_RGBA, GL_FLOAT, &data[0]);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, sampling);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, sampling);
     glBindTexture(GL_TEXTURE_3D, NULL);
     return texture;
 }
