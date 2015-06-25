@@ -88,35 +88,27 @@ The pattern continues for higher dimensionality textures, and curves of lower de
 
 \subsection{Intuition}
 
-The De Casteljeau algorithm shows us that we can find points on a Bezier curve by evaluating a hierarchy of linear interpolations.  For example, a quadratic curve is the linear interpolation between the linear interpolation of {$\overline{AB}$} and {$\overline{BC}$}, using the same time $t$ for each interpolation (\autoref{lst:GLSLDeCasteljeau}).
+The De Casteljeau algorithm shows us that we can find points on a Bezier curve by evaluating a hierarchy of linear interpolations.  For example, a quadratic curve is the linear interpolation between the linear interpolation of {$\overline{AB}$} and {$\overline{BC}$}, using the same time $t$ for each interpolation.
 
-\begin{lstlisting}[caption={GLSL De Casteljeau Algorithm For a Quadratic Bezier Curve}, label={lst:GLSLDeCasteljeau}]
+Bilinear interpolation is used when linear sampling is enabled and a texture sample is taking from a 2d texture.  Bilinear interpolation is achieved by linearly interpolating across one axis (say, the X axis) and then interpolating the two results by the other axis (the Y axis).  In bilinear interpolation, you have a $t$ and a $u$ interpolation value, and you have four values to interpolate between $A$,$B$,$C$,$D$.
+
+\begin{lstlisting}[caption={GLSL implementation of bilinear interpolation and the De Casteljeau algorithm for a quadratic Bezier curve.}, label={lst:GLSLCurves}]
+float BilinearInterpolate (
+  in float u, in float v,
+  in float A, in float B, in float C, in float D
+) {
+    return mix(mix(A,B,u), mix(C,D,u), v);
+}
+
 float QuadraticBezier (
   in float t,
-  in float A,
-  in float B,
-  in float C
+  in float A, in float B, in float C
 ) {
     return mix(mix(A,B,t), mix(B,C,t), t);
 }
 \end{lstlisting}
 
-Bilinear interpolation is used when linear sampling is enabled and a texture sample is taking from a 2d texture.  Bilinear interpolation is achieved by linearly interpolating across one axis (say, the X axis) and then interpolating the two results by the other axis (the Y axis).  In bilinear interpolation, you have a $t$ and a $u$ interpolation value, and you have four values to interpolate between $A$,$B$,$C$,$D$ (\autoref{lst:GLSLBilinear}).
-
-\begin{lstlisting}[caption={GLSL implementation of bilinear interpolation between four floats}, label={lst:GLSLBilinear}]
-float BilinearInterpolate (
-  in float u,
-  in float v,
-  in float A,
-  in float B,
-  in float C,
-  in float D
-) {
-    return mix(mix(A,B,u), mix(C,D,u), v);
-}
-\end{lstlisting}
-
-Comparing the source code for these two operations, we begin to get an idea of how to set up the points in our texture and the u and v coordinates to use such that when performing bilinear sampling, that we will get, as output, points on a quadratic bezier curve (\autoref{fig:decasteljeauBilinear}).
+Comparing the source code for these two operations  (\autoref{lst:GLSLCurves}), we begin to get an idea of how to set up the points in our texture and the u and v coordinates to use such that when performing bilinear sampling, that we will get, as output, points on a quadratic bezier curve (\autoref{fig:decasteljeauBilinear}).
 
   \begin{figure}
     % bezier curve diagram
@@ -166,7 +158,7 @@ Comparing the source code for these two operations, we begin to get an idea of h
         \draw[black,fill=black] (0.6,0.6) circle (1mm);
         \draw[black] (0.55,0.6) node[anchor=east] {\bf{t}=0.6};
     \end{tikzpicture} 
-    \caption{Left: A quadratic Bezier curve evaluated at {\bf{t}}=0.6 for control points A,B,C using the De Casteljeau algorithm.  Right: The De Casteljeau algorithm using bilinear interpolation.  Note that in this case, the X axis is evaluated before the Y, but the Y axis could be evaluated before the X for the same results.}
+    \caption{\textit{Left:} A quadratic Bezier curve evaluated at {\bf{t}}=0.6 for control points A,B,C using the De Casteljeau algorithm.  \textit{Right:} The De Casteljeau algorithm using bilinear interpolation.  Note that in this case, the X axis is evaluated before the Y, but the Y axis could be evaluated before the X for the same results.}
     \label{fig:decasteljeauBilinear}
   \end{figure}
 
@@ -191,7 +183,7 @@ The common pixel formats contain four color channels – Red, Green, Blue and Al
         \draw (0.08,0.75) node[] {\Huge{B}};
         \draw (0.25,0.75) node[] {\Huge{C}};            
     \end{tikzpicture}
-    \caption{Left: a 2x2 texture storing control points for a quadratic Bezier curve in each color channel.  Center: The same texture as viewed when using bilinear texture sampling.  The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. Right: The curves resulting from sampling along the yellow line (Alpha curve ommited).}   
+    \caption{\textit{Left:} a 2x2 texture storing control points for a quadratic Bezier curve in each color channel.  \textit{Middle:} The same texture as viewed when using bilinear texture sampling.  The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. \textit{Right:} The curves resulting from sampling along the yellow line (Alpha curve ommited).}   
     \label{fig:texbilcurve}
   \end{figure}  
 
@@ -258,19 +250,33 @@ TODO: How to prove for N dimensions?  This section needs help
 
 While the Bernstein form of Bezier curves is equivelant to evaluating a Bezier curve with the De Casteljeau algorithm, in practice there are differences that come up between the two.  It is well known that the De Casteljeau algorithm is slower but more numerically robust than evaluating the Bernstein form.
 
-The technique presented in this paper also has numerical differences in practice.  While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures.
+The technique presented in this paper also has numerical differences in practice.  While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures (\autoref{fig:quickaccuracy}).
 
 As shown in \autoref{fig:texbilcurve}, the quality can be significantly higher than a baked out curve for the same number of pixels however.  There is more information on addressing accuracy in \autoref{sec:addressingaccuracyissues}.
 
-TODO: give the details of the architecture and cite the two papers cited from the other place!
+  \begin{figure}
+    \begin{tikzpicture}[x=12cm,y=4cm]
+      % border
+      \draw (0cm,0cm) rectangle (12cm,4cm);
+      % raw texture, bilinear sampled texture, curve results
+        \node[anchor=south west,inner sep=0] at (0cm,0cm) {\includegraphics[width=4cm,height=4cm]{HighQuality.png}};
+        \node[anchor=south west,inner sep=0] at (4cm,0cm) {\includegraphics[width=4cm,height=4cm]{HighQualityZoom.png}};
+        \node[anchor=south west,inner sep=0] at (8cm,0cm) {\includegraphics[width=4cm,height=4cm]{LowQualityZoom.png}};
+        % representative line for where the quadratic bezier curve lives
+        \draw[yellow] (0.11,0.35) rectangle (0.21,0.65);    
+          
+    \end{tikzpicture}
+    \caption{\textit{Left:} Sampled curves.  \textit{Middle:} Zooming in on a curve calculated with shader program constants.  \textit{Right:} Zooming in on a curve calculated using the method in this paper}   
+    \label{fig:quickaccuracy}
+  \end{figure}  
 
-TODO: Show a zoomed in version of curves with this technique, vs the real curve
+TODO: give the details of the architecture imprecision sources and cite the two papers cited from the other place!
 
 %-------------------------------------------------------------------------
-\section{Implications of Texture Dimensionality}
-\label{sec:implicationsoftexturedimensionality}
+\section{Texture Dimensionality}
+\label{sec:texturedimensionality}
 
-While this technique is able to be used with any texture dimensionality, there are different characteristics when using textures of different dimensionalities.  Those characteristics will be explored here.
+While this technique is able to be used with any texture dimensionality, there are different characteristics for each choice.  Those characteristics will be explored here.
 
 \subsection{One Dimensional Textures}
 
@@ -278,7 +284,9 @@ One dimensional textures are textures which have N pixels in a single row or col
 
 Using one dimensional textures, the built in texture interpolation is only able to perform linear interpolation, which allows calculations of only 1st order (linear) Bezier basis functions.
 
-That means that if you want a Bezier curve higher than order 1, you are going to have to take more texture samples and combine the results in the shader program.  While this is more expensive computationally, it does have the benefit of doing more of the work in the shader program, which has higher precision, so the end result will be a higher quality curve.
+If you want a Bezier curve higher than order 1, you are going to have to take more texture samples and combine the results in the shader program.  While this is more expensive computationally, it does have the benefit of doing more of the work in the shader program, which has higher precision through use of full float math, so the end result will be a higher quality curve.
+
+
 
 TODO: Flesh out details, show diagram of texture layout.
 TODO: Maybe just GLSL for linear and quartic, but images for linear, quadratic, cubic, quartic with comparison vs "ground truth".

@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  25 JUN 2015 06:53
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  25 JUN 2015 07:13
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**./Figure3.tex
-(./Figure3.tex
+**./FigTexture1D.tex
+(./FigTexture1D.tex
 LaTeX2e <2015/01/01>
 Babel <3.9l> and hyphenation patterns for 79 languages loaded.
 (d:/texlive/2015/texmf-dist/tex/latex/base/article.cls
@@ -322,35 +322,216 @@ File: pgfmodulematrix.code.tex 2013/09/17  (rcs-revision 1.8)
 (d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
 brarytopaths.code.tex
 File: tikzlibrarytopaths.code.tex 2008/06/17 v3.0.0 (rcs-revision 1.2)
-))) (./Figure3.aux)
-\openout1 = `Figure3.aux'.
+)))
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-euclide/tkz-euclide.sty
+Package: tkz-euclide 2011/06/01 1.16 c for plots 2d 
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 7.
-LaTeX Font Info:    ... okay on input line 7.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 7.
-LaTeX Font Info:    ... okay on input line 7.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 7.
-LaTeX Font Info:    ... okay on input line 7.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 7.
-LaTeX Font Info:    ... okay on input line 7.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 7.
-LaTeX Font Info:    ... okay on input line 7.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 7.
-LaTeX Font Info:    ... okay on input line 7.
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-base/tkz-base.sty
+Package: tkz-base 2011/06/01 1.16 c tkz-base
+
+(d:/texlive/2015/texmf-dist/tex/latex/etex-pkg/etex.sty
+Package: etex 2015/03/02 v2.1 eTeX basic definition package (PEB,DPC)
+\et@xins=\count107
+)
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
+brarycalc.code.tex
+File: tikzlibrarycalc.code.tex 2013/07/15 v3.0.0 (rcs-revision 1.9)
+)
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
+braryarrows.code.tex
+File: tikzlibraryarrows.code.tex 2008/01/09 v3.0.0 (rcs-revision 1.1)
+
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/libraries/pgflibraryarrows.code.tex
+File: pgflibraryarrows.code.tex 2013/09/23 v3.0.0 (rcs-revision 1.16)
+\arrowsize=\dimen151
+))
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
+braryplotmarks.code.tex
+File: tikzlibraryplotmarks.code.tex 2008/01/09 v3.0.0 (rcs-revision 1.1)
+
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/libraries/pgflibraryplotmarks.code.
+tex
+File: pgflibraryplotmarks.code.tex 2013/07/20 v3.0.0 (rcs-revision 1.13)
+))
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
+brarypositioning.code.tex
+File: tikzlibrarypositioning.code.tex 2008/10/06 v3.0.0 (rcs-revision 1.7)
+)
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
+braryshapes.misc.code.tex
+File: tikzlibraryshapes.misc.code.tex 2008/01/09 v3.0.0 (rcs-revision 1.1)
+
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/libraries/shapes/pgflibraryshapes.m
+isc.code.tex
+File: pgflibraryshapes.misc.code.tex 2013/07/18 v3.0.0 (rcs-revision 1.5)
+))
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
+brarydecorations.code.tex
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/modules/pgfmoduledecorations.code.t
+ex
+\pgfdecoratedcompleteddistance=\dimen152
+\pgfdecoratedremainingdistance=\dimen153
+\pgfdecoratedinputsegmentcompleteddistance=\dimen154
+\pgfdecoratedinputsegmentremainingdistance=\dimen155
+\pgf@decorate@distancetomove=\dimen156
+\pgf@decorate@repeatstate=\count108
+\pgfdecorationsegmentamplitude=\dimen157
+\pgfdecorationsegmentlength=\dimen158
+)
+\tikz@lib@dec@box=\box37
+)
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
+brarydecorations.markings.code.tex
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/libraries/decorations/pgflibrarydec
+orations.markings.code.tex))
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
+brarydecorations.pathreplacing.code.tex
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/libraries/decorations/pgflibrarydec
+orations.pathreplacing.code.tex))
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
+brarypatterns.code.tex
+File: tikzlibrarypatterns.code.tex 2008/01/15 v3.0.0 (rcs-revision 1.2)
+
+(d:/texlive/2015/texmf-dist/tex/generic/pgf/libraries/pgflibrarypatterns.code.t
+ex
+File: pgflibrarypatterns.code.tex 2008/03/03 v3.0.0 (rcs-revision 1.13)
+)) (d:/texlive/2015/texmf-dist/tex/latex/numprint/numprint.sty
+Package: numprint 2012/08/20 v1.39 Print numbers (HH)
+
+(d:/texlive/2015/texmf-dist/tex/latex/tools/array.sty
+Package: array 2014/10/28 v2.4c Tabular extension package (FMi)
+\col@sep=\dimen159
+\extrarowheight=\dimen160
+\NC@list=\toks27
+\extratabsurround=\skip43
+\backup@length=\skip44
+)
+\c@nprt@mantissa@digitsbefore=\count109
+\c@nprt@mantissa@digitsafter=\count110
+\c@nprt@exponent@digitsbefore=\count111
+\c@nprt@exponent@digitsafter=\count112
+\nprt@digitwidth=\skip45
+\nprt@sepwidth=\skip46
+\nprt@decimalwidth=\skip47
+\nprt@blockwidth=\skip48
+\nprt@digittoks=\toks28
+\nprt@pretoks=\toks29
+\nprt@posttoks=\toks30
+\nprt@thisdigit=\count113
+\nprt@curpos=\count114
+\nprt@rndpos=\count115
+\c@nprt@digitsfirstblock=\count116
+\c@nprt@blockcnt=\count117
+\c@nprt@cntprint=\count118
+
+No configuration file `numprint.cfg' found.)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp.sty
+Package: fp 1995/04/02
+
+`Fixed Point Package', Version 0.8, April 2, 1995 (C) Michael Mehlich
+(d:/texlive/2015/texmf-dist/tex/latex/fp/defpattern.sty
+Package: defpattern 1994/10/12
+\actioncount=\count119
+)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp-basic.sty
+Package: fp-basic 1996/05/13
+\FP@xs=\count120
+\FP@xia=\count121
+\FP@xib=\count122
+\FP@xfa=\count123
+\FP@xfb=\count124
+\FP@rega=\count125
+\FP@regb=\count126
+\FP@regs=\count127
+\FP@times=\count128
+)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp-addons.sty
+Package: fp-addons 1995/03/15
+)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp-snap.sty
+Package: fp-snap 1995/04/05
+)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp-exp.sty
+Package: fp-exp 1995/04/03
+)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp-trigo.sty
+Package: fp-trigo 1995/04/14
+)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp-pas.sty
+Package: fp-pas 1994/08/29
+)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp-random.sty
+Package: fp-random 1995/02/23
+\FPseed=\count129
+)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp-eqn.sty
+Package: fp-eqn 1995/04/03
+)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp-upn.sty
+Package: fp-upn 1996/10/21
+)
+(d:/texlive/2015/texmf-dist/tex/latex/fp/fp-eval.sty
+Package: fp-eval 1995/04/03
+))
+\tkzRadius=\dimen161
+\tkzLength=\dimen162
+\tkz@radi=\dimen163
+\tkz@ax=\dimen164
+\tkz@ay=\dimen165
+\tkz@bx=\dimen166
+\tkz@by=\dimen167
+\tkz@cx=\dimen168
+\tkz@cy=\dimen169
+\tkz@dx=\dimen170
+\tkz@dy=\dimen171
+
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-base/tkz-tools-utilities.tex)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-base/tkz-tools-arith.tex
+File: tkz-tool-arith.tex tkz-tool-arith 1.161 c
+)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-base/tkz-tools-base.tex)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-base/tkz-tools-misc.tex)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-base/tkz-tools-math.tex)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-base/tkz-obj-points.tex)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-base/tkz-obj-segments.tex)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-base/tkz-obj-marks.tex
+\tkz@cntmk=\count130
+))
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-euclide/tkz-tools-intersections.tex)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-euclide/tkz-tools-transformations.tex
+) (d:/texlive/2015/texmf-dist/tex/latex/tkz-euclide/tkz-obj-lines.tex)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-euclide/tkz-lib-symbols.tex)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-euclide/tkz-obj-circles.tex)
+(d:/texlive/2015/texmf-dist/tex/latex/tkz-euclide/tkz-obj-addpoints.tex))
+(./FigTexture1D.aux)
+\openout1 = `FigTexture1D.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 8.
+LaTeX Font Info:    ... okay on input line 8.
  ABD: EveryShipout initializing macros
 (d:/texlive/2015/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count107
-\scratchdimen=\dimen151
-\scratchbox=\box37
-\nofMPsegments=\count108
-\nofMParguments=\count109
-\everyMPshowfont=\toks27
-\MPscratchCnt=\count110
-\MPscratchDim=\dimen152
-\MPnumerator=\count111
-\makeMPintoPDFobject=\count112
-\everyMPtoPDFconversion=\toks28
+\scratchcounter=\count131
+\scratchdimen=\dimen172
+\scratchbox=\box38
+\nofMPsegments=\count132
+\nofMParguments=\count133
+\everyMPshowfont=\toks31
+\MPscratchCnt=\count134
+\MPscratchDim=\dimen173
+\MPnumerator=\count135
+\makeMPintoPDFobject=\count136
+\everyMPtoPDFconversion=\toks32
 ) (d:/texlive/2015/texmf-dist/tex/generic/oberdiek/pdftexcmds.sty
 Package: pdftexcmds 2011/11/29 v0.20 Utility functions of pdfTeX for LuaTeX (HO
 )
@@ -399,46 +580,26 @@ G,.JBIG2,.JB2,.eps]
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-(d:/texlive/2015/texmf-dist/tex/generic/pgf/libraries/pgflibraryarrows.meta.cod
-e.tex
-File: pgflibraryarrows.meta.code.tex 2013/12/13 v3.0.0 (rcs-revision 1.12)
-\pgfarrowinset=\dimen153
-\pgfarrowlength=\dimen154
-\pgfarrowwidth=\dimen155
-\pgfarrowlinewidth=\dimen156
-)
-Missing character: There is no p in font nullfont!
-Missing character: There is no t in font nullfont!
-Missing character: There is no p in font nullfont!
-Missing character: There is no t in font nullfont!
-Missing character: There is no p in font nullfont!
-Missing character: There is no t in font nullfont!
-Missing character: There is no p in font nullfont!
-Missing character: There is no t in font nullfont!
-Missing character: There is no p in font nullfont!
-Missing character: There is no t in font nullfont!
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 22.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 22.
- [1{d:/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-(./Figure3.aux) ) 
+Overfull \hbox (133.40765pt too wide) in paragraph at lines 19--20
+[][] 
+ []
+
+[1{d:/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+(./FigTexture1D.aux) ) 
 Here is how much of TeX's memory you used:
- 11748 strings out of 493089
- 241453 string characters out of 6138425
- 270836 words of memory out of 5000000
- 15041 multiletter control sequences out of 15000+600000
- 3948 words of font info for 15 fonts, out of 8000000 for 9000
+ 15119 strings out of 493089
+ 314487 string characters out of 6138425
+ 371791 words of memory out of 5000000
+ 18269 multiletter control sequences out of 15000+600000
+ 3640 words of font info for 14 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 55i,9n,65p,428b,654s stack positions out of 5000i,500n,10000p,200000b,80000s
-<d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmb
-x10.pfb><d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><
-d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb><d:/texlive
-/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb>
-Output written on Figure3.pdf (1 page, 45546 bytes).
+ 55i,5n,67p,419b,532s stack positions out of 5000i,500n,10000p,200000b,80000s
+<d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmr10.pfb>
+Output written on FigTexture1D.pdf (1 page, 12879 bytes).
 PDF statistics:
- 27 PDF objects out of 1000 (max. 8388607)
- 19 compressed objects within 1 object stream
+ 15 PDF objects out of 1000 (max. 8388607)
+ 10 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  13 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  22 JUN 2015 20:48
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  25 JUN 2015 06:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -322,8 +322,7 @@ File: pgfmodulematrix.code.tex 2013/09/17  (rcs-revision 1.8)
 (d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
 brarytopaths.code.tex
 File: tikzlibrarytopaths.code.tex 2008/06/17 v3.0.0 (rcs-revision 1.2)
-)))
-No file Figure4.aux.
+))) (./Figure4.aux)
 \openout1 = `Figure4.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 7.
@@ -338,7 +337,7 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 7.
 LaTeX Font Info:    ... okay on input line 7.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 7.
 LaTeX Font Info:    ... okay on input line 7.
-ABD: EveryShipout initializing macros
+ ABD: EveryShipout initializing macros
 (d:/texlive/2015/texmf-dist/tex/context/base/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count107
@@ -443,9 +442,9 @@ Overfull \hbox (11.05943pt too wide) in paragraph at lines 26--27
 [1{d:/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <./Figure4Text
 ure.png> <./Figure4Bilinear.png> <./Figure4Curves.png>] (./Figure4.aux) ) 
 Here is how much of TeX's memory you used:
- 11616 strings out of 493089
- 238756 string characters out of 6138425
- 263544 words of memory out of 5000000
+ 11618 strings out of 493089
+ 238780 string characters out of 6138425
+ 263543 words of memory out of 5000000
  14908 multiletter control sequences out of 15000+600000
  3939 words of font info for 15 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -453,7 +452,7 @@ Here is how much of TeX's memory you used:
 <d:/te
 xlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><d:/texlive/2015
 /texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb>
-Output written on Figure4.pdf (1 page, 285924 bytes).
+Output written on Figure4.pdf (1 page, 285931 bytes).
 PDF statistics:
  26 PDF objects out of 1000 (max. 8388607)
  14 compressed objects within 1 object stream

@@ -1,0 +1,23 @@
+\documentclass{article}
+\usepackage{tikz}
+\usepackage{tkz-euclide}
+\definecolor{darkgreen}{RGB}{0,192,0}
+\title{Cartesian closed categories and the price of eggs}
+\author{Jane Doe}
+\date{September 1994}
+\begin{document}
+
+	\begin{figure}
+		\begin{tikzpicture}[x=8cm,y=4cm]
+			\tkzInit[xmax=2,ymax=1,xmin=0,ymin=0]
+			% border
+			\draw (-0.1,-0.2) rectangle (2,1.2);
+
+			\foreach \x in {0,...,4}
+				\draw (\x * 0.1 - 0.05,0.45) rectangle (\x * 0.1 + 0.05, 0.55);
+
+		\end{tikzpicture}
+		\caption{TODO: this}		
+	\end{figure}	
+
+\end{document}

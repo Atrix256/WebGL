@@ -26,24 +26,24 @@
 \@writefile{toc}{\contentsline {section}{\numberline {2}The Technique}{3}{section.2}}
 \newlabel{sec:thetechnique}{{2}{3}{The Technique}{section.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Intuition}{3}{subsection.2.1}}
-\newlabel{lst:GLSLDeCasteljeau}{{1}{3}{GLSL De Casteljeau Algorithm For a Quadratic Bezier Curve}{lstlisting.1}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}GLSL De Casteljeau Algorithm For a Quadratic Bezier Curve}{3}{lstlisting.1}}
-\newlabel{lst:GLSLBilinear}{{2}{3}{GLSL implementation of bilinear interpolation between four floats}{lstlisting.2}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}GLSL implementation of bilinear interpolation between four floats}{3}{lstlisting.2}}
-\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Left: A quadratic Bezier curve evaluated at {\bf  {t}}=0.6 for control points A,B,C using the De Casteljeau algorithm. Right: The De Casteljeau algorithm using bilinear interpolation. Note that in this case, the X axis is evaluated before the Y, but the Y axis could be evaluated before the X for the same results.\relax }}{4}{figure.caption.3}}
-\newlabel{fig:decasteljeauBilinear}{{3}{4}{Left: A quadratic Bezier curve evaluated at {\bf {t}}=0.6 for control points A,B,C using the De Casteljeau algorithm. Right: The De Casteljeau algorithm using bilinear interpolation. Note that in this case, the X axis is evaluated before the Y, but the Y axis could be evaluated before the X for the same results.\relax }{figure.caption.3}{}}
+\newlabel{lst:GLSLCurves}{{1}{3}{GLSL implementation of bilinear interpolation and the De Casteljeau algorithm for a quadratic Bezier curve}{lstlisting.1}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {1}GLSL implementation of bilinear interpolation and the De Casteljeau algorithm for a quadratic Bezier curve.}{3}{lstlisting.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces \textit  {Left:} A quadratic Bezier curve evaluated at {\bf  {t}}=0.6 for control points A,B,C using the De Casteljeau algorithm. \textit  {Right:} The De Casteljeau algorithm using bilinear interpolation. Note that in this case, the X axis is evaluated before the Y, but the Y axis could be evaluated before the X for the same results.\relax }}{4}{figure.caption.3}}
+\newlabel{fig:decasteljeauBilinear}{{3}{4}{\textit {Left:} A quadratic Bezier curve evaluated at {\bf {t}}=0.6 for control points A,B,C using the De Casteljeau algorithm. \textit {Right:} The De Casteljeau algorithm using bilinear interpolation. Note that in this case, the X axis is evaluated before the Y, but the Y axis could be evaluated before the X for the same results.\relax }{figure.caption.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Mathematical Basis}{4}{subsection.2.2}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Left: a 2x2 texture storing control points for a quadratic Bezier curve in each color channel. Center: The same texture as viewed when using bilinear texture sampling. The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. Right: The curves resulting from sampling along the yellow line (Alpha curve ommited).\relax }}{5}{figure.caption.4}}
-\newlabel{fig:texbilcurve}{{4}{5}{Left: a 2x2 texture storing control points for a quadratic Bezier curve in each color channel. Center: The same texture as viewed when using bilinear texture sampling. The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. Right: The curves resulting from sampling along the yellow line (Alpha curve ommited).\relax }{figure.caption.4}{}}
-\newlabel{eqn:bernsteinform}{{1}{5}{Mathematical Basis}{equation.2.1}{}}
+\newlabel{eqn:bernsteinform}{{1}{4}{Mathematical Basis}{equation.2.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textit  {Left:} a 2x2 texture storing control points for a quadratic Bezier curve in each color channel. \textit  {Middle:} The same texture as viewed when using bilinear texture sampling. The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. \textit  {Right:} The curves resulting from sampling along the yellow line (Alpha curve ommited).\relax }}{5}{figure.caption.4}}
+\newlabel{fig:texbilcurve}{{4}{5}{\textit {Left:} a 2x2 texture storing control points for a quadratic Bezier curve in each color channel. \textit {Middle:} The same texture as viewed when using bilinear texture sampling. The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. \textit {Right:} The curves resulting from sampling along the yellow line (Alpha curve ommited).\relax }{figure.caption.4}{}}
 \newlabel{eqn:bernsteinformn1}{{2}{5}{Mathematical Basis}{equation.2.2}{}}
 \newlabel{eqn:bernsteinformn2}{{3}{5}{Mathematical Basis}{equation.2.3}{}}
-\newlabel{eqn:bilinearinterpolation}{{4}{6}{Mathematical Basis}{equation.2.4}{}}
+\newlabel{eqn:bilinearinterpolation}{{4}{5}{Mathematical Basis}{equation.2.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textit  {Left:} Sampled curves. \textit  {Middle:} Zooming in on a curve calculated with shader program constants. \textit  {Right:} Zooming in on a curve calculated using the method in this paper\relax }}{6}{figure.caption.5}}
+\newlabel{fig:quickaccuracy}{{5}{6}{\textit {Left:} Sampled curves. \textit {Middle:} Zooming in on a curve calculated with shader program constants. \textit {Right:} Zooming in on a curve calculated using the method in this paper\relax }{figure.caption.5}{}}
 \newlabel{eqn:bilinearinterpolation2}{{5}{6}{Mathematical Basis}{equation.2.5}{}}
 \newlabel{eqn:bilinearinterpolation3}{{6}{6}{Mathematical Basis}{equation.2.6}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Accuracy}{6}{subsection.2.3}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Implications of Texture Dimensionality}{7}{section.3}}
-\newlabel{sec:implicationsoftexturedimensionality}{{3}{7}{Implications of Texture Dimensionality}{section.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Texture Dimensionality}{7}{section.3}}
+\newlabel{sec:texturedimensionality}{{3}{7}{Texture Dimensionality}{section.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}One Dimensional Textures}{7}{subsection.3.1}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Two Dimensional Textures}{7}{subsection.3.2}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Three Dimensional Textures}{7}{subsection.3.3}}
@@ -62,7 +62,7 @@
 \newlabel{sec:comparisonswithothertechniques}{{7}{9}{Comparisons With Other Techniques}{section.7}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {8}Performance Characteristics}{9}{section.8}}
 \newlabel{sec:performancecharacteristics}{{8}{9}{Performance Characteristics}{section.8}{}}
-\newlabel{sec:futurework}{{8}{9}{Future Work}{section*.5}{}}
-\newlabel{sec:acknowledgements}{{8}{9}{Acknowledgements}{section*.6}{}}
-\newlabel{sec:references}{{8}{9}{References}{section*.7}{}}
-\newlabel{sec:indexofsupplementalmaterials}{{8}{9}{Index of Supplemental Materials}{section*.8}{}}
+\newlabel{sec:futurework}{{8}{9}{Future Work}{section*.6}{}}
+\newlabel{sec:acknowledgements}{{8}{9}{Acknowledgements}{section*.7}{}}
+\newlabel{sec:references}{{8}{9}{References}{section*.8}{}}
+\newlabel{sec:indexofsupplementalmaterials}{{8}{9}{Index of Supplemental Materials}{section*.9}{}}
