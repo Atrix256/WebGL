@@ -37,7 +37,7 @@
     \draw (0.08,0.75) node[] {\Huge{B}};
     \draw (0.25,0.75) node[] {\Huge{C}};    
   \end{tikzpicture}
-  \caption{Left: 2x2 texture containing control points for a quadratic Bezier curve per color channel. Middle: The texture as viewed with bilinear sampling. Right: The resulting curves when sampling along the yellow line (Alpha curve omitted).}
+  \caption{\textit{Left:} 2x2 texture containing control points for a quadratic Bezier curve in each color channel. \textit{Middle:} The texture as viewed with bilinear sampling. \textit{Right:} The resulting curves when sampling along the yellow line (Alpha curve omitted).}
   \label{fig:teaser}
 }
 
@@ -46,7 +46,7 @@
 
 \begin{abstract}
 \small
-Modern graphics techniques expose internal parameters to allow re-use and to help seperate the technical implementation from the artistic usage cases.  A popular choice is to expose parameters as a customizable curve and to quantize the curve into a texture which either leads to lower quality results, or more texture memory being used to accomodate a higher sampling frequency.  The technique presented in this paper leverages the capabilities of GPU texture samplers to allow more efficient storage and evaluation of both integral and rational Bezier curves of any order, resulting in higher fidelity for the same costs.  Piecewise curves, B-Splines and Nurbs are mentioned, and there are also limited applications towards vector graphics.
+Modern graphics techniques expose internal parameters to allow re-use and to help seperate the technical implementation from artistic usage cases.  A popular choice is to expose parameters as customizable curves and to quantize the curves into textures.  This leads to either lower quality results, or more texture memory being used to accomodate higher sampling frequencies.  The technique presented in this paper leverages the capabilities of GPU texture samplers to allow more efficient storage and evaluation of both integral and rational Bezier curves of any order, resulting in higher fidelity for the same costs.  Piecewise curves, B-Splines and Nurbs are mentioned, and there are also limited applications towards vector graphics.
 \end{abstract}
 
 
@@ -55,19 +55,19 @@ Modern graphics techniques expose internal parameters to allow re-use and to hel
 \label{sec:introduction}
 There are two basic ways for a shader program to gain access to customized curve data.  One way is to evaluate the curve on the CPU at discrete intervals and put those points into a texture that can be used by the GPU.  The other way is to pass curve control point data from the CPU to the shader program as shader constants.
 
-Baking curve points into a texture means that the shader program doesn't need to know what type of curve it was that made the data, but comes at the loss of quality since there are a finite number of curve points sampled, and the data between points is just a linear interpolation between the samples.  If higher quality is desired, you can achieve this by increasing the resolution of the texture to be able to trade accuracy for texture memory.
+Baking curve points into a texture means that the shader program doesn't need to know what type of curve it was that made the data, nor how many control points it has, but comes at the loss of quality since there are a finite number of curve points sampled, and the data between points is just a linear interpolation between the samples.  If higher quality is desired, you can achieve this by increasing the resolution of the texture to be able to trade accuracy for texture memory.
 
 Passing control point data to a shader program as shader constants allows you to get high quality curve calculations, but comes at the cost of the shader program being written in a very specific way for the type of curve you want to use, as well as more shader program instructions to calculate specific curve points.
 
 \begin{figure}
   \includegraphics[width=5in]{Figure2.png}
-  \caption{Left: A quadratic Bezier curve written to the green channel, and it's baked out equivelant using 4 pixels written to the red channel.  Right: The technique from this paper also using 4 pixels, written to the green channel, and the baked out equivelant written to the red channel again for comparison. \label{fig:sampleconfig}}
+  \caption{\textit{Left:} A quadratic Bezier curve written to the green channel, and the baked out equivelant using 4 pixels written to the red channel.  \textit{Right:} The technique from this paper, also using 4 pixels, written to the green channel, and the baked out equivelant written to the red channel again for comparison. \label{fig:sampleconfig}}
   \label{fig:quickcomparison}
 \end{figure}
 
 This paper shows a third method where:
 \begin{itemize}
-  \item Curve data is encoded within a texture in such a way to allow the texture sampler to evaluate polynomial basis functions before the data reaches the shader program.
+  \item Curve data is encoded within a texture in such a way to allow the texture sampler to calculate points on the curve before the data reaches the shader program.
   \item It gives accuracy results closer to that of shader constant curves, while having less calculation overhead.
   \item The technique can support both integral and rational Bezier curves of any order and can also be used for piecewise curves.
   \item The curve type must be decided on in advance, like when using the shader constant method.
@@ -75,8 +75,6 @@ This paper shows a third method where:
 \end{itemize}
 
 A quick comparison of the visual quality of these three techniques can be seen in \autoref{fig:quickcomparison}.
-
-TODO: make those bullet points reference forward into sections of the paper
 
 %-------------------------------------------------------------------------
 \section{The Technique}
@@ -86,11 +84,11 @@ The core of this technique is that the linear texture interpolation capabilities
 
 A one dimensional texture with linear sampling results in the evaluation of a linear Bezier curve (order 1), a two dimensional texture with linear sampling can result in a quadratic bezier curve (order 2), and a three dimensional texture (volumetric texture) with linear sampling can result in a cubic Bezier curve (order 3).
 
-The pattern continues for higher dimensionality textures, and curves of lower degrees can be combined to create curves of higher degrees by either continuing De Casteljeau's algorithm in the shader program, or by using the Bernstein form of Bezier curves to combine multiple curve points with fewer operations.
+The pattern continues for higher dimensionality textures, and curves of lower degrees can be combined in the shader program to create curves of higher degrees by either continuing De Casteljeau's algorithm or by using the Bernstein form of Bezier curves.
 
 \subsection{Intuition}
 
-The De Casteljeau algorithm shows us that we can find points on a Bezier curve by evaluating a hierarchy of linear interpolations.  For example, a quadratic curve is the linear interpolation between the linear interpolation of {$\overline{AB}$} and {$\overline{BC}$}, using the same time $t$ for each interpolation (\autoref{lst:GLSLDeCasteljeau})
+The De Casteljeau algorithm shows us that we can find points on a Bezier curve by evaluating a hierarchy of linear interpolations.  For example, a quadratic curve is the linear interpolation between the linear interpolation of {$\overline{AB}$} and {$\overline{BC}$}, using the same time $t$ for each interpolation (\autoref{lst:GLSLDeCasteljeau}).
 
 \begin{lstlisting}[caption={GLSL De Casteljeau Algorithm For a Quadratic Bezier Curve}, label={lst:GLSLDeCasteljeau}]
 float QuadraticBezier (
@@ -103,9 +101,22 @@ float QuadraticBezier (
 }
 \end{lstlisting}
 
-Bilinear interpolation is used when linear sampling is enabled and a texture sample is taking from a 2d texture.  Bilinear interpolation is achieved by linearly interpolating across one axis (say, the X axis) and then interpolating the two results by the other axis (the Y axis).
+Bilinear interpolation is used when linear sampling is enabled and a texture sample is taking from a 2d texture.  Bilinear interpolation is achieved by linearly interpolating across one axis (say, the X axis) and then interpolating the two results by the other axis (the Y axis).  In bilinear interpolation, you have a $t$ and a $u$ interpolation value, and you have four values to interpolate between $A$,$B$,$C$,$D$ (\autoref{lst:GLSLBilinear}).
 
-From this, we have an idea of how to set up the points in our texture so that when performing bilinear sampling (\autoref{fig:decasteljeauBilinear}), that we will get, as output, points on a quadratic bezier curve.
+\begin{lstlisting}[caption={GLSL implementation of bilinear interpolation between four floats}, label={lst:GLSLBilinear}]
+float BilinearInterpolate (
+  in float u,
+  in float v,
+  in float A,
+  in float B,
+  in float C,
+  in float D
+) {
+    return mix(mix(A,B,u), mix(C,D,u), v);
+}
+\end{lstlisting}
+
+Comparing the source code for these two operations, we begin to get an idea of how to set up the points in our texture and the u and v coordinates to use such that when performing bilinear sampling, that we will get, as output, points on a quadratic bezier curve (\autoref{fig:decasteljeauBilinear}).
 
   \begin{figure}
     % bezier curve diagram
@@ -163,9 +174,7 @@ Since we need to linearly interpolate between {$\overline{AB}$} and {$\overline{
 
 It can be seen that the actual pixel value in a bilinear sampled texture is in the middle of a pixel.  That means that when calculating our texture coordinates we must sample between pixel location $(0.5,0.5)$ and pixel location $(1.5,1.5)$ to get the correct results.
 
-The common pixel formats contain four color channels – Red, Green, Blue and Alpha – which allows us to be able to evaluate four curves with a single texture read.
-
-\autoref {fig:texbilcurve} shows this in action.
+The common pixel formats contain four color channels – Red, Green, Blue and Alpha – which allows us to be able to evaluate four curves with a single texture read (\autoref{fig:texbilcurve}).
 
   \begin{figure}
     \begin{tikzpicture}[x=12.5cm,y=4.25cm]
@@ -247,9 +256,9 @@ TODO: How to prove for N dimensions?  This section needs help
 
 \subsection{Accuracy}
 
-While the Bernstein form of Bezier curves is equivelant to evaluating a Bezier curve with the De Casteljeau algorithm, in practice there are differences that come up between the two.  For instance, it is well known that the De Casteljeau algorithm is slower but more numerically robust than evaluating the Bernstein form.
+While the Bernstein form of Bezier curves is equivelant to evaluating a Bezier curve with the De Casteljeau algorithm, in practice there are differences that come up between the two.  It is well known that the De Casteljeau algorithm is slower but more numerically robust than evaluating the Bernstein form.
 
-The technique presented in this paper also has numeric differences in practice.  While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures.
+The technique presented in this paper also has numerical differences in practice.  While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures.
 
 As shown in \autoref{fig:texbilcurve}, the quality can be significantly higher than a baked out curve for the same number of pixels however.  There is more information on addressing accuracy in \autoref{sec:addressingaccuracyissues}.
 
@@ -258,8 +267,8 @@ TODO: give the details of the architecture and cite the two papers cited from th
 TODO: Show a zoomed in version of curves with this technique, vs the real curve
 
 %-------------------------------------------------------------------------
-\section{The Technique}
-\label{sec:thetechnique}
+\section{Implications of Texture Dimensionality}
+\label{sec:implicationsoftexturedimensionality}
 
 While this technique is able to be used with any texture dimensionality, there are different characteristics when using textures of different dimensionalities.  Those characteristics will be explored here.
 
