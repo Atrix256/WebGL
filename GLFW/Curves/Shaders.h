@@ -12,6 +12,7 @@
         ~CShader##NAME##(); \
         void Render(); \
         void Init(); \
+        static const char *GetName() { return #NAME; } \
         static const char *GetVertexShader(); \
         static const char *GetFragmentShader(); \
         static void GetWidthHeight(int &width, int &height) {width=WIDTH; height=HEIGHT;}

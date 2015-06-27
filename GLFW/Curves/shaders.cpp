@@ -14,7 +14,7 @@
 template <typename T>
 GLuint LoadShader(const T& shader)
 {
-    return LoadShader(shader.GetVertexShader(), shader.GetFragmentShader());
+    return LoadShader(shader.GetName(), shader.GetVertexShader(), shader.GetFragmentShader());
 }
 
 //=============================================================================================================

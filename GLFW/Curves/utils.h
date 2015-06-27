@@ -6,7 +6,7 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 
-GLuint LoadShader(const char *vertexShader, const char *fragmentShader);
+GLuint LoadShader(const char *name, const char *vertexShader, const char *fragmentShader);
 
 template<typename T>
 GLuint MakeBuffer(const std::vector<T>& data);

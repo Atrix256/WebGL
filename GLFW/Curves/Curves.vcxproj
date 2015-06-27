@@ -91,15 +91,18 @@
     </ClCompile>
     <ClCompile Include="Shader_BilinearTest2.cpp" />
     <ClCompile Include="Shader_BilinearTest3.cpp" />
+    <ClCompile Include="Shader_Cubic1d.cpp" />
     <ClCompile Include="Shader_Cubic2d.cpp" />
     <ClCompile Include="Shader_Cubic3d.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Shader_Quadratic1d.cpp" />
     <ClCompile Include="Shader_Quadratic2d.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="Shader_Quartic1d.cpp" />
     <ClCompile Include="Shader_Quartic2d.cpp" />
     <ClCompile Include="Shader_Quartic3d.cpp" />
     <ClCompile Include="Shader_RationalTest.cpp" />

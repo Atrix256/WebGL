@@ -61,7 +61,7 @@ int main(void)
     }
     printf("Using GLEW %s\n", glewGetString(GLEW_VERSION));
 
-    printf("Using OpenGL %s\n", glGetString(GL_VERSION));
+    printf("Using OpenGL %s\n\n", glGetString(GL_VERSION));
 
     // init our shaders
     #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) CShader##NAME shader##NAME##;  shader##NAME##.Init();

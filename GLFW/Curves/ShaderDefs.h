@@ -97,10 +97,22 @@ SHADER_BEGIN(RationalTest, 1000, 500)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float, true)
 SHADER_END()
 
+SHADER_BEGIN(Quadratic1d, 1000, 500)
+    SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
+    SHADER_UNIFORM_TEXTURE_1D(uSampler, float, true)
+SHADER_END()
+
 SHADER_BEGIN(Quadratic2d, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float, true)
+SHADER_END()
+
+SHADER_BEGIN(Cubic1d, 1000, 500)
+    SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
+    SHADER_UNIFORM_TEXTURE_1D(uSampler, float, true)
 SHADER_END()
 
 SHADER_BEGIN(Cubic2d, 1000, 500)
@@ -111,8 +123,14 @@ SHADER_END()
 
 SHADER_BEGIN(Cubic3d, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
-    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 3, double)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
     SHADER_UNIFORM_TEXTURE_3D(uSampler, float, true)
+SHADER_END()
+
+SHADER_BEGIN(Quartic1d, 1000, 500)
+    SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
+    SHADER_UNIFORM_TEXTURE_1D(uSampler, float, true)
 SHADER_END()
 
 SHADER_BEGIN(Quartic2d, 1000, 500)
@@ -123,7 +141,7 @@ SHADER_END()
 
 SHADER_BEGIN(Quartic3d, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
-    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 3, double)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
     SHADER_UNIFORM_TEXTURE_3D(uSampler, float, true)
 SHADER_END()
 

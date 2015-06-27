@@ -8,7 +8,7 @@
 #include <algorithm>
 
 //=============================================================================================================
-GLuint LoadShader(const char *vertexShader, const char *fragmentShader) {
+GLuint LoadShader(const char *name, const char *vertexShader, const char *fragmentShader) {
     GLuint vertShader = glCreateShader(GL_VERTEX_SHADER);
     GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -16,7 +16,6 @@ GLuint LoadShader(const char *vertexShader, const char *fragmentShader) {
     int logLength;
 
     // Compile vertex shader
-    printf("Compiling vertex shader.\n");
     glShaderSource(vertShader, 1, &vertexShader, NULL);
     glCompileShader(vertShader);
 
@@ -25,10 +24,8 @@ GLuint LoadShader(const char *vertexShader, const char *fragmentShader) {
     glGetShaderiv(vertShader, GL_INFO_LOG_LENGTH, &logLength);
     std::vector<GLchar> vertShaderError((logLength > 1) ? logLength : 1);
     glGetShaderInfoLog(vertShader, logLength, NULL, &vertShaderError[0]);
-    printf("%s\n", &vertShaderError[0]);
 
     // Compile fragment shader
-    printf("Compiling fragment shader.\n");
     glShaderSource(fragShader, 1, &fragmentShader, NULL);
     glCompileShader(fragShader);
 
@@ -37,9 +34,7 @@ GLuint LoadShader(const char *vertexShader, const char *fragmentShader) {
     glGetShaderiv(fragShader, GL_INFO_LOG_LENGTH, &logLength);
     std::vector<GLchar> fragShaderError((logLength > 1) ? logLength : 1);
     glGetShaderInfoLog(fragShader, logLength, NULL, &fragShaderError[0]);
-    printf("%s\n", &fragShaderError[0]);
 
-    printf("Linking program\n");
     GLuint program = glCreateProgram();
     glAttachShader(program, vertShader);
     glAttachShader(program, fragShader);
@@ -49,10 +44,16 @@ GLuint LoadShader(const char *vertexShader, const char *fragmentShader) {
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
     std::vector<char> programError((logLength > 1) ? logLength : 1);
     glGetProgramInfoLog(program, logLength, NULL, &programError[0]);
-    printf("%s\n", &programError[0]);
 
     glDeleteShader(vertShader);
     glDeleteShader(fragShader);
+
+    if (vertShaderError[0] != 0 || fragShaderError[0] != 0 || programError[0] != 0) {
+        printf("==========%s Had Errors!==========\n", name);
+        printf("Vertex: %s\n", &vertShaderError[0]);
+        printf("Fragment: %s\n", &vertShaderError[0]);
+        printf("Link: %s\n", &programError[0]);
+    }
 
     return program;
 }

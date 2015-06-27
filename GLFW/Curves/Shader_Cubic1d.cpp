@@ -1,10 +1,10 @@
 #include "Shaders.h"
 
 //=============================================================================================================
-//                                            Cubic3d
+//                                            Cubic1d
 //=============================================================================================================
 
-void CShaderCubic3d::Init()
+void CShaderCubic1d::Init()
 {
     SetAttributeData_aTextureCoord({
         0.0, 0.0,
@@ -28,16 +28,12 @@ void CShaderCubic3d::Init()
     const float B[] = { 0.2f , 0.0f, 1.00f, 0.6f };
     const float A[] = { 0.75f, 0.0f, 0.29f, 0.4f };
 
-    SetTextureData_uSampler(2, 2, 2, {
-        R[0], G[0], B[0], A[0],     R[1], G[1], B[1], A[1],
-        R[1], G[1], B[1], A[1],     R[2], G[2], B[2], A[2],
-
-        R[1], G[1], B[1], A[1],     R[2], G[2], B[2], A[2],
-        R[2], G[2], B[2], A[2],     R[3], G[3], B[3], A[3],
+    SetTextureData_uSampler(4, {
+        R[0], G[0], B[0], A[0],     R[1], G[1], B[1], A[1],     R[2], G[2], B[2], A[2],     R[3], G[3], B[3], A[3],
     });
 }
 
-const char *CShaderCubic3d::GetVertexShader()
+const char *CShaderCubic1d::GetVertexShader()
 {
     return
     SHADER_SOURCE(
@@ -53,43 +49,33 @@ const char *CShaderCubic3d::GetVertexShader()
     );
 }
 
-const char *CShaderCubic3d::GetFragmentShader()
+const char *CShaderCubic1d::GetFragmentShader()
 {
     return
     SHADER_SOURCE(
-    uniform sampler3D uSampler;
+    uniform sampler1D uSampler;
     
     in vec2 vTextureCoord;
 
     out vec4 outColor;
 
-    vec4 SampleTime(vec3 time, bool linearSampling) {
-        // Trilinear sampling:
-        // Hardware based trilinear sampling
+    vec4 SampleTime(float time, bool linearSampling) {
+        // Bilinear sampling:
+        // Hardware based bilinear sampling
         if (linearSampling)
-            return texture(uSampler, (time + 0.5) / 2.0);
+            return texture(uSampler, (time + 0.5) / 4.0);
 
         // Nearest sampling:
-        // Software trilinear sampling (higher quality)
-        vec3 frac = fract(time);
+        // Software bilinear sampling (higher quality)
+        float frac = fract(time);
 
-        vec3 floorTime = floor(time) + 0.5;
+        float floorTime = floor(time) + 0.5;
 
-        vec4 A = texture(uSampler, (floorTime + vec3(0.0, 0.0, 0.0)) / 2.0);
-        vec4 B = texture(uSampler, (floorTime + vec3(1.0, 0.0, 0.0)) / 2.0);
-        vec4 C = texture(uSampler, (floorTime + vec3(0.0, 1.0, 0.0)) / 2.0);
-        vec4 D = texture(uSampler, (floorTime + vec3(1.0, 1.0, 0.0)) / 2.0);
-        vec4 front = mix(mix(A, B, frac.x), mix(C, D, frac.x), frac.y);
+        vec4 A = texture(uSampler, (floorTime + 0.0) / 4.0);
+        vec4 B = texture(uSampler, (floorTime + 1.0) / 4.0);
 
-        vec4 E = texture(uSampler, (floorTime + vec3(0.0, 0.0, 1.0)) / 2.0);
-        vec4 F = texture(uSampler, (floorTime + vec3(1.0, 0.0, 1.0)) / 2.0);
-        vec4 G = texture(uSampler, (floorTime + vec3(0.0, 1.0, 1.0)) / 2.0);
-        vec4 H = texture(uSampler, (floorTime + vec3(1.0, 1.0, 1.0)) / 2.0);
-        vec4 back = mix(mix(E, F, frac.x), mix(G, H, frac.x), frac.y);
-
-        return mix(front, back, frac.z);
+        return mix(A, B, frac);
     }
-
 
     void main(void) {
         vec4 colorValue = vec4(0.0);
@@ -97,12 +83,26 @@ const char *CShaderCubic3d::GetFragmentShader()
         if (vTextureCoord.x < 0.995)
         {
             float time = vTextureCoord.x / 0.995;
-            colorValue = SampleTime(vec3(time), true);
+            vec4 colorValueA = SampleTime(time, true);
+            vec4 colorValueB = SampleTime(time + 1.0, true);
+            vec4 colorValueC = SampleTime(time + 2.0, true);
+
+            float s = (1.0 - time);
+            float s2 = s*s;
+            float time2 = time*time;
+            colorValue = colorValueA * s2 + colorValueB * 2.0 * s * time + colorValueC * time2;
         }
         else if (vTextureCoord.x > 1.005)
         {
             float time = fract(vTextureCoord.x - 0.005) / 0.995;
-            colorValue = SampleTime(vec3(time), false);
+            vec4 colorValueA = SampleTime(time, false);
+            vec4 colorValueB = SampleTime(time + 1.0, false);
+            vec4 colorValueC = SampleTime(time + 2.0, false);
+
+            float s = (1.0 - time);
+            float s2 = s*s;
+            float time2 = time*time;
+            colorValue = colorValueA * s2 + colorValueB * 2.0 * s * time + colorValueC * time2;
         }
         else
         {

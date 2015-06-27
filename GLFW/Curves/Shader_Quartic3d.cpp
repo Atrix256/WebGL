@@ -7,12 +7,12 @@
 void CShaderQuartic3d::Init()
 {
     SetAttributeData_aTextureCoord({
-        0.0, 0.0, 0.0,
-        2.0, 0.0, 0.0,
-        2.0, 1.0, 0.0,
-        0.0, 0.0, 0.0,
-        2.0, 1.0, 0.0,
-        0.0, 1.0, 0.0,
+        0.0, 0.0,
+        2.0, 0.0,
+        2.0, 1.0,
+        0.0, 0.0,
+        2.0, 1.0,
+        0.0, 1.0,
     });
     SetAttributeData_aVertexPosition({
         -1.0, -1.0,
@@ -46,9 +46,9 @@ const char *CShaderQuartic3d::GetVertexShader()
     return
     SHADER_SOURCE(
     in vec2 aVertexPosition;
-    in vec3 aTextureCoord;
+    in vec2 aTextureCoord;
 
-    out vec3 vTextureCoord;
+    out vec2 vTextureCoord;
 
     void main(void) {
         gl_Position = vec4(aVertexPosition, 1.0, 1.0);
@@ -63,7 +63,7 @@ const char *CShaderQuartic3d::GetFragmentShader()
     SHADER_SOURCE(
     uniform sampler3D uSampler;
     
-    in vec3 vTextureCoord;
+    in vec2 vTextureCoord;
 
     out vec4 outColor;
 
