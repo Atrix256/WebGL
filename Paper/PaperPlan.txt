@@ -1,5 +1,17 @@
 TODO:
 
+* make GLFW shader compile warnings go away!!
+
+* need to clearly show accuracy of different options.
+ * hw/sw/hw+sw
+ * texture dimensionality
+ * curve order
+
+
+! yes, need related work section.  This is to mention the other papers, that leverage linear sampling
+  as a first step to other curves.  They are all meant for better texture filtering though, and they don't
+  seem to leverage higher dimensionality textures towards this purpose.
+
 * mention other papers that leverage the texture sampler to calculate curves for other purposes
 
 * put $ around all the symbols? control points, t,u, etc!
@@ -188,6 +200,14 @@ Author Contact info
 
 * some references here:
  * http://algorithmist.net/docs/subdivision.pdf
+
+! newer cuda guide?
+ * http://docs.nvidia.com/cuda/cuda-c-programming-guide/#texture-fetching
+
+* linear sampling to do curves (for texture interpolation
+ * http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter20.html
+ * http://www.mate.tue.nl/mate/pdfs/10318.pdf
+ * http://http.developer.nvidia.com/GPUGems/gpugems_ch24.html
 
 ===========FUTURE WORK===========
 

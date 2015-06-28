@@ -245,6 +245,7 @@ If we replace $A$,$B$,$C$ with $P_0$, $P_1$, $P_2$, and $s$ with $(1-t)$ we then
 This pattern continues for trilinear interpolation and beyond
 
 TODO: How to prove for N dimensions?  This section needs help
+TODO: could somehow show how N-linear sampling is same as De Casteljeaus for all N's? tree diagram or something else.
 
 \subsection{Accuracy}
 
@@ -276,33 +277,176 @@ TODO: give the details of the architecture imprecision sources and cite the two 
 \section{Texture Dimensionality}
 \label{sec:texturedimensionality}
 
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{
+            \node[shape=circle,draw] (char) {#1};}}
+
+\begin{figure}
+  \begin{tikzpicture}[level/.style={sibling distance = 5cm/#1, level distance = 1.5cm}] 
+    \begin{scope}[shift={(-6cm,0)}]
+      \node (Root) {\circled{ABCD}}
+          child{ node{\circled{ABC}}
+                  child{ node {\circled{AB}}
+                    child{ node {\circled{A}}}
+                    child{ node {\circled{B}}}            
+                  }
+                  child{ node {\circled{BC}}
+                    child{ node {\circled{B}}}
+                    child{ node {\circled{C}}}            
+                  }                            
+          }
+          child{ node {\circled{BCD}}
+                  child{ node {\circled{BC}}
+                    child{ node {\circled{B}}}
+                    child{ node {\circled{C}}}
+                  }  
+                  child{ node {\circled{CD}}
+                    child{ node {\circled{C}}}
+                    child{ node {\circled{D}}}
+                  }  
+          }
+      ; 
+
+      % Comments for each level
+      \begin{scope}[every node/.style={right}]
+        \path (Root      -| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Cubic curve / Trilinear sampling};
+        \path (Root-1    -| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Quadratic curve / Bilinear sampling};
+        \path (Root-1-1  -| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Linear curve / Linear sampling};
+        \path (Root-1-1-1-| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Point / Nearest Neighbor};
+      \end{scope}
+    \end{scope}   
+  \end{tikzpicture}
+  \caption{A tree showing the De Casteljeau algorithm for a cubic curve.  The labels on the right show what type of curves are evaluated at that level, as well as the $N$ dimensional sampling that is required to evaluate nodes at that level with a single texture read.}
+  \label{fig:decdimensionality}
+\end{figure}  
+
 While this technique is able to be used with any texture dimensionality, there are different characteristics for each choice.  Those characteristics will be explored here.
 
 \subsection{One Dimensional Textures}
 
-One dimensional textures are textures which have N pixels in a single row or column, such as 8x1, 16x1 or more generally Nx1.
+One dimensional textures are textures which have $W$ pixels in a single row or column, such as $(8,1)$, $(16,1)$ or more generally $(W,1)$.
 
-Using one dimensional textures, the built in texture interpolation is only able to perform linear interpolation, which allows calculations of only 1st order (linear) Bezier basis functions.
+Using one dimensional textures, the built in texture interpolation is only able to perform linear interpolation, which allows calculations of only 1st order (linear) Bezier basis functions (\autoref{fig:decdimensionality}).
 
-If you want a Bezier curve higher than order 1, you are going to have to take more texture samples and combine the results in the shader program.  While this is more expensive computationally, it does have the benefit of doing more of the work in the shader program, which has higher precision through use of full float math, so the end result will be a higher quality curve.
+If you want a Bezier curve higher than order $1$, you can take more texture samples and combine the results in the shader program.  While this is more expensive computationally than moving to a texture of higher dimensionality, it does have the benefit of doing more of the work in the shader program, which has higher precision through use of full float math, so the end result will be a higher quality curve.
 
+The size of the one dimensional texture needed for $M$ piecewise curves, each of degree $N$ is $(N+1)*M$. For instance, a cubic (degree 3) curve requires 4 pixels ($(3+1)*1$).  If you want to encode two piecewise cubic curves end to end, it requires 8 pixels ($(3+1)*2$).
 
+If $C0$ continuity is desired for piecewise curves, a redundant control point can be removed from the beginning of each curve after the first curve, which makes the size of texture required become $N*M+1$, requiring only 7 pixels for two cubic curves, instead of 8, or 10 pixels for three cubic curves, instead of 12 (\autoref{fig:texlayeout1d}).
 
-TODO: Flesh out details, show diagram of texture layout.
-TODO: Maybe just GLSL for linear and quartic, but images for linear, quadratic, cubic, quartic with comparison vs "ground truth".
+  \begin{figure}
+    \begin{tikzpicture}
+      \draw[step=1cm,gray,very thin] (0,0) grid (4,1);
+      \draw (0.5,0.5) node {$A$};
+      \draw (1.5,0.5) node {$B$};
+      \draw (2.5,0.5) node {$C$};
+      \draw (3.5,0.5) node {$D$};
+    \end{tikzpicture}
 
+    \vspace{5mm}
+
+    \begin{tikzpicture}
+      \draw[step=1cm,gray,very thin] (0,0) grid (8,1);
+      \draw (0.5,0.5) node {$A$};
+      \draw (1.5,0.5) node {$B$};
+      \draw (2.5,0.5) node {$C$};
+      \draw (3.5,0.5) node {$D$};
+      \draw (4.5,0.5) node {$D$};
+      \draw (5.5,0.5) node {$E$};
+      \draw (6.5,0.5) node {$F$};
+      \draw (7.5,0.5) node {$G$};     
+    \end{tikzpicture}   
+    \caption{\textit{Top:} A cubic curve with control points $A,B,C,D$ encoded in a 1d texture with a size of 4 pixels.  \textit{Bottom:} Two piecewise curves encoded in a 1d texture.  The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.  If C0 continuitiy is always desired between the curves, a redundant $D$ could be removed to store these curves in 7 pixels instead of 8. }    
+    \label{fig:texlayeout1d}
+  \end{figure}
+
+In the case of a cubic curve with control points $A,B,C,D$, the one dimensional texture will be 4 pixels in size, and three texture reads will need to be done to get the interpolations for $\overline{AB},\overline{BC},\overline{CD}$.  Those will then need to be combined using either the De Casteljeau algorithm, or by using the Bernstein form of a quadratic Bezier curve (order 2) to elevate those three points from order 1 to order 3, to get the final point $\stackrel{\frown}{ABCD}$.
+
+\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture.  Linear texture sampling used to evaluate the first level of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a quadratic Bezier curve.}, label={lst:GLSLCubicTexture1D}]
+// 4 pixel 1d texture with control points encoded: A,B,C,D
+uniform sampler1D uSampler; 
+const float c_textureSize = 4.0;
+
+vec4 CubicCurveFromTexture1D_DeCastelJeau(in float t) {
+    vec4 AB = texture(uSampler, (t + 0.5) / c_textureSize);
+    vec4 BC = texture(uSampler, (t + 1.5) / c_textureSize;
+    vec4 CD = texture(uSampler, (t + 2.5) / c_textureSize);
+    vec4 ABC = mix(AB, BC, t);
+    vec4 BCD = mix(BC, CD, t);
+    return mix(ABC, BCD, t);
+}
+
+vec4 CubicCurveFromTexture1D_Bernstein(in float t) {
+    vec4 AB = texture(uSampler, (t + 0.5) / c_textureSize);
+    vec4 BC = texture(uSampler, (t + 1.5) / c_textureSize);
+    vec4 CD = texture(uSampler, (t + 2.5) / c_textureSize);
+    float s = (1 - t);
+    float s2 = s * s;
+    float t2 = t * t;
+    // Quadratic Bezier Curve = A*s*s + B*2*s*t + C*t*t
+    return AB*s2 + BC*2.0*s*t + CD*t2;
+}
+\end{lstlisting}
 
 \subsection{Two Dimensional Textures}
 
-Two dimensional textures are textures which are MxN pixels in size, such as 8x8 or 16x16 or 32x4.
+Two dimensional textures are textures which are $(W,H)$ pixels in size, such as $(8,8)$ or $(16,16)$ or $(32,4)$.
 
-Using two dimensional textures allows the texture interpolator to perform bilinear interpolation, which allows calculations of 2nd order (quadratic) Bezier basis functions.
+Using two dimensional textures allows the texture interpolator to perform bilinear interpolation, which allows calculations of 2nd order (quadratic) Bezier basis functions (\autoref{fig:decdimensionality}).
 
-If you want a Bezier curve higher than order 2, once again you are going to have to take more texture samples and combine the results in the shader program.  While more computationally expensive, it again results in higher precision results.
+If you want a Bezier curve higher than order 2, once again you can take more texture samples and combine the results in the shader program.  While more computationally expensive that moving to a higher dimensionality texture, it again results in higher precision results due to more of the computation happening in full floating point precision.
 
-TODO: flesh out details, show diagram of texture layout.
-TODO: GLSL for quadratric and quartic, but images for quadratic, cubic, quartic with comparison vs "ground truth".
-TODO: explain how linear can still be achieved even if it isn't that useful (yet? Hw/sw)
+The size of the two dimensional texture needed for $M$ piecewise curves, each of degree $N$ is $(2*M,N)$. For instance, a cubic (degree 3) curve will be $(2,3)$ pixels.  If you want to encode two piecewise cubic curves end to end, it requires $(4,3)$ pixels (\autoref{fig:texlayeout2d}).
+
+  \begin{figure}
+    \begin{tikzpicture}
+      \draw[step=1cm,gray,very thin] (0,0) grid (2,-3);
+      \draw (0.5,-0.5) node {$A$};
+      \draw (1.5,-0.5) node {$B$};
+      \draw (0.5,-1.5) node {$B$};
+      \draw (1.5,-1.5) node {$C$};
+      \draw (0.5,-2.5) node {$C$};
+      \draw (1.5,-2.5) node {$D$};      
+    \end{tikzpicture}
+    \hspace{5mm}
+    \begin{tikzpicture}
+      \draw[step=1cm,gray,very thin] (0,0) grid (4,-3);
+      \draw (0.5,-0.5) node {$A$};
+      \draw (1.5,-0.5) node {$B$};
+      \draw (0.5,-1.5) node {$B$};
+      \draw (1.5,-1.5) node {$C$};
+      \draw (0.5,-2.5) node {$C$};
+      \draw (1.5,-2.5) node {$D$};  
+
+      \draw (2.5,-0.5) node {$D$};
+      \draw (3.5,-0.5) node {$E$};
+      \draw (2.5,-1.5) node {$E$};
+      \draw (3.5,-1.5) node {$F$};
+      \draw (2.5,-2.5) node {$F$};
+      \draw (3.5,-2.5) node {$G$};          
+    \end{tikzpicture}
+    \caption{\textit{Left:} A cubic curve with control points $A,B,C,D$ encoded in a 2d texture that is $(2,3)$ in size.  \textit{Right:} Two piecewise curves encoded in a 2d texture that is $(4,3)$ in size.  The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.} 
+    \label{fig:texlayeout2d}
+  \end{figure}  
+
+\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture.  Bilinear texture sampling used to evaluate the first two levesl of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp).}, label={lst:GLSLCubicTexture1D}]
+// 2x4 2d texture, rounded to the nearest powers of 2 from 2x3.
+uniform sampler2D uSampler; 
+const vec2 c_textureSize = vec2(2.0,4.0);
+
+vec4 CubicCurveFromTexture2D_DeCastelJeau(in float t) {
+    vec4 ABC = texture(uSampler, (vec2(0.5, 0.5)+t) / c_textureSize);
+    vec4 BCD = texture(uSampler, (vec2(0.5, 1.5)+t) / c_textureSize);
+    return mix(ABC, BCD, t);
+}
+
+vec4 CubicCurveFromTexture2D_Bernstein(in float t) {
+    vec4 ABC = texture(uSampler, (vec2(0.5, 0.5)+t) / c_textureSize);
+    vec4 BCD = texture(uSampler, (vec2(0.5, 1.5)+t) / c_textureSize);
+    float s = (1 - t);
+    // Linear Bezier Curve = A*s + B*t
+    return ABC*s + BCD*t;
+}
+\end{lstlisting}
 
 \subsection{Three Dimensional Textures}
 

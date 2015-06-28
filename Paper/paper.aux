@@ -42,27 +42,37 @@
 \newlabel{eqn:bilinearinterpolation2}{{5}{6}{Mathematical Basis}{equation.2.5}{}}
 \newlabel{eqn:bilinearinterpolation3}{{6}{6}{Mathematical Basis}{equation.2.6}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Accuracy}{6}{subsection.2.3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces A tree showing the De Casteljeau algorithm for a cubic curve. The labels on the right show what type of curves are evaluated at that level, as well as the $N$ dimensional sampling that is required to evaluate nodes at that level with a single texture read.\relax }}{7}{figure.caption.6}}
+\newlabel{fig:decdimensionality}{{6}{7}{A tree showing the De Casteljeau algorithm for a cubic curve. The labels on the right show what type of curves are evaluated at that level, as well as the $N$ dimensional sampling that is required to evaluate nodes at that level with a single texture read.\relax }{figure.caption.6}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {3}Texture Dimensionality}{7}{section.3}}
 \newlabel{sec:texturedimensionality}{{3}{7}{Texture Dimensionality}{section.3}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.1}One Dimensional Textures}{7}{subsection.3.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Two Dimensional Textures}{7}{subsection.3.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Three Dimensional Textures}{7}{subsection.3.3}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Summary of Implications of Texture Dimensionality}{8}{subsection.3.4}}
-\@writefile{toc}{\contentsline {section}{\numberline {4}Extensions}{8}{section.4}}
-\newlabel{sec:extensions}{{4}{8}{Extensions}{section.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Combining Color Channels}{8}{subsection.4.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Piecewise Curves}{8}{subsection.4.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Rational Bezier Curves}{8}{subsection.4.3}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Multidimensional Bezier Curves}{8}{subsection.4.4}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Addressing Accuracy Issues}{8}{section.5}}
-\newlabel{sec:addressingaccuracyissues}{{5}{8}{Addressing Accuracy Issues}{section.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Limited Applications for Vector Graphics}{9}{section.6}}
-\newlabel{sec:limitedapplicationsforvectorgraphics}{{6}{9}{Limited Applications for Vector Graphics}{section.6}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {7}Comparisons With Other Techniques}{9}{section.7}}
-\newlabel{sec:comparisonswithothertechniques}{{7}{9}{Comparisons With Other Techniques}{section.7}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {8}Performance Characteristics}{9}{section.8}}
-\newlabel{sec:performancecharacteristics}{{8}{9}{Performance Characteristics}{section.8}{}}
-\newlabel{sec:futurework}{{8}{9}{Future Work}{section*.6}{}}
-\newlabel{sec:acknowledgements}{{8}{9}{Acknowledgements}{section*.7}{}}
-\newlabel{sec:references}{{8}{9}{References}{section*.8}{}}
-\newlabel{sec:indexofsupplementalmaterials}{{8}{9}{Index of Supplemental Materials}{section*.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces \textit  {Top:} A cubic curve with control points $A,B,C,D$ encoded in a 1d texture with a size of 4 pixels. \textit  {Bottom:} Two piecewise curves encoded in a 1d texture. The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$. If C0 continuitiy is always desired between the curves, a redundant $D$ could be removed to store these curves in 7 pixels instead of 8. \relax }}{8}{figure.caption.7}}
+\newlabel{fig:texlayeout1d}{{7}{8}{\textit {Top:} A cubic curve with control points $A,B,C,D$ encoded in a 1d texture with a size of 4 pixels. \textit {Bottom:} Two piecewise curves encoded in a 1d texture. The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$. If C0 continuitiy is always desired between the curves, a redundant $D$ could be removed to store these curves in 7 pixels instead of 8. \relax }{figure.caption.7}{}}
+\newlabel{lst:GLSLCubicTexture1D}{{2}{8}{GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture. Linear texture sampling used to evaluate the first level of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a quadratic Bezier curve}{lstlisting.2}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {2}GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture. Linear texture sampling used to evaluate the first level of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a quadratic Bezier curve.}{8}{lstlisting.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces \textit  {Left:} A cubic curve with control points $A,B,C,D$ encoded in a 2d texture that is $(2,3)$ in size. \textit  {Right:} Two piecewise curves encoded in a 2d texture that is $(4,3)$ in size. The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.\relax }}{9}{figure.caption.8}}
+\newlabel{fig:texlayeout2d}{{8}{9}{\textit {Left:} A cubic curve with control points $A,B,C,D$ encoded in a 2d texture that is $(2,3)$ in size. \textit {Right:} Two piecewise curves encoded in a 2d texture that is $(4,3)$ in size. The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.\relax }{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Two Dimensional Textures}{9}{subsection.3.2}}
+\newlabel{lst:GLSLCubicTexture1D}{{3}{9}{GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture. Bilinear texture sampling used to evaluate the first two levesl of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp)}{lstlisting.3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture. Bilinear texture sampling used to evaluate the first two levesl of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp).}{9}{lstlisting.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Three Dimensional Textures}{10}{subsection.3.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Summary of Implications of Texture Dimensionality}{10}{subsection.3.4}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Extensions}{10}{section.4}}
+\newlabel{sec:extensions}{{4}{10}{Extensions}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Combining Color Channels}{10}{subsection.4.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Piecewise Curves}{10}{subsection.4.2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Rational Bezier Curves}{11}{subsection.4.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Multidimensional Bezier Curves}{11}{subsection.4.4}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Addressing Accuracy Issues}{11}{section.5}}
+\newlabel{sec:addressingaccuracyissues}{{5}{11}{Addressing Accuracy Issues}{section.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Limited Applications for Vector Graphics}{11}{section.6}}
+\newlabel{sec:limitedapplicationsforvectorgraphics}{{6}{11}{Limited Applications for Vector Graphics}{section.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}Comparisons With Other Techniques}{11}{section.7}}
+\newlabel{sec:comparisonswithothertechniques}{{7}{11}{Comparisons With Other Techniques}{section.7}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {8}Performance Characteristics}{11}{section.8}}
+\newlabel{sec:performancecharacteristics}{{8}{11}{Performance Characteristics}{section.8}{}}
+\newlabel{sec:futurework}{{8}{11}{Future Work}{section*.9}{}}
+\newlabel{sec:acknowledgements}{{8}{11}{Acknowledgements}{section*.10}{}}
+\newlabel{sec:references}{{8}{12}{References}{section*.11}{}}
+\newlabel{sec:indexofsupplementalmaterials}{{8}{12}{Index of Supplemental Materials}{section*.12}{}}

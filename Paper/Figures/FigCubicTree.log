@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  27 JUN 2015 15:38
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  27 JUN 2015 11:19
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**./FigTexture1D.tex
-(./FigTexture1D.tex
+**./FigCubicTree.tex
+(./FigCubicTree.tex
 LaTeX2e <2015/01/01>
 Babel <3.9l> and hyphenation patterns for 79 languages loaded.
 (d:/texlive/2015/texmf-dist/tex/latex/base/article.cls
@@ -503,8 +503,8 @@ File: tkz-tool-arith.tex tkz-tool-arith 1.161 c
 (d:/texlive/2015/texmf-dist/tex/latex/tkz-euclide/tkz-lib-symbols.tex)
 (d:/texlive/2015/texmf-dist/tex/latex/tkz-euclide/tkz-obj-circles.tex)
 (d:/texlive/2015/texmf-dist/tex/latex/tkz-euclide/tkz-obj-addpoints.tex))
-(./FigTexture1D.aux)
-\openout1 = `FigTexture1D.aux'.
+(./FigCubicTree.aux)
+\openout1 = `FigCubicTree.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 8.
 LaTeX Font Info:    ... okay on input line 8.
@@ -581,23 +581,28 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 13.
+(Font)              <7> on input line 41.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 13.
- [1{d:/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] (./FigTextur
-e1D.aux) ) 
+(Font)              <5> on input line 41.
+
+Overfull \hbox (123.30632pt too wide) in paragraph at lines 47--48
+[][] 
+ []
+
+[1{d:/texlive/2015/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
+(./FigCubicTree.aux) ) 
 Here is how much of TeX's memory you used:
- 15114 strings out of 493089
- 314389 string characters out of 6138425
- 374792 words of memory out of 5000000
- 18263 multiletter control sequences out of 15000+600000
- 3986 words of font info for 15 fonts, out of 8000000 for 9000
+ 15223 strings out of 493089
+ 316660 string characters out of 6138425
+ 382780 words of memory out of 5000000
+ 18373 multiletter control sequences out of 15000+600000
+ 3640 words of font info for 14 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 55i,8n,67p,518b,601s stack positions out of 5000i,500n,10000p,200000b,80000s
-<d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb
-><d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><d:/texli
-ve/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb>
-Output written on FigTexture1D.pdf (1 page, 36760 bytes).
+ 55i,17n,67p,419b,1769s stack positions out of 5000i,500n,10000p,200000b,80000s
+<d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/c
+m/cmmi10.pfb><d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.p
+fb><d:/texlive/2015/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
+Output written on FigCubicTree.pdf (1 page, 34349 bytes).
 PDF statistics:
  23 PDF objects out of 1000 (max. 8388607)
  16 compressed objects within 1 object stream

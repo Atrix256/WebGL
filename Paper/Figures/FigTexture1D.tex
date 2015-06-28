@@ -8,16 +8,29 @@
 \begin{document}
 
 	\begin{figure}
-		\begin{tikzpicture}[x=8cm,y=4cm]
-			\tkzInit[xmax=2,ymax=1,xmin=0,ymin=0]
-			% border
-			\draw (-0.1,-0.2) rectangle (2,1.2);
-
-			\foreach \x in {0,...,4}
-				\draw (\x * 0.1 - 0.05,0.45) rectangle (\x * 0.1 + 0.05, 0.55);
-
+		\begin{tikzpicture}
+			\draw[step=1cm,gray,very thin] (0,0) grid (4,1);
+			\draw (0.5,0.5) node {$A$};
+			\draw (1.5,0.5) node {$B$};
+			\draw (2.5,0.5) node {$C$};
+			\draw (3.5,0.5) node {$D$};
 		\end{tikzpicture}
-		\caption{TODO: this}		
+
+		\vspace{5mm}
+
+		\begin{tikzpicture}
+			\draw[step=1cm,gray,very thin] (0,0) grid (8,1);
+			\draw (0.5,0.5) node {$A$};
+			\draw (1.5,0.5) node {$B$};
+			\draw (2.5,0.5) node {$C$};
+			\draw (3.5,0.5) node {$D$};
+			\draw (4.5,0.5) node {$D$};
+			\draw (5.5,0.5) node {$E$};
+			\draw (6.5,0.5) node {$F$};
+			\draw (7.5,0.5) node {$G$};			
+		\end{tikzpicture}		
+		\caption{\textit{Top:} A cubic curve with control points $A,B,C,D$ encoded in a 1d texture.  \textit{Bottom:} Two piecewise curves encoded in a 1d texture.  The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.  If C0 continuitiy is always desired between the curves, a redundant $D$ could be removed to store these curves in 7 pixels instead of 8.}		
+		\label{fig:texlayeout1d}
 	\end{figure}	
 
 \end{document}
