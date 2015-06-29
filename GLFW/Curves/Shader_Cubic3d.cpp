@@ -90,8 +90,14 @@ const char *CShaderCubic3d::GetFragmentShader()
         return mix(front, back, frac.z);
     }
 
+    const vec3 c_textureSize = vec3(2.0, 2.0, 2);
+
+    vec4 CubicCurveFromTexture3D(in float t) {
+        return texture(uSampler, vec3(0.5 + t) / c_textureSize);
+    }
 
     void main(void) {
+        /*
         vec4 colorValue = vec4(0.0);
 
         if (vTextureCoord.x < 0.995)
@@ -109,6 +115,13 @@ const char *CShaderCubic3d::GetFragmentShader()
             outColor = vec4(1.0);
             return;
         }
+        */
+
+        vec4 colorValue;
+        if (vTextureCoord.x <= 1.0)
+            colorValue = CubicCurveFromTexture3D(vTextureCoord.x);
+        else
+            colorValue = CubicCurveFromTexture3D(vTextureCoord.x - 1.0);
 
         vec4 values = step(vTextureCoord.yyyy, colorValue);
         values.xyz *= 0.5;

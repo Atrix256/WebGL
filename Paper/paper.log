@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  28 JUN 2015 21:18
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  29 JUN 2015 07:29
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -615,11 +615,7 @@ File: pgfmodulematrix.code.tex 2013/09/17  (rcs-revision 1.8)
 (d:/texlive/2015/texmf-dist/tex/generic/pgf/frontendlayer/tikz/libraries/tikzli
 brarytopaths.code.tex
 File: tikzlibrarytopaths.code.tex 2008/06/17 v3.0.0 (rcs-revision 1.2)
-))) (./paper.aux
-
-LaTeX Warning: Label `lst:GLSLCubicTexture1D' multiply defined.
-
-)
+))) (./paper.aux)
 \openout1 = `paper.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 20.
@@ -637,7 +633,8 @@ LaTeX Font Info:    ... okay on input line 20.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 20.
 LaTeX Font Info:    ... okay on input line 20.
 LaTeX Font Info:    Try loading font information for OT1+ptm on input line 20.
- (d:/texlive/2015/texmf-dist/tex/latex/psnfss/ot1ptm.fd
+
+(d:/texlive/2015/texmf-dist/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
 (d:/texlive/2015/texmf-dist/tex/context/base/supp-pdf.mkii
@@ -689,6 +686,9 @@ LaTeX Info: Redefining \ref on input line 20.
 LaTeX Info: Redefining \pageref on input line 20.
 LaTeX Info: Redefining \nameref on input line 20.
 
+! I can't write on file `paper.pdf'.
+(Press Enter to retry, or Control-Z to exit; default file extension is `.pdf')
+Please type another file name for output: 
 ABD: EveryShipout initializing macros
 (d:/texlive/2015/texmf-dist/tex/generic/pgf/libraries/pgflibraryarrows.meta.cod
 e.tex
@@ -937,67 +937,67 @@ Package xcolor Warning: Incompatible color definition on input line 449.
 Package xcolor Warning: Incompatible color definition on input line 455.
 
 
-Package xcolor Warning: Incompatible color definition on input line 616.
+Package xcolor Warning: Incompatible color definition on input line 461.
+
+
+Package xcolor Warning: Incompatible color definition on input line 620.
 
 [10]
 
-Package xcolor Warning: Incompatible color definition on input line 639.
+Package xcolor Warning: Incompatible color definition on input line 646.
 
 [11]
 
-Package xcolor Warning: Incompatible color definition on input line 687.
+Package xcolor Warning: Incompatible color definition on input line 705.
 
 
-Package xcolor Warning: Incompatible color definition on input line 694.
+Package xcolor Warning: Incompatible color definition on input line 712.
 
 
-Package xcolor Warning: Incompatible color definition on input line 695.
+Package xcolor Warning: Incompatible color definition on input line 713.
 
 
-Overfull \hbox (18.30946pt too wide) in paragraph at lines 682--698
+Overfull \hbox (18.30946pt too wide) in paragraph at lines 700--716
  [] 
  []
 
 
-Package xcolor Warning: Incompatible color definition on input line 700.
-
-
-Package xcolor Warning: Incompatible color definition on input line 700.
+Package xcolor Warning: Incompatible color definition on input line 718.
 
 [12]
-Underfull \hbox (badness 10000) in alignment at lines 700--700
+
+Package xcolor Warning: Incompatible color definition on input line 718.
+
+
+Underfull \hbox (badness 10000) in alignment at lines 718--718
 [][] [] []
  []
 
 
-Package xcolor Warning: Incompatible color definition on input line 700.
+Package xcolor Warning: Incompatible color definition on input line 718.
 
-<CC-BY-ND.png, id=215, 97.0827pt x 33.9669pt>
+<CC-BY-ND.png, id=223, 97.0827pt x 33.9669pt>
 File: CC-BY-ND.png Graphic file (type png)
  <use CC-BY-ND.png>
-Package pdftex.def Info: CC-BY-ND.png used on input line 700.
+Package pdftex.def Info: CC-BY-ND.png used on input line 718.
 (pdftex.def)             Requested size: 71.13188pt x 24.8884pt.
 
 
-Package xcolor Warning: Incompatible color definition on input line 702.
+Package xcolor Warning: Incompatible color definition on input line 720.
 
 [13 <./CC-BY-ND.png>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 702.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 702.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 720.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 720.
  (./paper.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 702.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 702.
-
-
-LaTeX Warning: There were multiply-defined labels.
-
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 702.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 720.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 720.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 720.
  ) 
 Here is how much of TeX's memory you used:
- 19706 strings out of 493089
- 363016 string characters out of 6138425
- 440131 words of memory out of 5000000
- 22716 multiletter control sequences out of 15000+600000
+ 19721 strings out of 493089
+ 363259 string characters out of 6138425
+ 441173 words of memory out of 5000000
+ 22723 multiletter control sequences out of 15000+600000
  36679 words of font info for 83 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  54i,17n,65p,752b,1809s stack positions out of 5000i,500n,10000p,200000b,80000s
@@ -1016,10 +1016,10 @@ pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb><d:/texlive
 /2015/texmf-dist/fonts/type1/urw/times/utmb8a.pfb><d:/texlive/2015/texmf-dist/f
 onts/type1/urw/times/utmr8a.pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/tim
 es/utmri8a.pfb>
-Output written on paper.pdf (13 pages, 763996 bytes).
+Output written on paper.pdf (13 pages, 764067 bytes).
 PDF statistics:
- 301 PDF objects out of 1000 (max. 8388607)
- 250 compressed objects within 3 object streams
- 110 named destinations out of 1000 (max. 500000)
+ 311 PDF objects out of 1000 (max. 8388607)
+ 260 compressed objects within 3 object streams
+ 118 named destinations out of 1000 (max. 500000)
  58 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -428,7 +428,7 @@ The size of the two dimensional texture needed for $M$ piecewise curves, each of
     \label{fig:texlayeout2d}
   \end{figure}  
 
-\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture.  Bilinear texture sampling used to evaluate the first two levesl of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp).}, label={lst:GLSLCubicTexture1D}]
+\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture.  Bilinear texture sampling used to evaluate the first two levesl of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp).}, label={lst:GLSLCubicTexture2D}]
 // 2x4 2d texture, rounded to the nearest powers of 2 from 2x3.
 uniform sampler2D uSampler; 
 const vec2 c_textureSize = vec2(2.0,4.0);
@@ -458,7 +458,7 @@ Again, you can take more texture samples and combine the results in the shader p
 
 You may have noticed that a 1d texture can store a linear curve, but that a 2d texture cannot.  The lowest order curve it can store is a quadratic curve.  In the case of a 3d texture, the minimum goes up again, and the lowest order curve you can store is a cubic curve.
 
-TODO: formula for texture size
+The size of the three dimensional texture needed for $M$ piecewise curves, each of degree $N$ is $(2*M,N-1,2)$. For instance, a cubic (degree 3) curve will be $(2,2,2)$ pixels.  If you want to encode two piecewise cubic curves end to end, it requires $(4,2,2)$ pixels (\autoref{fig:texlayeout3d}).
 
 \begin{figure}
     \begin{tikzpicture}
@@ -581,18 +581,37 @@ TODO: formula for texture size
     \end{tikzpicture}
 
     \caption{\textit{Top Left:} A cubic curve encoded in a $(2,2,2)$ sized texture, decoded with a single trilinear texture sample. \textit{Top Right:}  Two piecewise cubic curves encoded in a $(4,2,2)$ sized texture, decoded with a single trilinear texture sample.  \textit{Bottom Left:} A Quartic curve encoded in a $(2,3,2)$ sized texture, decoded with two trilinear texture samples. \textit{Bottom Right:} Two piecewise quartic curves encoded in a $(4,3,2)$ sized texture, decoded with two trilinear texture samples.} 
-    \label{fig:texlayeout1d}
+    \label{fig:texlayeout3d}
   \end{figure}  
 
-TODO: GLSL for cubic!
+\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,2,2)$ pixel 3d texture.  Trilinear texture sampling used to evaluate all three levels of the De Casteljeau algorithm.}, label={lst:GLSLCubicTexture3D}]
+// 2x2x2 3d texture.
+uniform sampler2D uSampler; 
+const vec3 c_textureSize = vec3(2.0, 2.0, 2);
 
-\subsection{Summary of Implications of Texture Dimensionality}
+vec4 CubicCurveFromTexture3D(in float t) {
+    return texture(uSampler, vec3(0.5 + t) / c_textureSize);
+}
+\end{lstlisting} 
 
-TODO: dimensionality / curve order comparisons. A table? Maybe side by side images?
-TODO: texture size changes, number of textures used, number of texture samples taken
-TODO: include quadrilinear and above?
-TODO: we might want to do this in the performance results section instead and provide perf metrics as well.
-TODO: beyond 3d textures?
+\subsection{Summary of Texture Dimensionality}
+
+TODO: TABLE to compare dimensionality
+table details...
+
+y axis =
+ * 1d, 2d, 3d, 4d?
+
+x axis =
+ * minimum curve order storage
+ * texture size formula
+ * num texture samples taken for a quintic curve? sextent curve? or maybe do quadratic, cubic, quarticorder 4, order 5?
+ * texture size for them too? dims and num pixels
+
+
+TODO do we want images here at all? probably not i guess...
+
+TODO: need to explain the layout of the pixels in the sections above somehow.  Maybe also get rid of describing what N-dimensional textures are
 
 %-------------------------------------------------------------------------
 \section{Extensions}
@@ -607,6 +626,7 @@ TODO: this.  Higher order curves without more texture reads
 \subsection{Piecewise Curves}
 
 TODO: this.  Pros and cons. B-splines can be converted to piecewise Bezier with Boem's algorithm (what's it called again?).
+TODO: how to actually evaluate piecewise curves! (GLSL if needed? or just describe it)
 
 \subsection{Rational Bezier Curves}
 
