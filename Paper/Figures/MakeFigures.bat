@@ -1,1 +1,1 @@
-D:\texlive\2015\bin\win32\pdflatex.exe FigTexture2D.tex
+D:\texlive\2015\bin\win32\pdflatex.exe FigTexture3D.tex

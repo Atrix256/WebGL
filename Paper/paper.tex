@@ -450,16 +450,141 @@ vec4 CubicCurveFromTexture2D_Bernstein(in float t) {
 
 \subsection{Three Dimensional Textures}
 
-Three dimensional textures (often refered to as volumetric textures) are textures which are MxNxO pixels in size such as 8x8x2 or 16x8x4.
+Three dimensional textures (often refered to as volumetric textures) are textures which are $(W,H,D)$ pixels in size such as $(8,8,2)$ or $(16,8,4)$.
 
-Using three dimensional textures allows the texture interpolator to evaluate trilinear interpolation, which allows calculations of 3rd order (cubic) Bezier basis functions.
+Using three dimensional textures allows the texture interpolator to evaluate trilinear interpolation, which allows calculations of 3rd order (cubic) Bezier basis functions (\autoref{fig:decdimensionality}).
 
 Again, you can take more texture samples and combine the results in the shader program to get higher than order 3 curves if desired.
 
-TODO: flesh out details, show diagram of texture layout.
-TODO: GLSL for cubic and quartic, but images for cubic, quartic with comparison vs ground truth.
-TODO: explain how linear and quadratic could still be achieved even if it isn't that useful (ye? Hw/sw)
-TODO: beyond 3d textures? Could do 4d with mipmapped volumetric textures!
+You may have noticed that a 1d texture can store a linear curve, but that a 2d texture cannot.  The lowest order curve it can store is a quadratic curve.  In the case of a 3d texture, the minimum goes up again, and the lowest order curve you can store is a cubic curve.
+
+TODO: formula for texture size
+
+\begin{figure}
+    \begin{tikzpicture}
+      \draw[step=1cm,gray,very thin] (0,0,0) grid (2,-2,0);
+      \draw (0.5,-0.5) node {$A$};
+      \draw (1.5,-0.5) node {$B$};
+      \draw (0.5,-1.5) node {$B$};
+      \draw (1.5,-1.5) node {$C$};
+
+      \begin{scope}[shift={(0.75,0.75,0)}]
+        \draw[step=1cm,gray,dashed] (0,0,0) grid (2,-2,0);
+        \draw[gray] (0.5,-0.5) node {$B$};
+        \draw[gray] (1.5,-0.5) node {$C$};
+        \draw[gray] (0.5,-1.5) node {$C$};
+        \draw[gray] (1.5,-1.5) node {$D$};
+      \end{scope}
+
+      \draw[dashed] (0,0,0) -- (0.75, 0.75,0);
+      \draw[dashed] (2,0,0) -- (2.75, 0.75,0);
+      \draw[dashed] (0,-2,0) -- (0.75,-1.25,0);
+      \draw[dashed] (2,-2,0) -- (2.75,-1.25,0);
+    \end{tikzpicture}
+    \hspace{5mm}
+    \begin{tikzpicture}
+      \draw[step=1cm,gray,very thin] (0,0,0) grid (4,-2,0);
+      \draw (0.5,-0.5) node {$A$};
+      \draw (1.5,-0.5) node {$B$};
+      \draw (0.5,-1.5) node {$B$};
+      \draw (1.5,-1.5) node {$C$};
+
+      \draw (2.5,-0.5) node {$E$};
+      \draw (3.5,-0.5) node {$F$};
+      \draw (2.5,-1.5) node {$F$};
+      \draw (3.5,-1.5) node {$G$};
+
+      \begin{scope}[shift={(0.75,0.75,0)}]
+        \draw[step=1cm,gray,dashed] (0,0,0) grid (4,-2,0);
+        \draw[gray] (0.5,-0.5) node {$B$};
+        \draw[gray] (1.5,-0.5) node {$C$};
+        \draw[gray] (0.5,-1.5) node {$C$};
+        \draw[gray] (1.5,-1.5) node {$D$};
+
+        \draw[gray] (2.5,-0.5) node {$F$};
+        \draw[gray] (3.5,-0.5) node {$G$};
+        \draw[gray] (2.5,-1.5) node {$G$};
+        \draw[gray] (3.5,-1.5) node {$H$};
+      \end{scope}
+
+      \draw[dashed] (0,0,0) -- (0.75, 0.75,0);
+      \draw[dashed] (4,0,0) -- (4.75, 0.75,0);
+      \draw[dashed] (0,-2,0) -- (0.75,-1.25,0);
+      \draw[dashed] (4,-2,0) -- (4.75,-1.25,0);
+    \end{tikzpicture}
+
+    \vspace{5mm}
+
+    \begin{tikzpicture}
+      \draw[step=1cm,gray,very thin] (0,0,0) grid (2,-3,0);
+      \draw (0.5,-0.5) node {$A$};
+      \draw (1.5,-0.5) node {$B$};
+      \draw (0.5,-1.5) node {$B$};
+      \draw (1.5,-1.5) node {$C$};
+      \draw (0.5,-2.5) node {$C$};
+      \draw (1.5,-2.5) node {$D$};
+
+      \begin{scope}[shift={(0.75,0.75,0)}]
+        \draw[step=1cm,gray,dashed] (0,0,0) grid (2,-3,0);
+        \draw[gray] (0.5,-0.5) node {$B$};
+        \draw[gray] (1.5,-0.5) node {$C$};
+        \draw[gray] (0.5,-1.5) node {$C$};
+        \draw[gray] (1.5,-1.5) node {$D$};
+        \draw[gray] (0.5,-2.5) node {$D$};
+        \draw[gray] (1.5,-2.5) node {$E$};
+      \end{scope}
+
+      \draw[dashed] (0,0,0) -- (0.75, 0.75,0);
+      \draw[dashed] (2,0,0) -- (2.75, 0.75,0);
+      \draw[dashed] (0,-3,0) -- (0.75,-2.25,0);
+      \draw[dashed] (2,-3,0) -- (2.75,-2.25,0);
+    \end{tikzpicture}
+    \hspace{5mm}
+    \begin{tikzpicture}
+      \draw[step=1cm,gray,very thin] (0,0,0) grid (4,-3,0);
+      \draw (0.5,-0.5) node {$A$};
+      \draw (1.5,-0.5) node {$B$};
+      \draw (0.5,-1.5) node {$B$};
+      \draw (1.5,-1.5) node {$C$};
+      \draw (0.5,-2.5) node {$C$};
+      \draw (1.5,-2.5) node {$D$};
+
+      \draw (2.5,-0.5) node {$F$};
+      \draw (3.5,-0.5) node {$G$};
+      \draw (2.5,-1.5) node {$G$};
+      \draw (3.5,-1.5) node {$H$};
+      \draw (2.5,-2.5) node {$H$};
+      \draw (3.5,-2.5) node {$I$};
+
+      \begin{scope}[shift={(0.75,0.75,0)}]
+        \draw[step=1cm,gray,dashed] (0,0,0) grid (4,-3,0);
+        \draw[gray] (0.5,-0.5) node {$B$};
+        \draw[gray] (1.5,-0.5) node {$C$};
+        \draw[gray] (0.5,-1.5) node {$C$};
+        \draw[gray] (1.5,-1.5) node {$D$};
+        \draw[gray] (0.5,-2.5) node {$D$};
+        \draw[gray] (1.5,-2.5) node {$E$};
+
+
+        \draw[gray] (2.5,-0.5) node {$G$};
+        \draw[gray] (3.5,-0.5) node {$H$};
+        \draw[gray] (2.5,-1.5) node {$H$};
+        \draw[gray] (3.5,-1.5) node {$I$};
+        \draw[gray] (2.5,-2.5) node {$I$};
+        \draw[gray] (3.5,-2.5) node {$J$};
+      \end{scope}
+
+      \draw[dashed] (0,0,0) -- (0.75, 0.75,0);
+      \draw[dashed] (4,0,0) -- (4.75, 0.75,0);
+      \draw[dashed] (0,-3,0) -- (0.75,-2.25,0);
+      \draw[dashed] (4,-3,0) -- (4.75,-2.25,0);
+    \end{tikzpicture}
+
+    \caption{\textit{Top Left:} A cubic curve encoded in a $(2,2,2)$ sized texture, decoded with a single trilinear texture sample. \textit{Top Right:}  Two piecewise cubic curves encoded in a $(4,2,2)$ sized texture, decoded with a single trilinear texture sample.  \textit{Bottom Left:} A Quartic curve encoded in a $(2,3,2)$ sized texture, decoded with two trilinear texture samples. \textit{Bottom Right:} Two piecewise quartic curves encoded in a $(4,3,2)$ sized texture, decoded with two trilinear texture samples.} 
+    \label{fig:texlayeout1d}
+  \end{figure}  
+
+TODO: GLSL for cubic!
 
 \subsection{Summary of Implications of Texture Dimensionality}
 
@@ -467,6 +592,7 @@ TODO: dimensionality / curve order comparisons. A table? Maybe side by side imag
 TODO: texture size changes, number of textures used, number of texture samples taken
 TODO: include quadrilinear and above?
 TODO: we might want to do this in the performance results section instead and provide perf metrics as well.
+TODO: beyond 3d textures?
 
 %-------------------------------------------------------------------------
 \section{Extensions}
