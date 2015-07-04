@@ -1,11 +1,16 @@
 TODO:
 
+* maybe stick to P_i instead of A,B,C for control points? in diagrams, in text, in code, etc
+ * consistency would be nicer
+
 * make GLFW shader compile warnings go away!!
 
 * need to clearly show accuracy of different options.
  * hw/sw/hw+sw
  * texture dimensionality
  * curve order
+
+* spell check!
 
 
 ! yes, need related work section.  This is to mention the other papers, that leverage linear sampling

@@ -1,6 +1,7 @@
 \documentclass{jcgt}
 \usepackage{tikz}
 \usepackage{amsmath}
+\usepackage{pgfplots}
 \definecolor{darkgreen}{RGB}{0,192,0}
 
 \setciteauthor{Alan Wolfe}
@@ -75,6 +76,10 @@ This paper shows a third method where:
 \end{itemize}
 
 A quick comparison of the visual quality of these three techniques can be seen in \autoref{fig:quickcomparison}.
+
+\subsection{Related Work}
+
+TODO: this
 
 %-------------------------------------------------------------------------
 \section{The Technique}
@@ -249,12 +254,6 @@ TODO: could somehow show how N-linear sampling is same as De Casteljeaus for all
 
 \subsection{Accuracy}
 
-While the Bernstein form of Bezier curves is equivelant to evaluating a Bezier curve with the De Casteljeau algorithm, in practice there are differences that come up between the two.  It is well known that the De Casteljeau algorithm is slower but more numerically robust than evaluating the Bernstein form.
-
-The technique presented in this paper also has numerical differences in practice.  While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures (\autoref{fig:quickaccuracy}).
-
-As shown in \autoref{fig:texbilcurve}, the quality can be significantly higher than a baked out curve for the same number of pixels however.  There is more information on addressing accuracy in \autoref{sec:addressingaccuracyissues}.
-
   \begin{figure}
     \begin{tikzpicture}[x=12cm,y=4cm]
       % border
@@ -271,6 +270,12 @@ As shown in \autoref{fig:texbilcurve}, the quality can be significantly higher t
     \label{fig:quickaccuracy}
   \end{figure}  
 
+While the Bernstein form of Bezier curves is equivelant to evaluating a Bezier curve with the De Casteljeau algorithm, in practice there are differences that come up between the two.  It is well known that the De Casteljeau algorithm is slower but more numerically robust than evaluating the Bernstein form.
+
+The technique presented in this paper also has numerical differences in practice.  While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures (\autoref{fig:quickaccuracy}).
+
+As shown in \autoref{fig:texbilcurve}, the quality can be significantly higher than a baked out curve for the same number of pixels however.  There is more information on addressing accuracy in \autoref{sec:addressingaccuracyissues}.
+
 TODO: give the details of the architecture imprecision sources and cite the two papers cited from the other place!
 
 %-------------------------------------------------------------------------
@@ -281,7 +286,7 @@ TODO: give the details of the architecture imprecision sources and cite the two 
             \node[shape=circle,draw] (char) {#1};}}
 
 \begin{figure}
-  \begin{tikzpicture}[level/.style={sibling distance = 5cm/#1, level distance = 1.5cm}] 
+  \begin{tikzpicture}[level/.style={sibling distance = 4.5cm/#1, level distance = 1.5cm}] 
     \begin{scope}[shift={(-6cm,0)}]
       \node (Root) {\circled{ABCD}}
           child{ node{\circled{ABC}}
@@ -308,10 +313,10 @@ TODO: give the details of the architecture imprecision sources and cite the two 
 
       % Comments for each level
       \begin{scope}[every node/.style={right}]
-        \path (Root      -| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Cubic curve / Trilinear sampling};
-        \path (Root-1    -| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Quadratic curve / Bilinear sampling};
-        \path (Root-1-1  -| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Linear curve / Linear sampling};
-        \path (Root-1-1-1-| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Point / Nearest Neighbor};
+        \path (Root      -| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Cubic / Trilinear};
+        \path (Root-1    -| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Quadratic / Bilinear};
+        \path (Root-1-1  -| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Linear / Linear};
+        \path (Root-1-1-1-| Root-2-2-2) ++(5mm,0) node {$\Rightarrow$} ++(5mm,0) node [blue] {Point / Nearest};
       \end{scope}
     \end{scope}   
   \end{tikzpicture}
@@ -323,15 +328,17 @@ While this technique is able to be used with any texture dimensionality, there a
 
 \subsection{One Dimensional Textures}
 
-One dimensional textures are textures which have $W$ pixels in a single row or column, such as $(8,1)$, $(16,1)$ or more generally $(W,1)$.
+Using one dimensional textures, the built in texture interpolation is only able to perform linear interpolation, which allows calculations of only 1st order (linear) Bezier curves (\autoref{fig:decdimensionality}).
 
-Using one dimensional textures, the built in texture interpolation is only able to perform linear interpolation, which allows calculations of only 1st order (linear) Bezier basis functions (\autoref{fig:decdimensionality}).
+Since the De Casteljeau algorithm just interpolates between linear interpolations, we can take more texture samples and combine them in the shader program to get higher order curves.  For an order $N$ Bezier curve, the De Casteljeau algorithm requires $2^{N-1}$ linear interpolations for the linear level of the tree.  You need two pixels to perform a linear interpolation, so it seems that we would need $2^N$ pixels to store a curve of order $N$ in a 1 dimensional textures.  For a cubic curve, that would look like this: $[P_0,P_1,P_1,P_2,P_1,P_2,P_2,P_3]$.
 
-If you want a Bezier curve higher than order $1$, you can take more texture samples and combine the results in the shader program.  While this is more expensive computationally than moving to a texture of higher dimensionality, it does have the benefit of doing more of the work in the shader program, which has higher precision through use of full float math, so the end result will be a higher quality curve.
+We can do better than that though.  Firstly, there are redundant lerps in the list for lerping between $P_1$ and $P_2$.  As the order of the curve increases, the number of redundancies increase as well.  We don't want to have to pay the cost of pixel storage and texture samples for redundancies, so because we have $N+1$ control points and we only ever sample between  $P_i$ and $P_{i+1}$, we only need to store $N$ lerps in the 1 dimensional texture, which would mean we would need $N*2$ pixels.  A cubic curve would then look like this:  $[P_0,P_1,P_1,P_2,P_2,P_3]$.
 
-The size of the one dimensional texture needed for $M$ piecewise curves, each of degree $N$ is $(N+1)*M$. For instance, a cubic (degree 3) curve requires 4 pixels ($(3+1)*1$).  If you want to encode two piecewise cubic curves end to end, it requires 8 pixels ($(3+1)*2$).
+After eliminating redundant lerps, we can see that there are redundant data values in our texture.  $P_1$ and $P_2$ each show up twice.  As the order of the curve increases, we would notice the pattern that all control points show up twice except the end points.  We can remove these redundancies and still be able to get the same information out.  The result of removing these redundancies is that our texture only needs to contain each control point once, which means we only need $N+1$ pixels to encode a curve of order $N$.  The cubic curve now looks like this: $[P_0,P_1,P_2,P_3]$. 
 
-If $C0$ continuity is desired for piecewise curves, a redundant control point can be removed from the beginning of each curve after the first curve, which makes the size of texture required become $N*M+1$, requiring only 7 pixels for two cubic curves, instead of 8, or 10 pixels for three cubic curves, instead of 12 (\autoref{fig:texlayeout1d}).
+If $M$ piecewise curves are desired, we multiply the number of pixels used for one curve by $M$.  The size of the one dimensional texture needed for $M$ piecewise curves, each of degree $N$ is $M*(N+1)$. Two piecewise cubic curves encoded into a texture would be 8 pixels in size and look like this: $[P_0,P_1,P_2,P_3,P_4,P_5,P_6,P_7]$
+
+It's often the case that you want $C0$ continuity for piecewise curves though, which in the example would give $P_4$ the same value as $P_3$.  If your piecewise curves always had $C0$ continuity, you could remove the redundant control point for every curve after the first, which would make it so the size of the texture required became $N*M+1$ (\autoref{fig:texlayeout1d}).
 
   \begin{figure}
     \begin{tikzpicture}
@@ -355,18 +362,33 @@ If $C0$ continuity is desired for piecewise curves, a redundant control point ca
       \draw (6.5,0.5) node {$F$};
       \draw (7.5,0.5) node {$G$};     
     \end{tikzpicture}   
-    \caption{\textit{Top:} A cubic curve with control points $A,B,C,D$ encoded in a 1d texture with a size of 4 pixels.  \textit{Bottom:} Two piecewise curves encoded in a 1d texture.  The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.  If C0 continuitiy is always desired between the curves, a redundant $D$ could be removed to store these curves in 7 pixels instead of 8. }    
+
+    \vspace{5mm}
+
+    \begin{tikzpicture}
+      \draw[step=1cm,gray,very thin] (0,0) grid (7,1);
+      \draw (0.5,0.5) node {$A$};
+      \draw (1.5,0.5) node {$B$};
+      \draw (2.5,0.5) node {$C$};
+      \draw (3.5,0.5) node {$D$};
+      \draw (4.5,0.5) node {$E$};
+      \draw (5.5,0.5) node {$F$};
+      \draw (6.5,0.5) node {$G$};     
+    \end{tikzpicture}      
+    \caption{\textit{Top:} A cubic curve with control points $A,B,C,D$ encoded in a 1d texture with a size of 4 pixels.  \textit{Middle:} Two piecewise curves encoded in a 1d texture.  The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.  \textit{Bottom:} With $C0$ continuitiy, a redundant $D$ can be removed to store these curves in 7 pixels instead of 8. }    
     \label{fig:texlayeout1d}
   \end{figure}
 
-In the case of a cubic curve with control points $A,B,C,D$, the one dimensional texture will be 4 pixels in size, and three texture reads will need to be done to get the interpolations for $\overline{AB},\overline{BC},\overline{CD}$.  Those will then need to be combined using either the De Casteljeau algorithm, or by using the Bernstein form of a quadratic Bezier curve (order 2) to elevate those three points from order 1 to order 3, to get the final point $\stackrel{\frown}{ABCD}$.
+Taking $N$ linearly interpolated texture samples from a one dimensional texture of size $N+1$ gives us the linear interpolated values we would need to continue to perform the De Casteljeau algorithm.  We can compute the final curve point either by doing that, or by plugging the values into the Bernstein form equation of Bezier curves.
 
-\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture.  Linear texture sampling used to evaluate the first level of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a quadratic Bezier curve.}, label={lst:GLSLCubicTexture1D}]
+In the case of a cubic curve with control points $A,B,C,D$, the one dimensional texture will be 4 pixels in size, and three texture reads will need to be done to get the interpolations for $\overline{AB},\overline{BC},\overline{CD}$.  Those will then need to be combined using either the De Casteljeau algorithm, or by using the Bernstein form of a quadratic Bezier curve ($P = A*s^2 + B*st + C*t^2$) to elevate those three points from order 1 to order 3, to get the final point $\stackrel{\frown}{ABCD}$.  Sample code of this example is provided in \autoref{lst:GLSLCubicTexture1D}.
+
+\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture.  Linear texture sampling is used to evaluate the linear level of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a quadratic Bezier curve.}, label={lst:GLSLCubicTexture1D}]
 // 4 pixel 1d texture with control points encoded: A,B,C,D
 uniform sampler1D uSampler; 
 const float c_textureSize = 4.0;
 
-vec4 CubicCurveFromTexture1D_DeCastelJeau(in float t) {
+vec4 CubicCurveFromTexture1D_DeCasteljeau(in float t) {
     vec4 AB = texture(uSampler, (t + 0.5) / c_textureSize);
     vec4 BC = texture(uSampler, (t + 1.5) / c_textureSize;
     vec4 CD = texture(uSampler, (t + 2.5) / c_textureSize);
@@ -388,16 +410,29 @@ vec4 CubicCurveFromTexture1D_Bernstein(in float t) {
 \end{lstlisting}
 
 \subsection{Two Dimensional Textures}
+Using two dimensional textures allows the texture interpolator to perform bilinear interpolation, which allows calculations of 2nd order (quadratic) Bezier curves (\autoref{fig:decdimensionality}).
 
-Two dimensional textures are textures which are $(W,H)$ pixels in size, such as $(8,8)$ or $(16,16)$ or $(32,4)$.
+This allows us to either calculate a quadratic bezier curve with a single texture read, or allows us to get the quadratic level values needed to make a higher order curve.
 
-Using two dimensional textures allows the texture interpolator to perform bilinear interpolation, which allows calculations of 2nd order (quadratic) Bezier basis functions (\autoref{fig:decdimensionality}).
+Knowing that a quadratic curve is just the linear interpolation of time $t$ between the points on two linear curves at time $t$, we know that our two dimensional texture needs to set up to be able to make this happen.  The result is that if we have a $2$x$2$ texture, the top two pixels should be $P_0$ and $P_1$ and the bottom two pixels should be $P_1$ and $P_2$.  When we do a bilinear interpolation such that we plug $t$ into both $u$ and $v$, the end result will be that $\overline{P_0P_1}$ and $\overline{P_1P_2}$ will be calculated from the $u$ axis interpolation, and then those two will be linearly interpolated across the $v$ axis to give us the final result.
 
-If you want a Bezier curve higher than order 2, once again you can take more texture samples and combine the results in the shader program.  While more computationally expensive that moving to a higher dimensionality texture, it again results in higher precision results due to more of the computation happening in full floating point precision.
+Knowing that we can linearly interpolate between two quadratic curves to create a cubic curve, and that we can combine three quadratic curves to create a quartic curve, the pattern seems to be that we need a texture size of $(2,2*(N-1))$ to encode a curve of order $N$ into a two dimensional texture.
 
-The size of the two dimensional texture needed for $M$ piecewise curves, each of degree $N$ is $(2*M,N)$. For instance, a cubic (degree 3) curve will be $(2,3)$ pixels.  If you want to encode two piecewise cubic curves end to end, it requires $(4,3)$ pixels (\autoref{fig:texlayeout2d}).
+When actually creating that texture, we would once again see redundancies however.  For a cubic curve with control points $P_0,P_1,P_2,P_3$ we would see that the top row of pixels was $P_0,P_1$, then the next row was $P_1,P_2$.  That would be our first quadratic curve.  The third row would start our second quadratic curve which would be $P_1,P_2$ and then the fourth and final row would be $P_2,P_3$.  In this case, $P_1,P_2$ is redundant.  If we increased the order of the curve, the pattern that we would see is that every curve after the first curve would have a redundant row.
+
+Removing that redunant row, it means that we start with a $2$x$2$ texture for a quadratic curve, and then just add a row of pixels for each order above quadratic.  That makes the size of our texture required be only $(2,N)$.
+
+If $M$ piecewise curves are desired, each of degree $N$, we can encode them across the $X$ axis to require a texture size of $(2*M,N)$ (\autoref{fig:texlayeout2d}).
 
   \begin{figure}
+    \begin{tikzpicture}
+      \draw[step=1cm,gray,very thin] (0,0) grid (2,-2);
+      \draw (0.5,-0.5) node {$A$};
+      \draw (1.5,-0.5) node {$B$};
+      \draw (0.5,-1.5) node {$B$};
+      \draw (1.5,-1.5) node {$C$};     
+    \end{tikzpicture}
+    \hspace{5mm}  
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0) grid (2,-3);
       \draw (0.5,-0.5) node {$A$};
@@ -424,7 +459,7 @@ The size of the two dimensional texture needed for $M$ piecewise curves, each of
       \draw (2.5,-2.5) node {$F$};
       \draw (3.5,-2.5) node {$G$};          
     \end{tikzpicture}
-    \caption{\textit{Left:} A cubic curve with control points $A,B,C,D$ encoded in a 2d texture that is $(2,3)$ in size.  \textit{Right:} Two piecewise curves encoded in a 2d texture that is $(4,3)$ in size.  The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.} 
+    \caption{\textit{Left:} A quadratic curve with control points $A,B,C$ encoded in a 2d texture that is $(2,2)$ in size. \textit{Middle:} A cubic curve with control points $A,B,C,D$ encoded in a 2d texture that is $(2,3)$ in size.  \textit{Right:} Two piecewise curves encoded in a 2d texture that is $(4,3)$ in size.  The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.} 
     \label{fig:texlayeout2d}
   \end{figure}  
 
@@ -433,7 +468,7 @@ The size of the two dimensional texture needed for $M$ piecewise curves, each of
 uniform sampler2D uSampler; 
 const vec2 c_textureSize = vec2(2.0,4.0);
 
-vec4 CubicCurveFromTexture2D_DeCastelJeau(in float t) {
+vec4 CubicCurveFromTexture2D_DeCasteljeau(in float t) {
     vec4 ABC = texture(uSampler, (vec2(0.5, 0.5)+t) / c_textureSize);
     vec4 BCD = texture(uSampler, (vec2(0.5, 1.5)+t) / c_textureSize);
     return mix(ABC, BCD, t);
@@ -450,15 +485,15 @@ vec4 CubicCurveFromTexture2D_Bernstein(in float t) {
 
 \subsection{Three Dimensional Textures}
 
-Three dimensional textures (often refered to as volumetric textures) are textures which are $(W,H,D)$ pixels in size such as $(8,8,2)$ or $(16,8,4)$.
+Using three dimensional textures (often refered to as volumetric textures) allows the texture interpolator to evaluate trilinear interpolation, which allows calculations of 3rd order (cubic) Bezier curves (\autoref{fig:decdimensionality}).
 
-Using three dimensional textures allows the texture interpolator to evaluate trilinear interpolation, which allows calculations of 3rd order (cubic) Bezier basis functions (\autoref{fig:decdimensionality}).
+This allows us to either calculate a cubic bezier curve with a single texture read, or allows us to get the cubic level values needed to make a higher order curve.
 
-Again, you can take more texture samples and combine the results in the shader program to get higher than order 3 curves if desired.
+Knowing that a cubic curve is just the linear interpolation of time $t$ between the points on two quadratic curves at time $t$, we know that our three dimensional texture needs to be set up to be able to make this happen.  With a $2$x$2$x$2$ texture, the front $2$x$2$ pixels would encode a quadratic curve for $P_0,P_1,P_2$ and the back $2$x$2$ pixels would encode a quadratic curve for $P_1,P_2,P_3$.  Then, when we sample the texture, plugging $t$ into $u,v$ and $w$, the result will be that it will calculate the points on the quadratic curves $P_0,P_1,P_2$ at time $t$ and also $P_1,P_2,P_3$ at time $t$, and then will interpolate across the $w$ axis to give us the final result.
 
-You may have noticed that a 1d texture can store a linear curve, but that a 2d texture cannot.  The lowest order curve it can store is a quadratic curve.  In the case of a 3d texture, the minimum goes up again, and the lowest order curve you can store is a cubic curve.
+You can combine two cubic curves to make a quartic curve, or three cubic curves to make a quintic curve.  If you were to put $2$x$2$x$2$ cubic curves back to back, you would notice a redundancy like we saw in lower dimensionality textures.  Instead of going that route though, we can just build on the redundancy removement from two dimensional textures.
 
-The size of the three dimensional texture needed for $M$ piecewise curves, each of degree $N$ is $(2*M,N-1,2)$. For instance, a cubic (degree 3) curve will be $(2,2,2)$ pixels.  If you want to encode two piecewise cubic curves end to end, it requires $(4,2,2)$ pixels (\autoref{fig:texlayeout3d}).
+The size of a three dimensional texture needed to encode a curve of degree $N$ is $(2,N-1,2)$.  If you wanted to store $M$ piecewise curves, each of degree $N$, the formula becomes $(2*M,N-1,2)$ (\autoref{fig:texlayeout3d}).
 
 \begin{figure}
     \begin{tikzpicture}
@@ -587,7 +622,7 @@ The size of the three dimensional texture needed for $M$ piecewise curves, each 
 \begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,2,2)$ pixel 3d texture.  Trilinear texture sampling used to evaluate all three levels of the De Casteljeau algorithm.}, label={lst:GLSLCubicTexture3D}]
 // 2x2x2 3d texture.
 uniform sampler2D uSampler; 
-const vec3 c_textureSize = vec3(2.0, 2.0, 2);
+const vec3 c_textureSize = vec3(2.0, 2.0, 2.0);
 
 vec4 CubicCurveFromTexture3D(in float t) {
     return texture(uSampler, vec3(0.5 + t) / c_textureSize);
@@ -596,20 +631,47 @@ vec4 CubicCurveFromTexture3D(in float t) {
 
 \subsection{Summary of Texture Dimensionality}
 
-TODO: TABLE to compare dimensionality
-table details...
+Increasing texture dimensionality allows you to evaluate the same order curve with fewer texture reads but comes at the cost of using more texture memory.  We evaluated texture dimensions one, two and three, but the pattern continues for higher dimensions as well.
 
-y axis =
- * 1d, 2d, 3d, 4d?
+The table below is a comparison of texture dimensionality options.  $M$ is the number of piecewise curves being stored and $N$ is the order of the curve.
 
-x axis =
- * minimum curve order storage
- * texture size formula
- * num texture samples taken for a quintic curve? sextent curve? or maybe do quadratic, cubic, quarticorder 4, order 5?
- * texture size for them too? dims and num pixels
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+ & \bf{Min. Order} & \bf{\# Samples} & \bf{Dimensions} & \bf{\# Pixels} \\ \hline
+\bf{1D} & 1 (Linear) & $N$ & $(M*(N+1))$ & $M*(N+1)*1$ \\ \hline
+\bf{2D} & 2 (Quadratic) & $N-1$ & $(2*M,N)$ & $M*(N+0)*2$\\ \hline
+\bf{3D} & 3 (Cubic) & $N-2$ & $(2*M,N-1,2)$ & $M*(N-1)*4$\\ \hline
+\bf{4D} & 4 (Quartic) & $N-3$ & $(2*M,N-2,2,2)$ & $M*(N-2)*8$\\ \hline
+\end{tabular}
 
+TODO: do we want this graph? it does show pixel usage per dimensionality
+\begin{figure}
+    \begin{tikzpicture}
 
-TODO do we want images here at all? probably not i guess...
+      \begin{axis}[xmin=1,xmax=6,ymin=0,xtick={1,...,6},ytick={0,5,10,15,20,25,30},xlabel={Order},ylabel={Pixel Count},legend pos=north west]
+
+        % 1d textures
+        \addplot[color=orange, domain=1:6]{x+1};
+        \addlegendentry{$1D$}
+
+        % 2d textures
+        \addplot[color=red, domain=2:6]{x*2};
+        \addlegendentry{$2D$}
+    
+        % 3d textures
+        \addplot[color=green, domain=3:6]{(x-1)*4};
+        \addlegendentry{$3D$}
+
+        % 4d textures
+        \addplot[color=blue, domain=4:6]{(x-2)*8};
+        \addlegendentry{$4D$}        
+            
+      \end{axis}
+    \end{tikzpicture}
+
+    \caption{Pixel count for curve order, with different texture dimensionalities.}
+    \label{fig:decasteljeauBilinear}
+  \end{figure}
 
 TODO: need to explain the layout of the pixels in the sections above somehow.  Maybe also get rid of describing what N-dimensional textures are
 
@@ -643,6 +705,7 @@ TODO: this.  Each color channel is an axis.
 
 TODO: this. HW vs SW vs HWSW hybrid vs read points yourself and do math w/o using interpolator. Everythign in between.
 TODO: images to show differences.
+TODO: doing more work in shader, because using 1d textures or soemthing.  more texture reads but higher quality
 
 %-------------------------------------------------------------------------
 \section{Limited Applications for Vector Graphics}
