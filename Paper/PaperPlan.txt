@@ -1,5 +1,10 @@
 TODO:
 
+* mention limitation of encoding control points only 0 to 1.  mention that you can scale to solve it!
+ * refer to this in the rational bezier curves section that you use the same solution to solve the weight issue!
+
+* make sure you aren't confusing order with degree anywhere, and get an off by 1 thing in the text!
+
 * maybe stick to P_i instead of A,B,C for control points? in diagrams, in text, in code, etc
  * consistency would be nicer
 

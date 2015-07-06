@@ -673,8 +673,6 @@ TODO: do we want this graph? it does show pixel usage per dimensionality
     \label{fig:decasteljeauBilinear}
   \end{figure}
 
-TODO: need to explain the layout of the pixels in the sections above somehow.  Maybe also get rid of describing what N-dimensional textures are
-
 %-------------------------------------------------------------------------
 \section{Extensions}
 \label{sec:extensions}
@@ -683,21 +681,71 @@ There are a few ways to extend this technique for more options.
 
 \subsection{Combining Color Channels}
 
-TODO: this.  Higher order curves without more texture reads
+If you encode Bezier curves into a texture which has multiple color channels - such as the standard four R,G,B,A - you can set up the textures such that once you read in the R,G,B,A, you can combine the channel values together such that you get a fewer number of curves per texture read, but that they are higher order.
+
+For instance, if you had a 2x2 texture, you could encode the control points A,B,C into the red channel, and the control points B,C,D into the green channel.  Then, after you did a texture read, you could do a lerp between the red and the green channel.  Since the red and green channel each contain a quadratic curve, the result would be a cubic curve, defined by the control points A,B,C,D.  However, you've used up two of the channels for a single curve, so are getting fewer curves per texture read, but they are higher order.  The blue and the alpha channel could either be quadratic curves, or could also be encoded such that they could be combined together to provide another cubic curve.
+
+You could also set it up such that R,G,B,A were meant to be combined together to make a quintic (degree 5) curve.  You'd only get a single curve value per texture read, but it would be 3 degrees higher.  You could combine the color channels either with De Casteljeaus algorithm, or with the cubic Bernstein Bezier form. 
+
+If you you are combining M color channels, each of which are values from curves of order N, the resulting curve value will be order N+M-1.  The inutitive explanation to this, is that each channel has the ability to add one more control point to the curve, regardless of what texture dimensionality you are working with.
+
+An interesting side effect to combining color channels is that the accuracy of the resulting curve gets better.  This is because you are doing some of the math in full precision floating point, instead of the limited precision of the fixed point math in the texture sampler.
 
 \subsection{Piecewise Curves}
 
-TODO: this.  Pros and cons. B-splines can be converted to piecewise Bezier with Boem's algorithm (what's it called again?).
-TODO: how to actually evaluate piecewise curves! (GLSL if needed? or just describe it)
+As mentioned earlier, you can encode multiple Bezier curves end to end within textures of any dimensionality.
+
+When you are in need of a curve with lots of control points, piecewise curves have several benefits over increasing the order of the curve.
+
+Besides the usual benefits, when encoding Bezier curves in textures, piecewise curves allow us to use lower order curves, which allows us to use lower dimensional textures, and have less computation in the shader programs.
+
+Another benefit is that there can be discontinuities between curve segments, which is sometimes desired.
+
+B-splines can also be converted to piecewise Bezier curves using Boehm's algorithm, so even though this paper talks only about Bezier curves, you could do pre-processing of B-splines to convert them to piecewise Bezier curves, and use the techniques in this paper. 
+
+For a deeper look at the benefits of piecewise curves, look at....
+TODO: find a paper that talks about the pros and cons?
+
+and for a deeper discussion about the benefits of b-spline curves, look at....
+TODO: find a paper that talks about benefits of bsplines over bezier curves
+
+Evaluating a piecewise curve with this technique is very simple.  As an example, let's say that we have a texture that is 8x2, and encodes 4 quadratic Bezier curves end to end. The left most 2x2 pixels encode the quadratic curve used for time $t \epsilon [0,0.25)$.  The next block of 2x2 pixels encode the quadratic curve used for time $t \epsilon [0.25,0.5)$.  The third block encodes time $t \epsilon [0.5,0.75)$, and the last block encodes time $t \epsilon [0.75,1.0]$.
 
 \subsection{Rational Bezier Curves}
 
-TODO: this.
-TODO: Nurbs can be converted to rational bezier curves with Boem's algorithm as well
+Rational Bezier curves are defined by the equation:
+
+\begin{equation}
+\text{\bf{B}}(t) = \frac
+                % Nominator
+                {\sum\limits_{i=0}^n\binom {n} {i}(1-t)^{n-i}t^iw_i\text{\bf{P}}_i}
+                % Denominator
+                {\sum\limits_{i=0}^n\binom {n} {i}(1-t)^{n-i}t^iw_i}
+\label{eqn:rationalbezier}                
+\end{equation}
+
+Looking closely, we can see that we essentially have one Bezier curve devided by another.  The numerator has a weighting and a control point, while the denominator has only a weighting, but if we were to multiply the weighting into the control point in the numerator, we would essentially have one Bezier curve divided by another.
+
+Using this technique, we can easily encode the numerator into one color channel, and the denominator into another.
+
+If we wanted to get two rational Bezier curves per texture read, we could encode the two numerators into R and G, and the denominators into B and A.
+
+Or, if we had three curves that all used the same weights, that would mean that the denominator was the same for all three curves.  In this case, we could encode the three numerators into R,G,B and encode the denominator in A.
+
+To compute the value of rational Bezier curves, you first take your texture samples, combining them as per normal if there were multiple taken, and then after that, you divide the numerators by the denominators to get the final values.
+
+There is a limitation to encoding rational Bezier curves in this form due to the fact that texture values range from 0 to 1, but when using rational Bezier curves, weights greater than 1 are sometimes desired.  The good news is that you can normalize the weights by dividing all weight values by the largest weight value, such that the largest weight value becomes 1.  The result will be the same as if you had values greater than 1 in the weights.
+
+Rational Bezier curves have many uses, as they have much more flexibility over the shapes they can take, including the ability to exactly represent all conic sections.  You can find more information about that at...
+TODO: find paper about rational bezier curves?
+
+Just as b-splines can be converted into piecewise Bezier curves, NURBS can also be converted into piecewise rational Bezier curves, again using Boehm's algorithm, which means these techniques can also apply to NURBS, if they are first preprocessed into rational Bezier curves.
 
 \subsection{Multidimensional Bezier Curves}
 
-TODO: this.  Each color channel is an axis.
+So far we have only talked about one dimensional - or explicit - bezier curves.  Multidimensional Bezier curves are evaluated seperately per axis though, which means that you can encode information per axis in different color channels.
+
+With a standard R,G,B,A 2x2 texture, you could either encode four 1 dimensional Bezier curves, or you could encode two  2 dimensional Bezier curves (one in R,G and the other in B,A), or you could encode a three dimensional curve in R,G,B and have a one dimensional curve in A, or you could encode a four dimensional curve in R,G,B,A.
 
 %-------------------------------------------------------------------------
 \section{Addressing Accuracy Issues}
