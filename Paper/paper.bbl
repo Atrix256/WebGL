@@ -1,0 +1,40 @@
+\begin{thebibliography}{\protect\citename{Ruijters et~al\mbox{.} }2008}
+
+\bibitem[\protect\citename{Green }2007]{Green:2007:IAM:1281500.1281665}
+{\sc Green, C.}
+\newblock 2007.
+\newblock Improved alpha-tested magnification for vector textures and special
+  effects.
+\newblock In {\em ACM SIGGRAPH 2007 Courses}, ACM, New York, NY, USA, SIGGRAPH
+  '07, 9--18.
+\newblock URL: \url{http://doi.acm.org/10.1145/1281500.1281665},
+  doi:10.1145/1281500.1281665.
+
+\bibitem[\protect\citename{Loop and Blinn }2005]{Loop:2005:RIC:1073204.1073303}
+{\sc Loop, C., and Blinn, J.}
+\newblock 2005.
+\newblock Resolution independent curve rendering using programmable graphics
+  hardware.
+\newblock {\em ACM Trans. Graph. 24}, 3 (July), 1000--1009.
+\newblock URL: \url{http://doi.acm.org/10.1145/1073204.1073303},
+  doi:10.1145/1073204.1073303.
+
+\bibitem[\protect\citename{Nehab and Hoppe
+  }2008]{Nehab:2008:RRG:1409060.1409088}
+{\sc Nehab, D., and Hoppe, H.}
+\newblock 2008.
+\newblock Random-access rendering of general vector graphics.
+\newblock {\em ACM Trans. Graph. 27}, 5 (Dec.), 135:1--135:10.
+\newblock URL: \url{http://doi.acm.org/10.1145/1409060.1409088},
+  doi:10.1145/1409060.1409088.
+
+\bibitem[\protect\citename{Ruijters et~al\mbox{.}
+  }2008]{doi:10.1080/2151237X.2008.10129269}
+{\sc Ruijters, D., ter Haar~Romeny, B.~M., and Suetens, P.}
+\newblock 2008.
+\newblock Efficient gpu-based texture interpolation using uniform b-splines.
+\newblock {\em Journal of Graphics, GPU, and Game Tools 13}, 4, 61--69.
+\newblock arXiv:http://dx.doi.org/10.1080/2151237X.2008.10129269,
+  doi:10.1080/2151237X.2008.10129269.
+
+\end{thebibliography}

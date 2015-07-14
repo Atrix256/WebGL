@@ -78,10 +78,6 @@ This paper shows a third method where:
 
 A quick comparison of the visual quality of these three techniques can be seen in \autoref{fig:quickcomparison}.
 
-\subsection{Related Work}
-
-TODO: this
-
 %-------------------------------------------------------------------------
 \section{The Technique}
 \label{sec:thetechnique}
@@ -278,13 +274,14 @@ This pattern continues for trilinear interpolation and beyond.  $N$ dimensional 
     \label{fig:quickaccuracy}
   \end{figure}  
 
-While the Bernstein form of Bezier curves is equivelant to evaluating a Bezier curve with the De Casteljeau algorithm, in practice there are differences that come up between the two.  It is well known that the De Casteljeau algorithm is slower but more numerically robust than evaluating the Bernstein form.
+A limitation with this technique is that control points can only take values that can be stored and recalled from the specific texture format you are using.  This can be an issue not only for the range of values possibly - such as when a texture can only hold values from 0 to 1 or 0 to 255 - but is also an issue for accuracy.   The value range problem is easily solved by scaling the values read from the texture, but the accuracy problem is a harder problem to address.  
 
-The technique presented in this paper also has numerical differences in practice.  While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures (\autoref{fig:quickaccuracy}).
+While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures (\autoref{fig:quickaccuracy}).
 
 As shown in \autoref{fig:texbilcurve}, the quality can be significantly higher than a baked out curve for the same number of pixels however.  There is more information on addressing accuracy in \autoref{sec:addressingaccuracyissues}.
 
 TODO: give the details of the architecture imprecision sources and cite the two papers cited from the other place!
+TODO: make this more coherent
 
 %-------------------------------------------------------------------------
 \section{Texture Dimensionality}
@@ -769,9 +766,7 @@ Also, if you want a higher order curve than your texture can provide with a sing
 \section{Limited Applications for Vector Graphics}
 \label{sec:limitedapplicationsforvectorgraphics}
 
-This technique does have applications to vector graphics, but they are pretty limited admitedly.  The main reason for the limitation is that this technique is good at calculating the point on a curve at time $t$, but when using curves in vector graphics situations, you usually do not know the time $t$ that you want to know the curve point for, and it is usually difficult to find it.
-
-TODO: mention loop and blinn's paper as an example of how it avoids the problem of finding the time 4.
+This technique does have applications to vector graphics, but they are pretty limited and there are better solutions if using Bezier curves as vector art is the goal \cite{Loop:2005:RIC:1073204.1073303,Nehab:2008:RRG:1409060.1409088}, or if the goal is to use textures for vector art data storage \cite{Green:2007:IAM:1281500.1281665}.  The limitation is due to the fact that this technique is good at calculating the point on a curve at time $t$, but when using curves in vector graphics situations, you usually do not know the time $t$ that you want to know the curve point for, and it is usually difficult to find it.
 
 However, there are certain special situations where you can easily get the time $t$ value of the curve that you care about.  Two of the most common situations for these are when rendering 1D explicit Bezier curves, and when rendering 1D explicit Bezier curves in polar form.
 
@@ -795,6 +790,7 @@ TODO: need an image of the flag
 \label{sec:comparisonswithothertechniques}
 
 TODO: real apples to apples comparisons with texture baking (can be any order!) as well as shader constants.
+TODO: maybe we don't need this
 
 %-------------------------------------------------------------------------
 \section{Performance Characteristics}
@@ -808,9 +804,13 @@ TODO: show results from multiple GPUs?
 \section*{Future Work}
 \label{sec:futurework}
 
-TODO: this
+In the past, work has been done to evaluate curves on the GPU using textures, but for the purposes of texture interpolation \cite{doi:10.1080/2151237X.2008.10129269}.  The progress made on those types of techniques could likely be used in a similar fashion to directly evaluate other curve types on the GPU for purposes other than texture sampling.
 
-TODO: any play here with lobes and encoding curves in polar form?
+Extending this technique to the third dimension would be an interesting usage case, as well as exploring ways to make the vector art usage cases more attractive.
+
+There may also be usefulness in storing curves in polar form to aproximate lobes for lighting algorithms.
+
+Lastly, throughout this paper, texture coordinates were set up such that the texture samples were taken only across the diagonal of $N$-dimensional hypercubes.  It would be interesting to explore whether deviating from the diagonal created useful properties, more complex curves, or more complex curve types so that even more usefulness could be achieved with the same number of pixels used.
 
 %-------------------------------------------------------------------------
 \section*{Acknowledgements}
@@ -819,10 +819,9 @@ TODO: this
 
 
 %-------------------------------------------------------------------------
-\section*{References}
-\label{sec:references}
-TODO: this
-
+\small
+\bibliographystyle{jcgt}
+\bibliography{paper}
 
 %-------------------------------------------------------------------------
 \section*{Index of Supplemental Materials}
