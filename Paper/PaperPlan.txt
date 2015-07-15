@@ -1,11 +1,6 @@
 TODO:
 
-* mention limitation of encoding control points only 0 to 1.  mention that you can scale to solve it!
- * refer to this in the rational bezier curves section that you use the same solution to solve the weight issue!
-
-* accuracy: 
- * http://docs.nvidia.com/cuda/cuda-c-programming-guide/#texture-fetching
- ? also mention other paper (b-spline one?) since it mentions accuracy
+* when todo's gone, read it yourself a few times.  then see about getting some other people involved before submitting.
 
 * make sure you aren't confusing order with degree anywhere, and get an off by 1 thing in the text!
 
@@ -14,48 +9,24 @@ TODO:
 
 * make GLFW shader compile warnings go away!!
 
-* need to clearly show accuracy of different options.
- * hw/sw/hw+sw
- * texture dimensionality
- * curve order
 * spell check!
-
-
-! yes, need related work section.  This is to mention the other papers, that leverage linear sampling
-  as a first step to other curves.  They are all meant for better texture filtering though, and they don't
-  seem to leverage higher dimensionality textures towards this purpose.
-
-* mention other papers that leverage the texture sampler to calculate curves for other purposes
 
 * put $ around all the symbols? control points, t,u, etc!
 
-* check log file for warnings, it looks like there are some!
+* check log file for warnings, it looks like there are some! see if any matter
 
 * perf
  * get cost of 1d vs 2d vs 3d texture sampling.
  * compare linear vs nearest too
  * get numbers from laptop as well as work computer
 
-? benefit of texture curves = don't need to know or care what type of curve created baked out data
- * this technique needs the shader program to know what type of curve unfortunately.
- * unless you are just aproximating curve data with some general thing (like... 3 end to end cubic curves always)
-
 ? why is your technique ever preferable to uniform constants?
  * asked MJP from gamedev.net why they opted to use textures instead of uniform constants
 
-
 ! avoid first person!
-
-? should i try to do a 4d texture demo??
- * would also want a quadrilinear test then
- * also a quadrilinear baked test.
-
-! do perf test.  hw vs sw bilinear, vs hwsw bilinear
- ? other perf tests?
 
 * might need to test a high order curve vs baked out curve to see how it fares vs baked out curve.
  * like... 8th order curve, or end to end curves.  vs baked out same number of pixels
-
 
 ? re-read "how to write a research paper" link
  * http://research.microsoft.com/en-us/um/people/simonpj/papers/giving-a-talk/writing-a-paper-slides.pdf
@@ -63,15 +34,6 @@ TODO:
 * show rick details at some point (when reviewing paper?)
 * another journal if needed: http://tog.acm.org/
 
-! might need some shots of interesting graphics things done where the parameters are on curves.
- * particle color over lifetime
- ? what else
-
-* ask graphics friends:
- ? what are some interesting graphics techniques that use curves? (gradients? particle color over lifetime, etc)
- ? do you currently use curves in your shaders? if so, how do you do that?  are they hard coded values, shader constants, baked out in textures?
-
-! need perf and accuracy information (already have accuracy, need perf)
 
 --- goals from JCGT guidelines ---
 * Understand how it differs from alternatives
@@ -375,6 +337,21 @@ Index of Supplemental Materials
 author contact information
 
 
+=====DONE TODO's====
+
+* accuracy: 
+ * http://docs.nvidia.com/cuda/cuda-c-programming-guide/#texture-fetching
+ ? also mention other paper (b-spline one?) since it mentions accuracy
+
+* mention limitation of encoding control points only 0 to 1.  mention that you can scale to solve it!
+ * refer to this in the rational bezier curves section that you use the same solution to solve the weight issue!
+
+
+* need to clearly show accuracy of different options.
+ * hw/sw/hw+sw
+ * texture dimensionality
+ * curve order
+
 ======THROW AWAY NOTES======
 
 --quadratic bezier
@@ -385,3 +362,33 @@ C = 0
 2*(1-x)*x
 2x(1-x)
 2x-2x^2
+
+
+
+! yes, need related work section.  This is to mention the other papers, that leverage linear sampling
+  as a first step to other curves.  They are all meant for better texture filtering though, and they don't
+  seem to leverage higher dimensionality textures towards this purpose.
+
+* mention other papers that leverage the texture sampler to calculate curves for other purposes
+
+
+? benefit of texture curves = don't need to know or care what type of curve created baked out data
+ * this technique needs the shader program to know what type of curve unfortunately.
+ * unless you are just aproximating curve data with some general thing (like... 3 end to end cubic curves always)
+
+? should i try to do a 4d texture demo??
+ * would also want a quadrilinear test then
+ * also a quadrilinear baked test.
+
+! do perf test.  hw vs sw bilinear, vs hwsw bilinear
+ ? other perf tests?
+
+! might need some shots of interesting graphics things done where the parameters are on curves.
+ * particle color over lifetime
+ ? what else
+
+* ask graphics friends:
+ ? what are some interesting graphics techniques that use curves? (gradients? particle color over lifetime, etc)
+ ? do you currently use curves in your shaders? if so, how do you do that?  are they hard coded values, shader constants, baked out in textures?
+
+! need perf and accuracy information (already have accuracy, need perf)

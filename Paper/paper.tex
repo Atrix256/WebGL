@@ -38,7 +38,7 @@
     \draw (0.08,0.75) node[] {\Huge{B}};
     \draw (0.25,0.75) node[] {\Huge{C}};    
   \end{tikzpicture}
-  \caption{\textit{Left:} 2x2 texture containing control points for a quadratic Bezier curve in each color channel. \textit{Middle:} The texture as viewed with bilinear sampling. \textit{Right:} The resulting curves when sampling along the yellow line (Alpha curve omitted).}
+  \caption{\textit{Left:} 2x2 texture containing control points for a quadratic Bezier curve in each color channel. \textit{Middle:} The texture as viewed with bilinear sampling. \textit{Right:} The resulting quadratic Bezier curves when sampling along the yellow line (Alpha curve omitted).}
   \label{fig:teaser}
 }
 
@@ -274,12 +274,11 @@ This pattern continues for trilinear interpolation and beyond.  $N$ dimensional 
     \label{fig:quickaccuracy}
   \end{figure}  
 
-A limitation with this technique is that control points can only take values that can be stored and recalled from the specific texture format you are using.  This can be an issue not only for the range of values possibly - such as when a texture can only hold values from 0 to 1 or 0 to 255 - but is also an issue for accuracy due being interpolated in a 9 bit (1.8) fixed point format \cite{NVIDIA}.   The value range problem is easily solved by scaling and offsetting.  The accuracy problem is not as easily addressed, but there are some ways mentioned later in the paper.
+A limitation with this technique is that control points can only take values that can be stored and recalled from the specific texture format being used, which puts a limitation on the range of values able to be used, as well as the precision of the values stored.
 
-The accuracy issues can be seen in \autoref{fig:quickaccuracy}, although the accuracy is still significantly higher than a baked out curve using the same number of pixels as seen in \autoref{fig:quickcomparison}.
+Furthermore, the fractional position of a texel used in the interpolation formulas is limited to 256 values due to it being calculated with a 9 bit (1.8) fixed point format \cite{NVIDIA}.
 
-TODO: the 9 bit fixed point format doesn't belong mentioned where it is.
-TODO: also need to find and mention the thing about how interpolation weights are multiplied before taking it into floating point.
+The accuracy issues can be seen in \autoref{fig:quickaccuracy}, although the accuracy can still be significantly higher than a baked out curve using the same number of pixels as seen in \autoref{fig:quickcomparison}.
 
 %-------------------------------------------------------------------------
 \section{Texture Dimensionality}
@@ -744,9 +743,23 @@ To name a few possibilities with a standard RGBA 2x2 texture, you could encode a
 \section{Addressing Accuracy Issues}
 \label{sec:addressingaccuracyissues}
 
+  \begin{figure}
+    \begin{tikzpicture}[x=12cm,y=4cm]
+      % border
+      \draw (0cm,0cm) rectangle (12cm,4cm);
+      % images
+      \node[anchor=south west,inner sep=0] at (0cm,0cm) {\includegraphics[width=4cm,height=4cm]{SampleHW.png}};
+      \node[anchor=south west,inner sep=0] at (4cm,0cm) {\includegraphics[width=4cm,height=4cm]{SampleHWSW.png}};
+      \node[anchor=south west,inner sep=0] at (8cm,0cm) {\includegraphics[width=4cm,height=4cm]{SampleSW.png}};   
+          
+    \end{tikzpicture}
+    \caption{\textit{Left:} Curve evaluted with a single texture read and bilinear texture sampling.  \textit{Middle:} Curve evaluated with two linear texture samples, combined in the shader program.  \textit{Right:} Curve evaluated with three texture samples (one per control point), combined in the shader program.}   
+    \label{fig:samplehwsw}
+  \end{figure} 
+
 Even though there are accuracy limitations in modern GPU texture samplers, accuracy can be increased by doing more of the calculations in the shader program, which operate at full floating point precision.
 
-A naive way to do this would be to use nearest neighbor texture sampling instead of linear, and do the linear interpolations yourself in the shader program.  This would mean twice as many texture reads with a 1D texture, four times as many texture reads with a 2D texture, and eight times as many texture reads with a 3D texture!  You would also be doing a lot more blending in the shader program, so your shader programs would become heavier weight.  This solution is essentially doing software linear texture sampling.
+A naive way to do this would be to use nearest neighbor texture sampling instead of linear, and do the linear interpolations yourself in the shader program.  This would mean twice as many texture reads with a 1D texture, four times as many texture reads with a 2D texture, and eight times as many texture reads with a 3D texture.  You would also be doing a lot more blending in the shader program, so your shader programs would become heavier weight.  This solution is essentially doing software linear texture sampling.
 
 A better approach that gives the same results would be to only do one nearest neighbor texture sample per control point in the texture, and then in the shader program, either use De Casteljeau's algorithm to combine them, or use the Bernstein form equation of Bezier curves.  At this point, you are best off just using a 1D texture to store your control points in, since you don't need any of the built in interpolation.
 
@@ -754,9 +767,7 @@ These two techniques do all of the curve math in the shader program at full floa
 
 Another way to address accuracy would be to do some of the work in the texture sampler, and some of the work in the shader program.  This allows you to have a sliding scale for accuracy vs cost.
 
-For instance, if you had a 2x2 image which encoded a quadratic Bezier curve, you might do two texture reads, letting the texture sampler do the $x$ axis interpolation, and then you could linearly interpolate those results in the shader program in full precision floating point math.  This would give you a result somewhere between full hardware and full software interpolation.
-
-TODO: image to show hw vs sw vs hwsw
+For instance, if you had a 2x2 image which encoded a quadratic Bezier curve, you might do two texture reads, letting the texture sampler do the $x$ axis interpolation, and then you could linearly interpolate those results in the shader program in full precision floating point math.  This would give you a result somewhere between full hardware and full software interpolation.  You can compare the results in \autoref{fig:samplehwsw}.
 
 Also, if you want a higher order curve than your texture can provide with a single read, forcing you to combine multiple curve points, combining those curve points in the shader program has the nice side benefit of increasing accuracy as well.
 
@@ -764,39 +775,46 @@ Also, if you want a higher order curve than your texture can provide with a sing
 \section{Limited Applications for Vector Graphics}
 \label{sec:limitedapplicationsforvectorgraphics}
 
+  \begin{figure}
+    \hspace{-1.5cm}
+    \begin{tikzpicture}[x=16cm,y=4cm]
+      % images
+      \node[anchor=south west,inner sep=0] at (0cm,0cm) {\includegraphics[width=8cm,height=4cm]{Flag.png}};
+      \node[anchor=south west,inner sep=0] at (8cm,0cm) {\includegraphics[width=8cm,height=4cm]{FlagZoom.png}};
+    \end{tikzpicture}
+    \caption{\textit{Left:}An animated flag textured with vector graphics using the techniques in this paper, using an 8x4 RGBA source texture to generate curves and color gradients.  \textit{Right:} Zooming in on part of the image to show the quality of the vector graphics.}   
+    \label{fig:vectorgfx}
+  \end{figure}
+
 This technique does have applications to vector graphics, but they are pretty limited and there are better solutions if using Bezier curves as vector art is the goal \cite{Loop:2005:RIC:1073204.1073303,Nehab:2008:RRG:1409060.1409088}, or if the goal is to use textures for vector art data storage \cite{Green:2007:IAM:1281500.1281665}.  The limitation is due to the fact that this technique is good at calculating the point on a curve at time $t$, but when using curves in vector graphics situations, you usually do not know the time $t$ that you want to know the curve point for, and it is usually difficult to find it.
 
 However, there are certain special situations where you can easily get the time $t$ value of the curve that you care about.  Two of the most common situations for these are when rendering 1D explicit Bezier curves, and when rendering 1D explicit Bezier curves in polar form.
 
 Explicit Bezier curves are curves which have scalar control points and are in the form of $y=f(x)$.  For these curves, when you plug in a value for $x$ you get a $y$ value out.  They are unable to make curves that have multiple $y$ values for the same $x$, and the curves can't cross over themselves to make closed shapes.  This does make them not as useful to vector graphics as 2D Bezier curves which are of the form $(x,y) = f(t)$, but they still do have some use cases.  Rendering explicit bezier curves using this technique is very simple.  If rendering a quad, you just choose either the $x$ or $y$ axis, normalize it from 0 to 1 and use that to calculate the other axis value by doing a texture sample.  At this point, you can either choose a half space to color in, or you can calculate the gradient of the function (by using the built in dFdx style functions to get partial derivatives), and use that as an estimated distance to the curve.
 
-TODO: picture of halfspace and gradient distance functions.
-
 This idea can easily be extended to 1D Bezier curves rendered in polar form.  If rendering a quad, you can use arc tangent to find the angle of the current pixel from the center, normalize that angle to 0 to 1, and then use that value to do a texture look up to calculate the value of the curve at that point.  Once again you can then either choose a half space to color in, or you can use the gradient information to get an estimated distance to the curve, to draw a curved line.
-
-TODO: do we need an image of polar form? maybe combine with picture above and reference the same thing
 
 Another problem with using this technique for vector graphics, is that since the texture sampler is doing at least some of the calculations for us, we don't have access to the values of the control points, which can make some operations harder.  Luckily, one property of Bezier curves is that affine transformations done to control points is equivelant to affide transformations done to points on the curve.  This means that we can do affine transformations on the curve points provided to us by the texture sampler, and it will be as if we had performed them on the control points themselves.
 
-Lastly, in regards to vector graphics, this technique can be used to allow people to define custom color gradients.  The benefit is that custom, non linear color gradients can be defined, and can be scaled up without decaying to the usual artifacts seen from linear texture sampling.
+Lastly, in regards to vector graphics, this technique can be used to allow people to define custom color gradients.  The benefit is that custom, non linear color gradients can be defined, and can be zoomed into without decaying to linear interpolation.
 
-TODO: do we need a gradient (rect / polar?) image?
-TODO: need an image of the flag
-
-%-------------------------------------------------------------------------
-\section{Comparisons With Other Techniques}
-\label{sec:comparisonswithothertechniques}
-
-TODO: real apples to apples comparisons with texture baking (can be any order!) as well as shader constants.
-TODO: maybe we don't need this
+A demonstration of these usage cases can be seen in \autoref{fig:vectorgfx}.
 
 %-------------------------------------------------------------------------
 \section{Performance Characteristics}
 \label{sec:performancecharacteristics}
 
-TODO: Show some real performance values. 
-TODO: show difference between 3d texture doing cubic, vs 2d texture with 2 texture reads and shader program results.
-TODO: show results from multiple GPUs?
+TODO: perf goals are...
+* show perf of a few curve types (linear, quadratic, cubic, quartic?), using 1d, 2d, 3d textures.  show based on \# of texture reads (like hw, hwsw, sw).
+* show results from laptop as well as work machine. maybe laptop on single GPU?
+
+TODO: perf tests... at 1000x1000
+* linear    :  1d texture (1 read vs 2 reads then lerp)
+* quadratic :  1d texture (2 reads and lerp vs 3 reads and quadratic bezier), 2d texture (1 read vs 2 reads and lerp vs 3 reads and quadratic Bezier)
+* cubic     :  1d texture (3 reads and quad vs 4 reads and quartic bezier), 2d texture (), 3d texture 
+* quartic   :  1d texture, 2d texture, 3d texture
+
+TODO: mention that it matters if you are texture lookup bound or not.  correct terms for that = ??
 
 %-------------------------------------------------------------------------
 \section*{Future Work}
@@ -806,7 +824,7 @@ In the past, work has been done to evaluate curves on the GPU using textures, bu
 
 Extending this technique to the third dimension would be an interesting usage case, as well as exploring ways to make the vector art usage cases more attractive.
 
-There may also be usefulness in storing curves in polar form to aproximate lobes for lighting algorithms.
+There may also be usefulness in curves in polar form to aproximate lobes for lighting algorithms.
 
 Lastly, throughout this paper, texture coordinates were set up such that the texture samples were taken only across the diagonal of $N$-dimensional hypercubes.  It would be interesting to explore whether deviating from the diagonal created useful properties, more complex curves, or more complex curve types so that even more usefulness could be achieved with the same number of pixels used.
 
