@@ -62,7 +62,7 @@ Passing control point data to a shader program as shader constants allows you to
 
 \begin{figure}
   \includegraphics[width=5in]{Figure2.png}
-  \caption{\textit{Left:} A quadratic Bezier curve written to the green channel, and the baked out equivelant using 4 pixels written to the red channel.  \textit{Right:} The technique from this paper, also using 4 pixels, written to the green channel, and the baked out equivelant written to the red channel again for comparison. \label{fig:sampleconfig}}
+  \caption{\textit{Left:} A quadratic Bezier curve written to the green channel, and the baked out equivelant using 4 pixels written to the red channel.  \textit{Right:} The technique from this paper, also using 4 pixels, written to the green channel, and the baked out equivelant written to the red channel again for comparison.}
   \label{fig:quickcomparison}
 \end{figure}
 
@@ -274,14 +274,12 @@ This pattern continues for trilinear interpolation and beyond.  $N$ dimensional 
     \label{fig:quickaccuracy}
   \end{figure}  
 
-A limitation with this technique is that control points can only take values that can be stored and recalled from the specific texture format you are using.  This can be an issue not only for the range of values possibly - such as when a texture can only hold values from 0 to 1 or 0 to 255 - but is also an issue for accuracy.   The value range problem is easily solved by scaling the values read from the texture, but the accuracy problem is a harder problem to address.  
+A limitation with this technique is that control points can only take values that can be stored and recalled from the specific texture format you are using.  This can be an issue not only for the range of values possibly - such as when a texture can only hold values from 0 to 1 or 0 to 255 - but is also an issue for accuracy due being interpolated in a 9 bit (1.8) fixed point format \cite{NVIDIA}.   The value range problem is easily solved by scaling and offsetting.  The accuracy problem is not as easily addressed, but there are some ways mentioned later in the paper.
 
-While it's been shown that the multidimensional linear interpolation capabilities can be mathematically equivelant to the Bernstein form as well as the De Casteljeau algorithm, there are mathematical precision issues due to current GPU architectures (\autoref{fig:quickaccuracy}).
+The accuracy issues can be seen in \autoref{fig:quickaccuracy}, although the accuracy is still significantly higher than a baked out curve using the same number of pixels as seen in \autoref{fig:quickcomparison}.
 
-As shown in \autoref{fig:texbilcurve}, the quality can be significantly higher than a baked out curve for the same number of pixels however.  There is more information on addressing accuracy in \autoref{sec:addressingaccuracyissues}.
-
-TODO: give the details of the architecture imprecision sources and cite the two papers cited from the other place!
-TODO: make this more coherent
+TODO: the 9 bit fixed point format doesn't belong mentioned where it is.
+TODO: also need to find and mention the thing about how interpolation weights are multiplied before taking it into floating point.
 
 %-------------------------------------------------------------------------
 \section{Texture Dimensionality}

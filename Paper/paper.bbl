@@ -28,6 +28,15 @@
 \newblock URL: \url{http://doi.acm.org/10.1145/1409060.1409088},
   doi:10.1145/1409060.1409088.
 
+\bibitem[\protect\citename{{NVIDIA} }2015]{NVIDIA}
+{\sc {NVIDIA}}.
+\newblock 2015.
+\newblock F.2 linear filtering.
+\newblock In {\em CUDA C Programming Guide}, NVIDIA.
+\newblock [Online; accessed 15-July-2015].
+\newblock URL:
+  \url{http://docs.nvidia.com/cuda/cuda-c-programming-guide/\#linear-filtering}.
+
 \bibitem[\protect\citename{Ruijters et~al\mbox{.}
   }2008]{doi:10.1080/2151237X.2008.10129269}
 {\sc Ruijters, D., ter Haar~Romeny, B.~M., and Suetens, P.}
