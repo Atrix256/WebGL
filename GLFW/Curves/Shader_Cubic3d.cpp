@@ -97,7 +97,6 @@ const char *CShaderCubic3d::GetFragmentShader()
     }
 
     void main(void) {
-        /*
         vec4 colorValue = vec4(0.0);
 
         if (vTextureCoord.x < 0.995)
@@ -115,13 +114,6 @@ const char *CShaderCubic3d::GetFragmentShader()
             outColor = vec4(1.0);
             return;
         }
-        */
-
-        vec4 colorValue;
-        if (vTextureCoord.x <= 1.0)
-            colorValue = CubicCurveFromTexture3D(vTextureCoord.x);
-        else
-            colorValue = CubicCurveFromTexture3D(vTextureCoord.x - 1.0);
 
         vec4 values = step(vTextureCoord.yyyy, colorValue);
         values.xyz *= 0.5;

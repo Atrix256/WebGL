@@ -38,12 +38,16 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 //=============================================================================================================
 int main(void)
 {
+    const bool c_fullscreen = false;
+
+
     //FreeConsole();
     GLFWwindow* window;
     glfwSetErrorCallback(error_callback);
     if (!glfwInit())
         exit(EXIT_FAILURE);
-    window = glfwCreateWindow(1000, 500, "", NULL, NULL);
+
+    window = glfwCreateWindow(1000, 500, "", c_fullscreen ? glfwGetPrimaryMonitor() : NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -111,14 +115,18 @@ int main(void)
         char title[256];
         ++frameCount;
 
-        double currentTime = glfwGetTime();
-        if (currentTime - lastFPSTime > 1.0) {
-            double elapsed = currentTime - lastFPSTime;
-            float fps = float(frameCount) / float(elapsed);
-            sprintf(FPS, "(FPS: %0.1f / ms: %0.4f", fps, 1000.0 / fps);
-            lastFPSTime = currentTime;
-            frameCount = 0;
-            updateTitle = true;
+        // only check time every 100 loops
+        if (frameCount % 100 == 0)
+        {
+            double currentTime = glfwGetTime();
+            if (currentTime - lastFPSTime > 2.5) {
+                double elapsed = currentTime - lastFPSTime;
+                double fps = double(frameCount) / elapsed;
+                sprintf(FPS, "(FPS: %0.1f / ms: %0.4f)", fps, 1000.0 / fps);
+                lastFPSTime = currentTime;
+                frameCount = 0;
+                updateTitle = true;
+            }
         }
 
         // update the title bar if we should

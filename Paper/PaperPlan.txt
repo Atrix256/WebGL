@@ -1,5 +1,7 @@
 TODO:
 
+* mention that it is a replacement for look up tables as well.
+
 * when todo's gone, read it yourself a few times.  then see about getting some other people involved before submitting.
 
 * make sure you aren't confusing order with degree anywhere, and get an off by 1 thing in the text!

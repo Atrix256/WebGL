@@ -708,7 +708,7 @@ Evaluating a piecewise curve with this technique is very simple.  As an example,
 
 \subsection{Rational Bezier Curves}
 
-Rational Bezier curves are defined by the equation:
+Rational Bezier curves are useful because they can be used to make shapes which cannot be formed from integral Bezier curves, including perfectly representing conic sections.  Rational Bezier curves are defined by the equation:
 
 \begin{equation}
 \text{\bf{B}}(t) = \frac
@@ -814,7 +814,23 @@ TODO: perf tests... at 1000x1000
 * cubic     :  1d texture (3 reads and quad vs 4 reads and quartic bezier), 2d texture (), 3d texture 
 * quartic   :  1d texture, 2d texture, 3d texture
 
-TODO: mention that it matters if you are texture lookup bound or not.  correct terms for that = ??
+TODO: mention that it matters if you are texture lookup bound or not.  correct terms for that = ?? also matters if texture is in cache or not.
+
+TODO:
+ ? does double vs float texture / position coordinates matter for perf? it seems like it does!
+ ? does unsigned char vs float texture data matter for perf?
+
+The table below shows  (dual 980m in SLI)
+TODO: ? does opengl make use of SLI?
+TODO: time in fullscreen, apparently that's the only time you can get SLI support!
+
+\begin{tabular}{|l|l|l|}
+\hline
+& \bf{HW} & \bf{SW}\\ \hline
+\bf{1D Linear} & &\\ \hline
+\bf{2D Quadratic} & &\\ \hline
+\bf{3D Cubic} & &\\ \hline
+\end{tabular}
 
 %-------------------------------------------------------------------------
 \section*{Future Work}

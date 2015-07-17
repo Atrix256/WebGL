@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  15 JUL 2015 15:56
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  17 JUL 2015 11:37
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -796,9 +796,6 @@ LaTeX Info: Redefining \ref on input line 21.
 LaTeX Info: Redefining \pageref on input line 21.
 LaTeX Info: Redefining \nameref on input line 21.
 
-! I can't write on file `paper.pdf'.
-(Press Enter to retry, or Control-Z to exit; default file extension is `.pdf')
-Please type another file name for output: 
 ABD: EveryShipout initializing macros
 
 Package pgfplots Warning: running in backwards compatibility mode (unsuitable t
@@ -1002,7 +999,7 @@ Package pdftex.def Info: LowQualityZoom.png used on input line 268.
 (pdftex.def)             Requested size: 113.81526pt x 113.81526pt.
 
 
-Package xcolor Warning: Incompatible color definition on input line 279.
+LaTeX Warning: Citation 'NVIDIA' on page 6 undefined on input line 279.
 
 
 Package xcolor Warning: Incompatible color definition on input line 281.
@@ -1088,19 +1085,19 @@ Package xcolor Warning: Incompatible color definition on input line 689.
 
 Package xcolor Warning: Incompatible color definition on input line 720.
 
-[14] <SampleHW.png, id=229, 250.9375pt x 250.9375pt>
+[14] <SampleHW.png, id=227, 250.9375pt x 250.9375pt>
 File: SampleHW.png Graphic file (type png)
  <use SampleHW.png>
 Package pdftex.def Info: SampleHW.png used on input line 751.
 (pdftex.def)             Requested size: 113.81297pt x 113.81297pt.
 
-<SampleHWSW.png, id=230, 250.9375pt x 250.9375pt>
+<SampleHWSW.png, id=228, 250.9375pt x 250.9375pt>
 File: SampleHWSW.png Graphic file (type png)
  <use SampleHWSW.png>
 Package pdftex.def Info: SampleHWSW.png used on input line 752.
 (pdftex.def)             Requested size: 113.81297pt x 113.81297pt.
 
-<SampleSW.png, id=231, 250.9375pt x 250.9375pt>
+<SampleSW.png, id=229, 250.9375pt x 250.9375pt>
 File: SampleSW.png Graphic file (type png)
  <use SampleSW.png>
 Package pdftex.def Info: SampleSW.png used on input line 753.
@@ -1117,13 +1114,13 @@ Package xcolor Warning: Incompatible color definition on input line 770.
 Package xcolor Warning: Incompatible color definition on input line 772.
 
 [16 <./SampleHW.png> <./SampleHWSW.png> <./SampleSW.png>]
-<Flag.png, id=250, 1027.84pt x 513.92pt>
+<Flag.png, id=248, 1027.84pt x 513.92pt>
 File: Flag.png Graphic file (type png)
  <use Flag.png>
 Package pdftex.def Info: Flag.png used on input line 782.
 (pdftex.def)             Requested size: 227.61543pt x 113.80771pt.
 
-<FlagZoom.png, id=251, 1027.84pt x 513.92pt>
+<FlagZoom.png, id=249, 1027.84pt x 513.92pt>
 File: FlagZoom.png Graphic file (type png)
  <use FlagZoom.png>
 Package pdftex.def Info: FlagZoom.png used on input line 783.
@@ -1134,70 +1131,44 @@ Overfull \hbox (42.63884pt too wide) in paragraph at lines 779--785
  []
 
 
-Package xcolor Warning: Incompatible color definition on input line 789.
+LaTeX Warning: Citation 'Loop:2005:RIC:1073204.1073303' on page 17 undefined on
+ input line 789.
 
 
-Package xcolor Warning: Incompatible color definition on input line 789.
+LaTeX Warning: Citation 'Nehab:2008:RRG:1409060.1409088' on page 17 undefined o
+n input line 789.
 
 
-Package xcolor Warning: Incompatible color definition on input line 789.
+LaTeX Warning: Citation 'Green:2007:IAM:1281500.1281665' on page 17 undefined o
+n input line 789.
 
 
-Package xcolor Warning: Incompatible color definition on input line 795.
+Package xcolor Warning: Incompatible color definition on input line 796.
 
 [17 <./Flag.png> <./FlagZoom.png>]
 
 Package xcolor Warning: Incompatible color definition on input line 801.
 
 
-Package xcolor Warning: Incompatible color definition on input line 823.
+LaTeX Warning: Citation 'doi:10.1080/2151237X.2008.10129269' on page 18 undefin
+ed on input line 838.
 
 
-Package xcolor Warning: Incompatible color definition on input line 828.
+Package xcolor Warning: Incompatible color definition on input line 839.
 
-[18] (./paper.bbl (./paper.brf)
+[18] (./paper.bbl
+No file paper.brf.
 \tf@brf=\write4
 \openout4 = `paper.brf'.
 
 
-
-Package xcolor Warning: Incompatible color definition on input line 12.
-
-
 Package xcolor Warning: Incompatible color definition on input line 12.
 
 
 Package xcolor Warning: Incompatible color definition on input line 21.
 
 
-Package xcolor Warning: Incompatible color definition on input line 21.
-
-
-Underfull \hbox (badness 1910) in paragraph at lines 21--21
-[]\OT1/ptm/m/sc/10 Loop, C., and Blinn, J.  \OT1/ptm/m/n/10 2005.  Res-o-lu-tio
-n in-de-pen-dent curve ren-der-ing us-
- []
-
-
-Underfull \hbox (badness 1558) in paragraph at lines 21--21
-\OT1/ptm/m/n/10 ing pro-grammable graph-ics hard-ware.  \OT1/ptm/m/it/10 ACM Tr
-ans. Graph. 24\OT1/ptm/m/n/10 , 3 (July), 1000--
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 21--21
-\OT1/ptm/m/n/10 1009.  URL: [][]$\OT1/pcr/m/n/10 http : / / doi . acm . org / 1
-0 . 1145 / 1073204 . 1073303$[][]\OT1/ptm/m/n/10 ,
- []
-
-
 Package xcolor Warning: Incompatible color definition on input line 30.
-
-
-Package xcolor Warning: Incompatible color definition on input line 30.
-
-
-Package xcolor Warning: Incompatible color definition on input line 39.
 
 
 Package xcolor Warning: Incompatible color definition on input line 39.
@@ -1208,55 +1179,61 @@ Underfull \hbox (badness 3128) in paragraph at lines 39--39
 ttp : / / docs . nvidia . com / cuda /
  []
 
-
-Package xcolor Warning: Incompatible color definition on input line 48.
-
 )
 
-Package xcolor Warning: Incompatible color definition on input line 856.
+Package xcolor Warning: Incompatible color definition on input line 871.
 
 
-Package xcolor Warning: Incompatible color definition on input line 857.
+Package xcolor Warning: Incompatible color definition on input line 872.
 
 
-Package xcolor Warning: Incompatible color definition on input line 861.
+Package xcolor Warning: Incompatible color definition on input line 876.
 
 [19]
 
-Package xcolor Warning: Incompatible color definition on input line 861.
+Package xcolor Warning: Incompatible color definition on input line 876.
 
 
-Underfull \hbox (badness 10000) in alignment at lines 861--861
+Underfull \hbox (badness 10000) in alignment at lines 876--876
 [][] [] []
  []
 
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 861.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 876.
 
-Package xcolor Warning: Incompatible color definition on input line 861.
+Package xcolor Warning: Incompatible color definition on input line 876.
 
-<CC-BY-ND.png, id=304, 97.0827pt x 33.9669pt>
+<CC-BY-ND.png, id=293, 97.0827pt x 33.9669pt>
 File: CC-BY-ND.png Graphic file (type png)
  <use CC-BY-ND.png>
-Package pdftex.def Info: CC-BY-ND.png used on input line 861.
+Package pdftex.def Info: CC-BY-ND.png used on input line 876.
 (pdftex.def)             Requested size: 71.13188pt x 24.8884pt.
 
 
-Package xcolor Warning: Incompatible color definition on input line 863.
+Package xcolor Warning: Incompatible color definition on input line 878.
 
 [20 <./CC-BY-ND.png>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 863.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 863.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 878.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 878.
  (./paper.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 863.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 863.
-Package rerunfilecheck Info: File `paper.brf' has not changed.
-(rerunfilecheck)             Checksum: 461244BEF9D4B13743AC1547224F320F;288.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 863.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 878.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 878.
+
+
+Package rerunfilecheck Warning: File `paper.brf' has changed.
+(rerunfilecheck)                Rerun to get bibliographical references right.
+
+Package rerunfilecheck Info: Checksums for `paper.brf':
+(rerunfilecheck)             Before: <no file>
+(rerunfilecheck)             After:  786089F157241CB538E5CB084D12D213;288.
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 878.
  ) 
 Here is how much of TeX's memory you used:
- 29143 strings out of 493089
- 674761 string characters out of 6138425
+ 29141 strings out of 493089
+ 674741 string characters out of 6138425
  870120 words of memory out of 5000000
  31976 multiletter control sequences out of 15000+600000
  38388 words of font info for 86 fonts, out of 8000000 for 9000
@@ -1277,10 +1254,10 @@ pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb><d:/texlive
 /2015/texmf-dist/fonts/type1/urw/times/utmb8a.pfb><d:/texlive/2015/texmf-dist/f
 onts/type1/urw/times/utmr8a.pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/tim
 es/utmri8a.pfb>
-Output written on paper.pdf (20 pages, 969458 bytes).
+Output written on paper.pdf (20 pages, 970743 bytes).
 PDF statistics:
- 393 PDF objects out of 1000 (max. 8388607)
- 324 compressed objects within 4 object streams
+ 383 PDF objects out of 1000 (max. 8388607)
+ 314 compressed objects within 4 object streams
  137 named destinations out of 1000 (max. 500000)
  83 words of extra memory for PDF output out of 10000 (max. 10000000)
 
