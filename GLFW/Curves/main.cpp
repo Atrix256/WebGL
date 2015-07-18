@@ -12,6 +12,13 @@
 
 EShaderTest g_whichTest = EShaderTest::e_shaderFirst;
 
+void WaitForEnter()
+{
+    printf("Press Enter to quit");
+    fflush(stdin);
+    getchar();
+}
+
 //=============================================================================================================
 static void error_callback(int error, const char* description)
 {
@@ -39,7 +46,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 int main(void)
 {
     const bool c_fullscreen = false;
-
 
     //FreeConsole();
     GLFWwindow* window;
@@ -95,7 +101,7 @@ int main(void)
 
             int width, height;
             switch (g_whichTest){
-            #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) case e_shader##NAME: shader##NAME##.GetWidthHeight(width,height); break;
+            #define SHADER_BEGIN(NAME, WIDTH, HEIGHT) case e_shader##NAME: shader##NAME##.GetWidthHeight(width,height);  printf("switched to" #NAME "\n"); break;
             #define SHADER_VERTEX_ATTRIBUTE(NAME, ELEMENTSIZE, TYPE)
             #define SHADER_UNIFORM(NAME)
             #define SHADER_UNIFORM_TEXTURE_1D(NAME, TYPE, LERP)
@@ -123,6 +129,7 @@ int main(void)
                 double elapsed = currentTime - lastFPSTime;
                 double fps = double(frameCount) / elapsed;
                 sprintf(FPS, "(FPS: %0.1f / ms: %0.4f)", fps, 1000.0 / fps);
+                printf("%s\n", FPS);
                 lastFPSTime = currentTime;
                 frameCount = 0;
                 updateTitle = true;
@@ -161,5 +168,9 @@ int main(void)
     }
     glfwDestroyWindow(window);
     glfwTerminate();
+
+    if (c_fullscreen)
+        WaitForEnter();
+
     exit(EXIT_SUCCESS);
 }

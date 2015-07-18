@@ -804,33 +804,18 @@ A demonstration of these usage cases can be seen in \autoref{fig:vectorgfx}.
 \section{Performance Characteristics}
 \label{sec:performancecharacteristics}
 
-TODO: perf goals are...
-* show perf of a few curve types (linear, quadratic, cubic, quartic?), using 1d, 2d, 3d textures.  show based on \# of texture reads (like hw, hwsw, sw).
-* show results from laptop as well as work machine. maybe laptop on single GPU?
+The table below was created by running a 1000x1000 pixel shader program where each pixel evaluated a curve using either linear texture sampling (HW or hardware evaluation), or did multiple texture reads to get the control points and then calculated the curve values inside of the shader program (SW or software shader program evaluation).  Actual performance characteristics in real world scenarios will be based on other factors, such as whether the texture is in the texture cache, or whether you are texture fetch bound or compute bound in the shader program.
 
-TODO: perf tests... at 1000x1000
-* linear    :  1d texture (1 read vs 2 reads then lerp)
-* quadratic :  1d texture (2 reads and lerp vs 3 reads and quadratic bezier), 2d texture (1 read vs 2 reads and lerp vs 3 reads and quadratic Bezier)
-* cubic     :  1d texture (3 reads and quad vs 4 reads and quartic bezier), 2d texture (), 3d texture 
-* quartic   :  1d texture, 2d texture, 3d texture
-
-TODO: mention that it matters if you are texture lookup bound or not.  correct terms for that = ?? also matters if texture is in cache or not.
-
-TODO:
- ? does double vs float texture / position coordinates matter for perf? it seems like it does!
- ? does unsigned char vs float texture data matter for perf?
-
-The table below shows  (dual 980m in SLI)
-TODO: ? does opengl make use of SLI?
-TODO: time in fullscreen, apparently that's the only time you can get SLI support!
-
-\begin{tabular}{|l|l|l|}
+\begin{tabular}{|l|l l|}
 \hline
+& \multicolumn{2}{|c|}{NV GF GTX 980m} \\
 & \bf{HW} & \bf{SW}\\ \hline
-\bf{1D Linear} & &\\ \hline
-\bf{2D Quadratic} & &\\ \hline
-\bf{3D Cubic} & &\\ \hline
+\bf{1D Texture / Linear Curve} & 131.8 $\mu$s & 132.7 $\mu$s \\ \hline
+\bf{2D Texture / Quadratic Curve} & 131.1 $\mu$s & 135.1 $\mu$s \\ \hline
+\bf{3D Texture / Cubic Curve} & 135.4 $\mu$s & 146.2 $\mu$s \\ \hline
 \end{tabular}
+
+TODO: do a test with the cards at work, and put those results here as well!
 
 %-------------------------------------------------------------------------
 \section*{Future Work}
