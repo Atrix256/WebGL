@@ -1,39 +1,23 @@
 TODO:
 
-* i think it might be important to put a picture of rational splines in there, showing sine / cosine.
-
-* mention that it is a replacement for look up tables as well.
-
-* when todo's gone, read it yourself a few times.  then see about getting some other people involved before submitting.
+* put $ around all the symbols? control points, t,u, etc!
 
 * make sure you aren't confusing order with degree anywhere, and get an off by 1 thing in the text!
 
 * maybe stick to P_i instead of A,B,C for control points? in diagrams, in text, in code, etc
  * consistency would be nicer
 
-* make GLFW shader compile warnings go away!!
-
-* spell check!
-
-* put $ around all the symbols? control points, t,u, etc!
-
-* check log file for warnings, it looks like there are some! see if any matter
-
-* perf
- * get cost of 1d vs 2d vs 3d texture sampling.
- * compare linear vs nearest too
- * get numbers from laptop as well as work computer
-
-? why is your technique ever preferable to uniform constants?
- * asked MJP from gamedev.net why they opted to use textures instead of uniform constants
+* when todo's gone, read it yourself a few times.  then see about getting some other people involved before submitting.
 
 ! avoid first person!
 
 * might need to test a high order curve vs baked out curve to see how it fares vs baked out curve.
  * like... 8th order curve, or end to end curves.  vs baked out same number of pixels
 
-? re-read "how to write a research paper" link
+? possibly re-read "how to write a research paper" link
  * http://research.microsoft.com/en-us/um/people/simonpj/papers/giving-a-talk/writing-a-paper-slides.pdf
+
+* spell check at end, after modifications!
 
 * show rick details at some point (when reviewing paper?)
 * another journal if needed: http://tog.acm.org/
@@ -356,6 +340,12 @@ author contact information
  * texture dimensionality
  * curve order
 
+
+* perf
+ * get cost of 1d vs 2d vs 3d texture sampling.
+ * compare linear vs nearest too
+ * get numbers from laptop as well as work computer
+
 ======THROW AWAY NOTES======
 
 --quadratic bezier
@@ -396,3 +386,13 @@ C = 0
  ? do you currently use curves in your shaders? if so, how do you do that?  are they hard coded values, shader constants, baked out in textures?
 
 ! need perf and accuracy information (already have accuracy, need perf)
+
+
+* make GLFW shader compile warnings go away!!
+
+* check log file for warnings, it looks like there are some! see if any matter.
+ * meh, the paper looks fine!
+
+? why is your technique ever preferable to uniform constants?
+ * asked MJP from gamedev.net why they opted to use textures instead of uniform constants
+ * nothing work including that i haven't already.

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  18 JUL 2015 10:52
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.22)  18 JUL 2015 11:43
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -913,9 +913,9 @@ Package xcolor Warning: Incompatible color definition on input line 97.
 Package xcolor Warning: Incompatible color definition on input line 97.
 
 
-Overfull \hbox (2.94057pt too wide) in paragraph at lines 97--98
+Overfull \hbox (2.83096pt too wide) in paragraph at lines 97--98
 []\OT1/ptm/m/n/10.95 To fur-ther see how bi-lin-ear in-ter-po-la-tion can be eq
-uiv-e-lant to eval-u-at-ing a quadratic
+uiv-a-lent to eval-u-at-ing a quadratic
  []
 
 LaTeX Font Info:    Try loading font information for OT1+pcr on input line 99.
@@ -923,7 +923,7 @@ LaTeX Font Info:    Try loading font information for OT1+pcr on input line 99.
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
 
-Package xcolor Warning: Incompatible color definition on input line 107.
+Package xcolor Warning: Incompatible color definition on input line 104.
 
 [3]
 LaTeX Font Info:    Font shape `OT1/pcr/m/it' in size <9> not available
@@ -944,7 +944,7 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <10> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 169.
 
 
-Package xcolor Warning: Incompatible color definition on input line 178.
+Package xcolor Warning: Incompatible color definition on input line 177.
 
 [4]
 Missing character: There is no â in font ptmr7t!
@@ -976,7 +976,7 @@ Package pdftex.def Info: Figure4Curves.png used on input line 188.
 (pdftex.def)             Requested size: 113.80533pt x 113.80533pt.
 
 
-Package xcolor Warning: Incompatible color definition on input line 225.
+Package xcolor Warning: Incompatible color definition on input line 221.
 
 [5 <./Figure4Texture.png> <./Figure4Bilinear.png> <./Figure4Curves.png>]
 <HighQuality.png, id=92, 501.875pt x 501.875pt>
@@ -1008,7 +1008,7 @@ Package xcolor Warning: Incompatible color definition on input line 281.
 Package xcolor Warning: Incompatible color definition on input line 281.
 
 
-Package xcolor Warning: Incompatible color definition on input line 327.
+Package xcolor Warning: Incompatible color definition on input line 282.
 
 [6]
 
@@ -1022,26 +1022,23 @@ Package xcolor Warning: Incompatible color definition on input line 336.
 Package xcolor Warning: Incompatible color definition on input line 343.
 
 
-Package xcolor Warning: Incompatible color definition on input line 385.
-
-[8]
-
 Package xcolor Warning: Incompatible color definition on input line 386.
 
+
+Package xcolor Warning: Incompatible color definition on input line 388.
+
+[8]
 
 Package xcolor Warning: Incompatible color definition on input line 415.
 
 
-Package xcolor Warning: Incompatible color definition on input line 418.
+Package xcolor Warning: Incompatible color definition on input line 416.
 
 [9]
 
 Package xcolor Warning: Incompatible color definition on input line 427.
 
 
-Package xcolor Warning: Incompatible color definition on input line 471.
-
-[10]
 Overfull \hbox (0.60379pt too wide) in paragraph at lines 474--475
 [][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
@@ -1057,6 +1054,9 @@ Overfull \hbox (0.60379pt too wide) in paragraph at lines 480--481
  []
 
 
+Package xcolor Warning: Incompatible color definition on input line 481.
+
+[10]
 Overfull \hbox (0.60379pt too wide) in paragraph at lines 481--482
 [][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
@@ -1065,94 +1065,104 @@ Overfull \hbox (0.60379pt too wide) in paragraph at lines 481--482
 Package xcolor Warning: Incompatible color definition on input line 490.
 
 
+Package xcolor Warning: Incompatible color definition on input line 497.
+
+[11]
+
 Package xcolor Warning: Incompatible color definition on input line 498.
 
 
-Package xcolor Warning: Incompatible color definition on input line 622.
+Package xcolor Warning: Incompatible color definition on input line 638.
 
-[11]
+[12]
 
 Package xcolor Warning: Incompatible color definition on input line 638.
 
 
-Package xcolor Warning: Incompatible color definition on input line 640.
+Package xcolor Warning: Incompatible color definition on input line 688.
 
-[12]
+[13] <Rational.png, id=222, 752.8125pt x 374.90062pt>
+File: Rational.png Graphic file (type png)
+ <use Rational.png>
+Package pdftex.def Info: Rational.png used on input line 713.
+(pdftex.def)             Requested size: 341.43895pt x 170.71733pt.
 
-Package xcolor Warning: Incompatible color definition on input line 689.
-
-[13]
 
 Package xcolor Warning: Incompatible color definition on input line 720.
 
-[14] <SampleHW.png, id=229, 250.9375pt x 250.9375pt>
+
+Package xcolor Warning: Incompatible color definition on input line 721.
+
+[14]
+
+Package xcolor Warning: Incompatible color definition on input line 740.
+
+[15 <./Rational.png>] <SampleHW.png, id=238, 250.9375pt x 250.9375pt>
 File: SampleHW.png Graphic file (type png)
- <use SampleHW.png>
-Package pdftex.def Info: SampleHW.png used on input line 751.
-(pdftex.def)             Requested size: 113.81297pt x 113.81297pt.
 
-<SampleHWSW.png, id=230, 250.9375pt x 250.9375pt>
+<use SampleHW.png>
+Package pdftex.def Info: SampleHW.png used on input line 760.
+(pdftex.def)             Requested size: 113.81297pt x 113.81297pt.
+ <SampleHWSW.png, id=239, 250.9375pt x 250.9375pt>
 File: SampleHWSW.png Graphic file (type png)
- <use SampleHWSW.png>
-Package pdftex.def Info: SampleHWSW.png used on input line 752.
-(pdftex.def)             Requested size: 113.81297pt x 113.81297pt.
 
-<SampleSW.png, id=231, 250.9375pt x 250.9375pt>
+<use SampleHWSW.png>
+Package pdftex.def Info: SampleHWSW.png used on input line 761.
+(pdftex.def)             Requested size: 113.81297pt x 113.81297pt.
+ <SampleSW.png, id=240, 250.9375pt x 250.9375pt>
 File: SampleSW.png Graphic file (type png)
- <use SampleSW.png>
-Package pdftex.def Info: SampleSW.png used on input line 753.
+
+<use SampleSW.png>
+Package pdftex.def Info: SampleSW.png used on input line 762.
 (pdftex.def)             Requested size: 113.81297pt x 113.81297pt.
 
 
-Package xcolor Warning: Incompatible color definition on input line 758.
-
-[15]
-
-Package xcolor Warning: Incompatible color definition on input line 770.
-
-
-Package xcolor Warning: Incompatible color definition on input line 772.
+Package xcolor Warning: Incompatible color definition on input line 771.
 
 [16 <./SampleHW.png> <./SampleHWSW.png> <./SampleSW.png>]
-<Flag.png, id=250, 1027.84pt x 513.92pt>
+
+Package xcolor Warning: Incompatible color definition on input line 779.
+
+<Flag.png, id=253, 1027.84pt x 513.92pt>
 File: Flag.png Graphic file (type png)
  <use Flag.png>
-Package pdftex.def Info: Flag.png used on input line 782.
+Package pdftex.def Info: Flag.png used on input line 791.
 (pdftex.def)             Requested size: 227.61543pt x 113.80771pt.
 
-<FlagZoom.png, id=251, 1027.84pt x 513.92pt>
+<FlagZoom.png, id=254, 1027.84pt x 513.92pt>
 File: FlagZoom.png Graphic file (type png)
  <use FlagZoom.png>
-Package pdftex.def Info: FlagZoom.png used on input line 783.
+Package pdftex.def Info: FlagZoom.png used on input line 792.
 (pdftex.def)             Requested size: 227.61543pt x 113.80771pt.
 
-Overfull \hbox (42.63884pt too wide) in paragraph at lines 779--785
+Overfull \hbox (42.63884pt too wide) in paragraph at lines 788--794
 []  [] 
  []
 
 
-Package xcolor Warning: Incompatible color definition on input line 789.
+Package xcolor Warning: Incompatible color definition on input line 798.
 
 
-Package xcolor Warning: Incompatible color definition on input line 789.
+Package xcolor Warning: Incompatible color definition on input line 798.
 
 
-Package xcolor Warning: Incompatible color definition on input line 789.
+Package xcolor Warning: Incompatible color definition on input line 798.
 
 
-Package xcolor Warning: Incompatible color definition on input line 795.
+Package xcolor Warning: Incompatible color definition on input line 802.
 
-[17 <./Flag.png> <./FlagZoom.png>]
+[17]
 
-Package xcolor Warning: Incompatible color definition on input line 801.
-
-
-Package xcolor Warning: Incompatible color definition on input line 824.
+Package xcolor Warning: Incompatible color definition on input line 810.
 
 
-Package xcolor Warning: Incompatible color definition on input line 827.
+Package xcolor Warning: Incompatible color definition on input line 813.
 
-[18] (./paper.bbl (./paper.brf)
+[18 <./Flag.png> <./FlagZoom.png>]
+
+Package xcolor Warning: Incompatible color definition on input line 833.
+
+(./paper.bbl (./paper.brf)
 \tf@brf=\write4
 \openout4 = `paper.brf'.
 
@@ -1163,6 +1173,10 @@ Package xcolor Warning: Incompatible color definition on input line 12.
 
 Package xcolor Warning: Incompatible color definition on input line 12.
 
+
+Package xcolor Warning: Incompatible color definition on input line 12.
+
+[19]
 
 Package xcolor Warning: Incompatible color definition on input line 21.
 
@@ -1210,55 +1224,54 @@ Package xcolor Warning: Incompatible color definition on input line 48.
 
 )
 
-Package xcolor Warning: Incompatible color definition on input line 857.
+Package xcolor Warning: Incompatible color definition on input line 866.
 
 
-Package xcolor Warning: Incompatible color definition on input line 858.
+Package xcolor Warning: Incompatible color definition on input line 867.
 
 
-Package xcolor Warning: Incompatible color definition on input line 862.
-
-[19]
-
-Package xcolor Warning: Incompatible color definition on input line 862.
+Package xcolor Warning: Incompatible color definition on input line 871.
 
 
-Underfull \hbox (badness 10000) in alignment at lines 862--862
+Underfull \hbox (badness 10000) in alignment at lines 871--871
 [][] [] []
  []
 
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 862.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 871.
 
-Package xcolor Warning: Incompatible color definition on input line 862.
+Package xcolor Warning: Incompatible color definition on input line 871.
 
-<CC-BY-ND.png, id=303, 97.0827pt x 33.9669pt>
+
+Package xcolor Warning: Incompatible color definition on input line 871.
+
+[20] <CC-BY-ND.png, id=312, 97.0827pt x 33.9669pt>
 File: CC-BY-ND.png Graphic file (type png)
  <use CC-BY-ND.png>
-Package pdftex.def Info: CC-BY-ND.png used on input line 862.
+Package pdftex.def Info: CC-BY-ND.png used on input line 871.
 (pdftex.def)             Requested size: 71.13188pt x 24.8884pt.
 
 
-Package xcolor Warning: Incompatible color definition on input line 864.
+Package xcolor Warning: Incompatible color definition on input line 873.
 
-[20 <./CC-BY-ND.png>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 864.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 864.
+[21 <./CC-BY-ND.png>]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 873.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 873.
  (./paper.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 864.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 864.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 873.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 873.
 Package rerunfilecheck Info: File `paper.brf' has not changed.
-(rerunfilecheck)             Checksum: 461244BEF9D4B13743AC1547224F320F;288.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 864.
+(rerunfilecheck)             Checksum: 76BA2B08040917FF0A2A93F631F71FD2;288.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 873.
  ) 
 Here is how much of TeX's memory you used:
- 29143 strings out of 493089
- 674761 string characters out of 6138425
- 870120 words of memory out of 5000000
- 31976 multiletter control sequences out of 15000+600000
+ 29151 strings out of 493089
+ 674890 string characters out of 6138425
+ 865120 words of memory out of 5000000
+ 31981 multiletter control sequences out of 15000+600000
  38388 words of font info for 86 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 54i,19n,77p,962b,2124s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 54i,19n,77p,982b,2124s stack positions out of 5000i,500n,10000p,200000b,80000s
 {d:/texlive/2015/texmf-dist/fonts/enc/dvips/base/8r.enc}<d:/texlive/2015/texm
 f-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><d:/texlive/2015/texmf-dist/fo
 nts/type1/public/amsfonts/cm/cmbx8.pfb><d:/texlive/2015/texmf-dist/fonts/type1/
@@ -1274,10 +1287,10 @@ pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb><d:/texlive
 /2015/texmf-dist/fonts/type1/urw/times/utmb8a.pfb><d:/texlive/2015/texmf-dist/f
 onts/type1/urw/times/utmr8a.pfb><d:/texlive/2015/texmf-dist/fonts/type1/urw/tim
 es/utmri8a.pfb>
-Output written on paper.pdf (20 pages, 968654 bytes).
+Output written on paper.pdf (21 pages, 1063591 bytes).
 PDF statistics:
- 393 PDF objects out of 1000 (max. 8388607)
- 324 compressed objects within 4 object streams
- 137 named destinations out of 1000 (max. 500000)
- 83 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 402 PDF objects out of 1000 (max. 8388607)
+ 331 compressed objects within 4 object streams
+ 139 named destinations out of 1000 (max. 500000)
+ 88 words of extra memory for PDF output out of 10000 (max. 10000000)
 
