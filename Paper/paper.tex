@@ -47,7 +47,7 @@
 
 \begin{abstract}
 \small
-Modern graphics techniques expose internal parameters to allow re-use and to help separate the technical implementation from artistic usage cases.  A popular choice is to expose parameters as customizable curves and to quantize the curves into textures.  Quantization leads to either lower quality results, or more texture memory being used to accommodate higher sampling frequencies.  The technique presented in this paper leverages the capabilities of GPU texture samplers to allow more efficient storage and evaluation of both integral and rational Bezier curves of any order, resulting in higher fidelity for the same costs.  Piecewise curves, B-Splines and NURBS are addressed, and there are also limited applications towards vector graphics.
+Modern graphics techniques expose internal parameters to allow re-use and to help separate the technical implementation from artistic usage cases.  A popular choice is to expose parameters as customizable curves and to quantize the curves into textures.  Quantization leads to either lower quality results, or more texture memory being used to accommodate higher sampling frequencies.  The technique presented in this paper leverages the capabilities of GPU texture samplers to allow more efficient storage and evaluation of both integral and rational Bezier curves of any order, resulting in higher fidelity for similar costs.  Piecewise curves, B-Splines and NURBS are addressed, and there are also limited applications towards vector graphics.
 \end{abstract}
 
 
@@ -56,13 +56,13 @@ Modern graphics techniques expose internal parameters to allow re-use and to hel
 \label{sec:introduction}
 There are two basic ways for a shader program to have customized curve data.  One way is to evaluate the curve on the CPU at discrete intervals and put those points into a texture that can be used by the GPU.  The other way is to pass curve control point data from the CPU to the shader program as shader constants, allowing the shader program to evaluate the curve at a given time $t$.
 
-Baking curve points into a texture means that the shader program doesn't need to know what type of curve it was that made the data, nor how many control points it had, but comes at the loss of quality since there are a finite number of curve points sampled, and the data between points is just a linear interpolation between the samples.  If higher quality is desired, you can increase the resolution of the texture to be able to trade accuracy for texture memory.
+Baking curve points into a texture means that the shader program doesn't need to know what type of curve it was that made the data, nor how many control points it had, but comes at the loss of quality since there are a finite number of curve points sampled, and the data between points is just a linear interpolation between the samples.  If higher quality is desired, you can increase the resolution of the texture to trade accuracy for texture memory.
 
-Passing control point data to a shader program as shader constants allows you to get high quality curve calculations, but comes at the cost of the shader program being written in a very specific way for the type of curve you want to use, as well as more shader program instructions to calculate specific curve points.
+Passing control point data to a shader program as shader constants allows you to get high quality curve calculations, but comes at the cost of the shader program being written specifically for the type of curve you want to use, and also takes more shader program instructions to calculate specific curve points.
 
 \begin{figure}
   \includegraphics[width=5in]{Figure2.png}
-  \caption{\textit{Left:} A quadratic Bezier curve written to the green channel, and the baked out equivalent using 4 pixels written to the red channel.  \textit{Right:} The technique from this paper, also using 4 pixels, written to the green channel, and the baked out equivalent written to the red channel again for comparison.}
+  \caption{Quadratic Bezier curves (yellow) compared to a 4x1 baked out (quantized) texture for the same curve (red).  \textit{Left:} Curve evaluated from shader program constants. \textit{Right:}  The technique from this paper - the curve is stored in a 2x2 texture and a bilinear texture sample is taken to get each point on the curve.}
   \label{fig:quickcomparison}
 \end{figure}
 
@@ -76,7 +76,9 @@ This paper shows a third method where:
   \item There are limited applications towards vector graphics.
 \end{itemize}
 
-A quick comparison of the visual quality of these three techniques can be seen in \autoref{fig:quickcomparison}.  Besides being useful for exposing internal parameters, the technique presented in this paper is also useful as an alternative to traditional shader look up tables which use linear interpolation to get points between data points.
+A quick comparison of the visual quality of these three techniques can be seen in \autoref{fig:quickcomparison}.
+
+Besides being useful for exposing internal parameters, the technique presented in this paper is also useful as an alternative to traditional shader look up tables, since this technique allows non linear interpolation between data points, where traditional lookup table textures only offer linear interpolation between data points.
 
 %-------------------------------------------------------------------------
 \section{The Technique}
@@ -86,13 +88,15 @@ The core of this technique is that the $N$-dimensional linear texture interpolat
 
 \subsection{Intuition}
 
+TODO: clean up the notation here!
+
 One dimensional linear texture sampling is just the linear interpolation between two data points.  This is equivalent to the De Casteljeau algorithm when evaluating a linear curve of order 1.  In both cases, it is just linear interpolation between two values.
 
-Two dimensional linear texture sampling (bilinear texture sampling) can be thought of as just the linear interpolation across the $y$ axis, of two linear interpolations across the $x$ axis.  In other words, it is just the linear interpolation of two linear interpolations.
+Two dimensional linear texture sampling (bilinear texture sampling) can be thought of as just the linear interpolation across the $y$ axis, of two linear interpolations across the $x$ axis (or an interpolation across the $x$ axis of two linear interpolations across the $y$ axis - order doesn't matter).  In other words, bilinear texture sampling is just the linear interpolation of two linear interpolations. 
 
-The De Casteljeau algorithm for evaluating a quadratic curve (order 2) is also just to linear interpolate between two linear curves (order 1).  If the control points of the quadratic curve are $P_0,P_1,P_2$, let's call the first interpolation $\overline{P_0P_1}$ which is the interpolation between $P_0$ and $P_1$ for time $t$. The second linear interpolation is $\overline{P_1P_2}$ and is the interpolation between $P_1$ and $P_2$ for time $t$.  The final point on the curve will be the interpolation at time $t$ between $\overline{P_0P_1}$ and $\overline{P_1P_2}$, which we can call $\stackrel{\frown}{P_0P_1P_2}$.  
+The De Casteljeau algorithm for evaluating a quadratic curve (order 2) is also just a linear interpolation between two linear interpolations.  If the control points of the quadratic curve are $P_0,P_1,P_2$, let's call the first interpolation $\overline{P_0P_1}$ which is the interpolation between $P_0$ and $P_1$ for time $t$. The second linear interpolation is $\overline{P_1P_2}$ and is the interpolation between $P_1$ and $P_2$ for time $t$.  The final point on the curve will be the interpolation at time $t$ between $\overline{P_0P_1}$ and $\overline{P_1P_2}$, which we can call $\stackrel{\frown}{P_0P_1P_2}$.  
 
-We could set up a texture such that the two $x$ axis interpolations would give us the values $\overline{P_0P_1}$ and $\overline{P_1P_2}$ respectively, and then the $y$ axis interpolation between those values would give us $\stackrel{\frown}{P_0P_1P_2}$.  When sampling, we would also use texture coordinates such that the weighting is the same for the interpolations across the $x$ and $y$ axis, so that it results in the same time $t$ value for interpolation in both linear interpolations.
+We could set up a texture such that the two $x$ axis interpolations would give us the values $\overline{P_0P_1}$ and $\overline{P_1P_2}$ respectively, and then the $y$ axis interpolation between those values would give us $\stackrel{\frown}{P_0P_1P_2}$.  When sampling, we would also use texture coordinates such it results in the same time $t$ value for interpolation on each axis.
 
 To further see how bilinear interpolation can be equivalent to evaluating a quadratic Bezier curve with the De Casteljeau algorithm, \autoref{fig:decasteljeauBilinear} shows it visually, and you can also compare the GLSL source code in \autoref{lst:GLSLCurves}.
 
@@ -104,8 +108,7 @@ float QuadraticBezier (
     return mix(mix(P0,P1,t), mix(P1,P2,t), t);
 }
 
-// This function can be equivelant to the function above
-// by setting the parameters:
+// This function is equivelant to the function above when:
 // u = t, v = t
 // A = P0, B = P1, C = P1, D = P2
 float BilinearInterpolate (
@@ -172,11 +175,11 @@ float BilinearInterpolate (
 
 The pattern continues for higher texture dimensions and curve orders as well.  Linear texture sampling of textures of dimension $N$ is just the linear interpolation between two linear texture samples of dimension $N-1$.  Using the De Casteljeau algorithm to evaluate a curve of order $N$ just means that you take a linear interpolation between curves of order $N-1$.
 
-Linear texture sampling lets you control each value (each pixel), and the weighting of each level (dimension) of the interpolations, but you can set up the pixels and texture coordinates such that it evaluates a Bezier curve.  The De Casteljeau algorithm is a subset of the $N$-dimensional linear texture sampling available on the GPU.
+Compared to a quadratic curve evaluated with De Casteljeau's algorithm, bilinear texture sampling has two blend weights instead of one, and has four values to interpolate between instead of three, but you can set a texture up such that when you sample it a specific way, you get as output a quadratic Bezier curve.  Because of this, the De Casteljeau algorithm is a subset of the $N$-dimensional linear texture sampling available on the GPU.
 
 It can be seen that the actual pixel value in a bilinear sampled texture is in the middle of a pixel.  That means that when calculating our texture coordinates for eg. a 2x2 texture, we must sample between pixel location $(0.5,0.5)$ and pixel location $(1.5,1.5)$ to get the correct results.
 
-The common pixel formats contain four color channels – Red, Green, Blue and Alpha – which allows us to be able to evaluate four curves with a single texture read (\autoref{fig:texbilcurve}).
+The common pixel formats contain four color channels –-- Red, Green, Blue and Alpha –-- which allows us to be able to evaluate four curves with a single texture read (\autoref{fig:texbilcurve}).
 
   \begin{figure}
     \begin{tikzpicture}[x=12.5cm,y=4.25cm]
@@ -201,6 +204,8 @@ It is also possible to get points on curves of higher order by taking multiple t
 
 \subsection{Mathematical Basis}
 
+TODO: fix up notation to be consistant (Px vs A,B,C,D)
+
 The De Casteljeau algorithm is equivalent to the Bernstein form of Bezier curves.
 
 \begin{equation}
@@ -224,7 +229,7 @@ When $n$ is $2$, to make a quadratic Bezier curve with bilinear interpolation, t
 \label{eqn:bernsteinformn2}
 \end{equation}
 
-To see how that equation can be the same as bilinear interpolation, let's start with the equation for bilinear interpolation, which is just a linear interpolation between two other linear interpolations.  We'll use $t$ and $u$ as the interpolation weights of each interpolation.
+To see how that equation can be the same as bilinear interpolation, let's start with the equation for bilinear interpolation, which is just a linear interpolation between two other linear interpolations.  We'll use $t$ and $u$ as the interpolation weights of each interpolation.  We will linearly interpolate between linear interpolations $E(u)$ and $F(u)$ by $t$ to get out a result of $P(t,u)$
 
 \begin{equation}
 \begin{split}
@@ -236,7 +241,7 @@ To see how that equation can be the same as bilinear interpolation, let's start 
 \label{eqn:bilinearinterpolation}
 \end{equation}
 
-In our usage case of bilinear interpolation to evaluate Bernstein polynomials, $P_0$ will be $A$, $P_1$ and $P_2$ will both be $B$, and $P_3$ will be $C$.  Also, $t$ and $u$ are the same in our usage case so we'll just replace $u$ with $t$.  We will also replace $(1-t)$ with $s$ for readability.
+In our usage case of bilinear interpolation to evaluate Bernstein polynomials, $P_0$ will be $A$, $P_1$ and $P_2$ will both be $B$, and $P_3$ will be $C$.  Also, we set $t$ and $u$ equal in our usage case so we'll replace $u$ with $t$.  We will also replace $(1-t)$ with $s$ for readability.
 
 \begin{equation}
 \begin{split}
@@ -247,14 +252,14 @@ In our usage case of bilinear interpolation to evaluate Bernstein polynomials, $
 \label{eqn:bilinearinterpolation2}
 \end{equation}
 
-If we replace $A$,$B$,$C$ with $P_0$, $P_1$, $P_2$, and $s$ with $(1-t)$ we then get the familiar equation back out.
+If we replace $A$,$B$,$C$ with $P_0$, $P_1$, $P_2$, and $s$ with $(1-t)$ we then get the familiar equation below, which is the Bernstein form of a quadratic Bezier curve.
 
 \begin{equation}
 \bf{P(t)} = P_0(1-t)^2+P_12(1-t)t+P_2t^2
 \label{eqn:bilinearinterpolation3}
 \end{equation}
 
-This pattern continues for trilinear interpolation and beyond.  $N$ dimensional linear texture sampling is just the linear interpolation between two linear texture samples of dimension $N-1$.  Bezier curves of order $N$ are just the linear interpolation between two bezier curves of order $N-1$.
+This pattern continues for trilinear interpolation mapping to a cubic curve, and beyond.  $N$ dimensional linear texture sampling is just the linear interpolation between two linear texture samples of dimension $N-1$.  Bezier curves of order $N$ are just the linear interpolation between two bezier curves of order $N-1$.
 
 \subsection{Accuracy}
 
@@ -283,6 +288,8 @@ The accuracy issues can be seen in \autoref{fig:quickaccuracy}, although the acc
 %-------------------------------------------------------------------------
 \section{Texture Dimensionality}
 \label{sec:texturedimensionality}
+
+While this technique is able to be used with any texture dimensionality, there are different characteristics for each choice.  Those characteristics will be explored here.
 
 \newcommand*\circled[1]{\tikz[baseline=(char.base)]{
             \node[shape=circle,draw] (char) {#1};}}
@@ -325,8 +332,6 @@ The accuracy issues can be seen in \autoref{fig:quickaccuracy}, although the acc
   \caption{A tree showing the De Casteljeau algorithm for a cubic curve.  The labels on the right show what type of curves are evaluated at that level, as well as the $N$ dimensional sampling that is required to evaluate nodes at that level with a single texture read.}
   \label{fig:decdimensionality}
 \end{figure}  
-
-While this technique is able to be used with any texture dimensionality, there are different characteristics for each choice.  Those characteristics will be explored here.
 
 \subsection{One Dimensional Textures}
 
@@ -416,7 +421,7 @@ Using two dimensional textures allows the texture interpolator to perform biline
 
 This allows us to either calculate a quadratic Bezier curve with a single texture read, or allows us to get the quadratic level values needed to make a higher order curve.
 
-Knowing that a quadratic curve is just the linear interpolation of time $t$ between the points on two linear curves at time $t$, we know that our two dimensional texture needs to set up to be able to make this happen.  The result is that if we have a $2$x$2$ texture, the top two pixels should be $P_0$ and $P_1$ and the bottom two pixels should be $P_1$ and $P_2$.  When we do a bilinear interpolation such that we plug $t$ into both $u$ and $v$, the end result will be that $\overline{P_0P_1}$ and $\overline{P_1P_2}$ will be calculated from the $u$ axis interpolation, and then those two will be linearly interpolated across the $v$ axis to give us the final result.
+Knowing that a quadratic curve is just the linear interpolation of time $t$ between the points on two linear curves at time $t$, we have to find a way to make a texture that will cause this to happen with bilinear interpolation.  The result is that if we have a $2$x$2$ texture, the top two pixels should be $P_0$ and $P_1$ and the bottom two pixels should be $P_1$ and $P_2$.  When we do a bilinear interpolation such that we plug $t$ into both $u$ and $v$, the end result will be that $\overline{P_0P_1}$ and $\overline{P_1P_2}$ will be calculated from the $u$ axis interpolation, and then those two will be linearly interpolated across the $v$ axis to give us the final result.
 
 Knowing that we can linearly interpolate between two quadratic curves to create a cubic curve, and that we can combine three quadratic curves to create a quartic curve, the pattern seems to be that we need a texture size of $(2,2*(N-1))$ to encode a curve of order $N$ into a two dimensional texture.
 
@@ -465,6 +470,8 @@ If $M$ piecewise curves are desired, each of degree $N$, we can encode them acro
     \label{fig:texlayeout2d}
   \end{figure}  
 
+GLSL source code is also provided below to help see how that would work for sampling a cubic curve from a two dimensional texture, with two bilinear texture samples combined to create the final cubic curve.
+
 \begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture.  Bilinear texture sampling used to evaluate the first two levels of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp).}, label={lst:GLSLCubicTexture2D}]
 // 2x4 2d texture, rounded to the nearest powers of 2 from 2x3.
 uniform sampler2D uSampler; 
@@ -491,7 +498,7 @@ Using three dimensional textures (often referred to as volumetric textures) allo
 
 This allows us to either calculate a cubic Bezier curve with a single texture read, or allows us to get the cubic level values needed to make a higher order curve.
 
-Knowing that a cubic curve is just the linear interpolation of time $t$ between the points on two quadratic curves at time $t$, we know that our three dimensional texture needs to be set up to be able to make this happen.  With a $2$x$2$x$2$ texture, the front $2$x$2$ pixels would encode a quadratic curve for $P_0,P_1,P_2$ and the back $2$x$2$ pixels would encode a quadratic curve for $P_1,P_2,P_3$.  Then, when we sample the texture, plugging $t$ into $u,v$ and $w$, the result will be that it will calculate the points on the quadratic curves $P_0,P_1,P_2$ at time $t$ and also $P_1,P_2,P_3$ at time $t$, and then will interpolate across the $w$ axis to give us the final result.
+Knowing that a cubic curve is just the linear interpolation of time $t$ between the points on two quadratic curves at time $t$, we need to find a way to set up a 3d texture to make this happen with trilinear texture sampling.  With a $2$x$2$x$2$ texture, the front $2$x$2$ pixels would encode a quadratic curve for $P_0,P_1,P_2$ and the back $2$x$2$ pixels would encode a quadratic curve for $P_1,P_2,P_3$.  Then, when we sample the texture, plugging $t$ into $u,v$ and $w$, the result will be that it will calculate the points on the quadratic curves $P_0,P_1,P_2$ at time $t$ and also $P_1,P_2,P_3$ at time $t$, and then will interpolate across the $w$ axis to give us the final result.
 
 You can combine two cubic curves to make a quartic curve, or three cubic curves to make a quintic curve.  If you were to put $2$x$2$x$2$ cubic curves back to back, you would notice a redundancy like we saw in lower dimensionality textures.  Instead of going that route though, we can just build on what we did for two dimensional textures.
 
@@ -621,6 +628,8 @@ The size of a three dimensional texture needed to encode a curve of degree $N$ i
     \label{fig:texlayeout3d}
   \end{figure}  
 
+Below is some GLSL source code showing how you would sample a cubic curve stored in a 3d 2x2x2 texture, using trilinear texture sampling.
+
 \begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,2,2)$ pixel 3d texture.  Trilinear texture sampling used to evaluate all three levels of the De Casteljeau algorithm.}, label={lst:GLSLCubicTexture3D}]
 // 2x2x2 3d texture.
 uniform sampler2D uSampler; 
@@ -717,7 +726,7 @@ Evaluating a piecewise curve with this technique is very simple.  As an example,
     \label{fig:rationalbeziersincos}
   \end{figure}
 
-Rational Bezier curves are useful because they can be used to make shapes which cannot be formed from integral Bezier curves, including perfectly representing conic sections which mean that they can also represent sine and cosine as seen in \autoref{fig:rationalbeziersincos}.  Rational Bezier curves are defined by the equation:
+Rational Bezier curves are useful because they can be used to make shapes which cannot be formed from integral Bezier curves, including perfectly representing conic sections.  This also means that they can accurately represent sine and cosine as seen in \autoref{fig:rationalbeziersincos}.  Rational Bezier curves are defined by the equation:
 
 \begin{equation}
 \text{\bf{B}}(t) = \frac
@@ -728,9 +737,7 @@ Rational Bezier curves are useful because they can be used to make shapes which 
 \label{eqn:rationalbezier}                
 \end{equation}
 
-Looking closely, we can see that we essentially have one Bezier curve divided by another.  The numerator has a weighting and a control point, while the denominator has only a weighting, but if we were to multiply the weighting into the control point in the numerator, we would essentially have one Bezier curve divided by another.
-
-Using this technique, we can easily encode the numerator into one color channel, and the denominator into another.
+If we were to multiply the weight into the control point for the numerator, We can see that we essentially have one Bezier curve divided by another.  Using the techniques in this paper, we could easily encode the numerator into one color channel, and the denominator into another.
 
 If we wanted to get two rational Bezier curves per texture read, we could encode the two numerators into R and G, and the denominators into B and A.
 
@@ -744,7 +751,7 @@ Just as b-splines can be converted into piecewise Bezier curves, NURBS can also 
 
 \subsection{Multidimensional Bezier Curves}
 
-So far we have only talked about one dimensional - or explicit - Bezier curves which take the form of $y=f(x)$.  Multidimensional Bezier curves are evaluated separately per axis though, which means that you can encode information per axis in different color channels.
+So far we have only talked about one dimensional --- or explicit --- Bezier curves which take the form of $y=f(x)$.  Multidimensional Bezier curves are evaluated separately per axis though, which means that you can encode information per axis in different color channels.
 
 To name a few possibilities with a standard RGBA 2x2 texture, you could encode a fourth dimensional Bezier curve, or you could encode 2 two dimensional Bezier curves, or you could even encode a three dimensional rational Bezier curve using R,G,B for the numerator of each axis, and A as the denominator for all three curves.
 
@@ -776,13 +783,25 @@ These two techniques do all of the curve math in the shader program at full floa
 
 Another way to address accuracy would be to do some of the work in the texture sampler, and some of the work in the shader program.  This allows you to have a sliding scale for accuracy vs cost.
 
-For instance, if you had a 2x2 image which encoded a quadratic Bezier curve, you might do two texture reads, letting the texture sampler do the $x$ axis interpolation, and then you could linearly interpolate those results in the shader program in full precision floating point math.  This would give you a result somewhere between full hardware and full software interpolation.  You can compare the results in \autoref{fig:samplehwsw}.
+For instance, if you had a 2x2 image which encoded a quadratic Bezier curve, you might do two texture reads, letting the texture sampler do the $x$ axis interpolation, and then you could linearly interpolate those results in the shader program in full precision floating point math for the $y$ axis.  This would give you a result somewhere between full hardware and full software interpolation.  You can compare the results in \autoref{fig:samplehwsw}.
 
 Also, if you want a higher order curve than your texture can provide with a single read, forcing you to combine multiple curve points, combining those curve points in the shader program has the nice side benefit of increasing accuracy as well.
 
 %-------------------------------------------------------------------------
 \section{Limited Applications for Vector Graphics}
 \label{sec:limitedapplicationsforvectorgraphics}
+
+This technique does have applications to vector graphics, but they are pretty limited and there are better solutions if using Bezier curves as vector art is the goal \cite{Loop:2005:RIC:1073204.1073303,Nehab:2008:RRG:1409060.1409088}, or if the goal is to use textures for vector art data storage \cite{Green:2007:IAM:1281500.1281665}.  The limitation is due to the fact that this technique is good at calculating the point on a curve at time $t$, but when using curves in vector graphics situations, you usually do not know the time $t$ that you want to know the curve point for, and it is usually difficult to find it.
+
+However, there are certain special situations where you can easily get the time $t$ value of the curve that you care about.  Two of the most common situations for these are when rendering 1D explicit Bezier curves, and when rendering 1D explicit Bezier curves in polar form.
+
+Explicit Bezier curves are curves which have scalar control points and are in the form of $y=f(x)$.  For these curves, when you plug in a value for $x$ you get a $y$ value out.  They are unable to make curves that have multiple $y$ values for the same $x$, and the curves can't cross over themselves to make closed shapes.  This does make them not as useful to vector graphics as 2D Bezier curves which are of the form $(x,y) = f(t)$, but they still do have some use cases.  Rendering explicit Bezier curves using this technique is very simple.  If rendering a quad, you just choose either the $x$ or $y$ axis, normalize it from 0 to 1 and use that to calculate the other axis value by doing a texture sample.  At this point, you can either choose a half space to color in, or you can calculate the gradient of the function (by using the built in dFdx style functions to get partial derivatives), and use that as an estimated distance to the curve.
+
+This idea can easily be extended to 1D Bezier curves rendered in polar form.  If rendering a quad, you can use arc tangent to find the angle of the current pixel from the center, normalize that angle to 0 to 1, and then use that value to do a texture look up to calculate the value of the curve at that point.  Once again you can then either choose a half space to color in, or you can use the gradient information to get an estimated distance to the curve, to draw a curved line.
+
+Another problem with using this technique for vector graphics, is that since the texture sampler is doing at least some of the calculations for us, we don't have access to the values of the control points, which can make some operations harder.  Luckily, one property of Bezier curves is that affine transformations done to control points is equivalent to affine transformations done to points on the curve.  This means that we can do affine transformations on the curve points provided to us by the texture sampler, and it will be as if we had performed them on the control points themselves.
+
+Lastly, in regards to vector graphics, this technique can be used to allow people to define custom color gradients.  The benefit is that custom, non linear color gradients can be defined, and can be zoomed into without decaying to linear interpolation.
 
   \begin{figure}
     \hspace{-1.5cm}
@@ -794,18 +813,6 @@ Also, if you want a higher order curve than your texture can provide with a sing
     \caption{\textit{Left:}An animated flag textured with vector graphics using the techniques in this paper, using an 8x4 RGBA source texture to generate curves and color gradients.  \textit{Right:} Zooming in on part of the image to show the quality of the vector graphics.}   
     \label{fig:vectorgfx}
   \end{figure}
-
-This technique does have applications to vector graphics, but they are pretty limited and there are better solutions if using Bezier curves as vector art is the goal \cite{Loop:2005:RIC:1073204.1073303,Nehab:2008:RRG:1409060.1409088}, or if the goal is to use textures for vector art data storage \cite{Green:2007:IAM:1281500.1281665}.  The limitation is due to the fact that this technique is good at calculating the point on a curve at time $t$, but when using curves in vector graphics situations, you usually do not know the time $t$ that you want to know the curve point for, and it is usually difficult to find it.
-
-However, there are certain special situations where you can easily get the time $t$ value of the curve that you care about.  Two of the most common situations for these are when rendering 1D explicit Bezier curves, and when rendering 1D explicit Bezier curves in polar form.
-
-Explicit Bezier curves are curves which have scalar control points and are in the form of $y=f(x)$.  For these curves, when you plug in a value for $x$ you get a $y$ value out.  They are unable to make curves that have multiple $y$ values for the same $x$, and the curves can't cross over themselves to make closed shapes.  This does make them not as useful to vector graphics as 2D Bezier curves which are of the form $(x,y) = f(t)$, but they still do have some use cases.  Rendering explicit bezier curves using this technique is very simple.  If rendering a quad, you just choose either the $x$ or $y$ axis, normalize it from 0 to 1 and use that to calculate the other axis value by doing a texture sample.  At this point, you can either choose a half space to color in, or you can calculate the gradient of the function (by using the built in dFdx style functions to get partial derivatives), and use that as an estimated distance to the curve.
-
-This idea can easily be extended to 1D Bezier curves rendered in polar form.  If rendering a quad, you can use arc tangent to find the angle of the current pixel from the center, normalize that angle to 0 to 1, and then use that value to do a texture look up to calculate the value of the curve at that point.  Once again you can then either choose a half space to color in, or you can use the gradient information to get an estimated distance to the curve, to draw a curved line.
-
-Another problem with using this technique for vector graphics, is that since the texture sampler is doing at least some of the calculations for us, we don't have access to the values of the control points, which can make some operations harder.  Luckily, one property of Bezier curves is that affine transformations done to control points is equivalent to affine transformations done to points on the curve.  This means that we can do affine transformations on the curve points provided to us by the texture sampler, and it will be as if we had performed them on the control points themselves.
-
-Lastly, in regards to vector graphics, this technique can be used to allow people to define custom color gradients.  The benefit is that custom, non linear color gradients can be defined, and can be zoomed into without decaying to linear interpolation.
 
 A demonstration of these usage cases can be seen in \autoref{fig:vectorgfx}.
 
