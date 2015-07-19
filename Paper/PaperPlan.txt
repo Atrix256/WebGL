@@ -2,7 +2,7 @@ TODO:
 
 * put $ around all the symbols? control points, t,u, etc!
 
-* make sure you aren't confusing order with degree anywhere, and get an off by 1 thing in the text!
+* fix notation of doing overline{AB} etc
 
 * maybe stick to P_i instead of A,B,C for control points? in diagrams, in text, in code, etc
  * consistency would be nicer
@@ -345,6 +345,8 @@ author contact information
  * get cost of 1d vs 2d vs 3d texture sampling.
  * compare linear vs nearest too
  * get numbers from laptop as well as work computer
+
+* make sure you aren't confusing order with degree anywhere, and get an off by 1 thing in the text!
 
 ======THROW AWAY NOTES======
 
