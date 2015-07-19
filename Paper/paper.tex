@@ -88,15 +88,13 @@ The core of this technique is that the $N$-dimensional linear texture interpolat
 
 \subsection{Intuition}
 
-TODO: clean up the notation here!
-
 One dimensional linear texture sampling is just the linear interpolation between two data points.  This is equivalent to the De Casteljeau algorithm when evaluating a linear curve of degree 1.  In both cases, it is just linear interpolation between two values.
 
 Two dimensional linear texture sampling (bilinear texture sampling) can be thought of as just the linear interpolation across the $y$ axis, of two linear interpolations across the $x$ axis (or an interpolation across the $x$ axis of two linear interpolations across the $y$ axis - order doesn't matter).  In other words, bilinear texture sampling is just the linear interpolation of two linear interpolations. 
 
-The De Casteljeau algorithm for evaluating a quadratic curve (degree 2) is also just a linear interpolation between two linear interpolations.  If the control points of the quadratic curve are $P_0,P_1,P_2$, let's call the first interpolation $\overline{P_0P_1}$ which is the interpolation between $P_0$ and $P_1$ for time $t$. The second linear interpolation is $\overline{P_1P_2}$ and is the interpolation between $P_1$ and $P_2$ for time $t$.  The final point on the curve will be the interpolation at time $t$ between $\overline{P_0P_1}$ and $\overline{P_1P_2}$, which we can call $\stackrel{\frown}{P_0P_1P_2}$.  
+The De Casteljeau algorithm for evaluating a quadratic curve (degree 2) is also just a linear interpolation between two linear interpolations.  If the control points of the quadratic curve are $P_0,P_1,P_2$, let's call the first interpolated point $Q_{0,1}$ which is the interpolation between $P_0$ and $P_1$ for time $t$. The second linear interpolation is $Q_{1,2}$ and is the interpolation between $P_1$ and $P_2$ for time $t$.  The final point on the curve will be the interpolation at time $t$ between $Q_{0,1}$ and $Q_{1,2}$, which we can call $R_{0,1,2}$.  
 
-We could set up a texture such that the two $x$ axis interpolations would give us the values $\overline{P_0P_1}$ and $\overline{P_1P_2}$ respectively, and then the $y$ axis interpolation between those values would give us $\stackrel{\frown}{P_0P_1P_2}$.  When sampling, we would also use texture coordinates such it results in the same time $t$ value for interpolation on each axis.
+We could set up a texture such that the two $x$ axis interpolations would give us the values $Q_{0,1}$ and $Q_{1,2}$ respectively, and then the $y$ axis interpolation between those values would give us $R_{0,1,2}$.  When sampling, we would also use texture coordinates such it results in the same time $t$ value for interpolation on each axis.
 
 To further see how bilinear interpolation can be equivalent to evaluating a quadratic Bezier curve with the De Casteljeau algorithm, \autoref{fig:decasteljeauBilinear} shows it visually, and you can also compare the GLSL source code in \autoref{lst:GLSLCurves}.
 
@@ -131,15 +129,15 @@ float BilinearInterpolate (
       % control polygon / labels
       \draw[red,->]       (0.0,0.0) -- (0.5,1.0);
       \draw[darkgreen,->] (0.5,1.0) -- (1.0,0.0);
-      \draw[red]          (0.25,0.5) node[anchor=east] {$\overline{AB}$};
-      \draw[darkgreen]    (0.75,0.5) node[anchor=west] {$\overline{BC}$};
+      \draw[red]          (0.25,0.5) node[anchor=east] {$Q_{0,1}$};
+      \draw[darkgreen]    (0.75,0.5) node[anchor=west] {$Q_{1,2}$};
       % control point labels
-      \draw (0.0,0.0) node[anchor=east]  {\bf{A}};
-      \draw (0.5,1.0) node[anchor=south] {\bf{B}};
-      \draw (1.0,0.0) node[anchor=west]  {\bf{C}};
+      \draw (0.0,0.0) node[anchor=east]  {$\bf{P_0}$};
+      \draw (0.5,1.0) node[anchor=south] {$\bf{P_1}$};
+      \draw (1.0,0.0) node[anchor=west]  {$\bf{P_2}$};
       % draw a line from AB->AC for time = 0.75
       \draw[orange,->] (0.3,0.6) -- (0.8,0.4);
-      \draw[orange] (0.40,0.55) node[anchor=south west] {$\stackrel{\frown}{ABC}$};
+      \draw[orange] (0.40,0.55) node[anchor=south west] {$R_{0,1,2}$};
       % draw the point at t=0.6 and label underneath the curve
       \draw[black,fill=black] (0.6,0.48) circle (1mm);
       \draw[black] (0.5,0.45) node[anchor=north] {\bf{t}=0.6};
@@ -153,23 +151,23 @@ float BilinearInterpolate (
         % representative line for where the quadratic bezier curve lives
         \draw[blue,line width=0.5mm] (0,0) -- (1,1);    
         % corner labels
-        \draw (0,0) node[anchor=north east] {\bf{A}};
-        \draw (1,0) node[anchor=north west] {\bf{B}};     
-        \draw (0,1) node[anchor=south east] {\bf{B}};
-        \draw (1,1) node[anchor=south west] {\bf{C}};     
+        \draw (0,0) node[anchor=north east] {$\bf{P_0}$};
+        \draw (1,0) node[anchor=north west] {$\bf{P_1}$};     
+        \draw (0,1) node[anchor=south east] {$\bf{P_1}$};
+        \draw (1,1) node[anchor=south west] {$\bf{P_2}$};     
         % x axis interpolation
         \draw[red,->]       (0.0,0.1) -- (1.0,0.1);
-        \draw[red]          (0.4,0.1) node[anchor=south] {$\overline{AB}$};
+        \draw[red]          (0.4,0.1) node[anchor=south] {$Q_{0,1}$};
         \draw[darkgreen,->] (0.0,0.9) -- (1.0,0.9);
-        \draw[darkgreen]    (0.4,0.9) node[anchor=north] {$\overline{BC}$};
+        \draw[darkgreen]    (0.4,0.9) node[anchor=north] {$Q_{1,2}$};
         % y axis interpolation
         \draw[orange,->]    (0.6,0.0) -- (0.6,1.0);
-        \draw[orange]     (0.6,0.5) node[anchor=west] {$\stackrel{\frown}{ABC}$};
+        \draw[orange]     (0.6,0.5) node[anchor=west] {$R_{0,1,2}$};
         % draw the point at t=0.6 and label for it
         \draw[black,fill=black] (0.6,0.6) circle (1mm);
         \draw[black] (0.55,0.6) node[anchor=east] {\bf{t}=0.6};
     \end{tikzpicture} 
-    \caption{\textit{Left:} A quadratic Bezier curve evaluated at {\bf{t}}=0.6 for control points A,B,C using the De Casteljeau algorithm.  \textit{Right:} The De Casteljeau algorithm using bilinear interpolation.  Note that in this case, the X axis is evaluated before the Y, but the Y axis could be evaluated before the X for the same results.}
+    \caption{\textit{Left:} A quadratic Bezier curve evaluated at {\bf{t}}=0.6 using the De Casteljeau algorithm.  \textit{Right:} The De Casteljeau algorithm using bilinear interpolation.}
     \label{fig:decasteljeauBilinear}
   \end{figure}
 
@@ -204,16 +202,14 @@ It is also possible to get points on curves of higher degree by taking multiple 
 
 \subsection{Mathematical Basis}
 
-TODO: fix up notation to be consistant (Px vs A,B,C,D)
-
-The De Casteljeau algorithm is equivalent to the Bernstein form of Bezier curves.
+The De Casteljeau algorithm is equivalent to the Bernstein form of Bezier curves (\autoref{eqn:bernsteinform}).
 
 \begin{equation}
 \bf{P(t)} = \sum\limits_{i=0}^n\binom {n} {i}(1-t)^{n-i}t^i\text{\bf{P}}_i
 \label{eqn:bernsteinform}
 \end{equation}
 
-That they are equivalent means that the Bernstein form for a given $n$ must also be able to be evaluated by $n$-Linear interpolation.  A linear curve should be able to be evaluated by linear interpolation, a quadratic curve should be able to be evaluated by bilinear interpolation, a cubic curve should be able to be evaluated by trilinear interpolation, and so on.
+This means that the Bernstein form for a given $n$ must also be able to be evaluated by $n$-Linear interpolation.  A linear curve should be able to be evaluated by linear interpolation, a quadratic curve should be able to be evaluated by bilinear interpolation, a cubic curve should be able to be evaluated by trilinear interpolation, and so on.
 
 When $n$ is $1$, to make a linear Bezier curve, the equation we get out is in fact just linear interpolation, so we can see that it's true in that case.
 
@@ -350,69 +346,68 @@ It's often the case that you want $C0$ continuity for piecewise curves though, w
   \begin{figure}
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0) grid (4,1);
-      \draw (0.5,0.5) node {$A$};
-      \draw (1.5,0.5) node {$B$};
-      \draw (2.5,0.5) node {$C$};
-      \draw (3.5,0.5) node {$D$};
+      \draw (0.5,0.5) node {$P_0$};
+      \draw (1.5,0.5) node {$P_1$};
+      \draw (2.5,0.5) node {$P_2$};
+      \draw (3.5,0.5) node {$P_3$};
     \end{tikzpicture}
 
     \vspace{5mm}
 
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0) grid (8,1);
-      \draw (0.5,0.5) node {$A$};
-      \draw (1.5,0.5) node {$B$};
-      \draw (2.5,0.5) node {$C$};
-      \draw (3.5,0.5) node {$D$};
-      \draw (4.5,0.5) node {$D$};
-      \draw (5.5,0.5) node {$E$};
-      \draw (6.5,0.5) node {$F$};
-      \draw (7.5,0.5) node {$G$};     
+      \draw (0.5,0.5) node {$P_0$};
+      \draw (1.5,0.5) node {$P_1$};
+      \draw (2.5,0.5) node {$P_2$};
+      \draw (3.5,0.5) node {$P_3$};
+      \draw (4.5,0.5) node {$P_3$};
+      \draw (5.5,0.5) node {$P_4$};
+      \draw (6.5,0.5) node {$P_5$};
+      \draw (7.5,0.5) node {$P_6$};     
     \end{tikzpicture}   
 
     \vspace{5mm}
 
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0) grid (7,1);
-      \draw (0.5,0.5) node {$A$};
-      \draw (1.5,0.5) node {$B$};
-      \draw (2.5,0.5) node {$C$};
-      \draw (3.5,0.5) node {$D$};
-      \draw (4.5,0.5) node {$E$};
-      \draw (5.5,0.5) node {$F$};
-      \draw (6.5,0.5) node {$G$};     
+      \draw (0.5,0.5) node {$P_0$};
+      \draw (1.5,0.5) node {$P_1$};
+      \draw (2.5,0.5) node {$P_2$};
+      \draw (3.5,0.5) node {$P_3$};
+      \draw (4.5,0.5) node {$P_4$};
+      \draw (5.5,0.5) node {$P_5$};
+      \draw (6.5,0.5) node {$P_6$};     
     \end{tikzpicture}      
-    \caption{\textit{Top:} A cubic curve with control points $A,B,C,D$ encoded in a 1d texture with a size of 4 pixels.  \textit{Middle:} Two piecewise curves encoded in a 1d texture.  The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.  \textit{Bottom:} With $C0$ continuity, a redundant $D$ can be removed to store these curves in 7 pixels instead of 8. }    
+    \caption{\textit{Top:} A cubic curve encoded in a 1d texture with a size of 4 pixels.  \textit{Middle:} Two piecewise cubic curves encoded in a 1d texture with $C0$ continuity.  \textit{Bottom:} With $C0$ continuity, a redundant $P_3$ can be removed to store these curves in 7 pixels instead of 8. }    
     \label{fig:texlayeout1d}
   \end{figure}
 
 Taking $N$ linearly interpolated texture samples from a one dimensional texture of size $N+1$ gives us the linear interpolated values we would need to continue to perform the De Casteljeau algorithm.  We can compute the final curve point either by doing that, or by plugging the values into the Bernstein form equation of Bezier curves.
 
-In the case of a cubic curve with control points $A,B,C,D$, the one dimensional texture will be 4 pixels in size, and three texture reads will need to be done to get the interpolations for $\overline{AB},\overline{BC},\overline{CD}$.  Those will then need to be combined using either the De Casteljeau algorithm, or by using the Bernstein form of a quadratic Bezier curve ($P = A*s^2 + B*st + C*t^2$) to elevate those three points from degree 1 to degree 3, to get the final point $\stackrel{\frown}{ABCD}$.  Sample code of this example is provided in \autoref{lst:GLSLCubicTexture1D}.
+In the case of a cubic curve with four control points, the one dimensional texture will be 4 pixels in size, and three texture reads will need to be done to get the interpolations along the line segments for $\overline{P_0P_1},\overline{P_1P_2},\overline{P_2P_3}$.  Those will then need to be combined using either the De Casteljeau algorithm, or by using the Bernstein form of a quadratic Bezier curve ($P = P_0*s^2 + P_1*2st + P_2*t^2$) to elevate those three points from degree 1 to degree 3, to get the final point on the curve.  Sample code of this example is provided in \autoref{lst:GLSLCubicTexture1D}.
 
 \begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture.  Linear texture sampling is used to evaluate the linear level of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a quadratic Bezier curve.}, label={lst:GLSLCubicTexture1D}]
-// 4 pixel 1d texture with control points encoded: A,B,C,D
-uniform sampler1D uSampler; 
+uniform sampler1D uSampler;  // 4x1 texture: $P_0,P_1,P_2,P_3$
 const float c_textureSize = 4.0;
 
 vec4 CubicCurveFromTexture1D_DeCasteljeau(in float t) {
-    vec4 AB = texture(uSampler, (t + 0.5) / c_textureSize);
-    vec4 BC = texture(uSampler, (t + 1.5) / c_textureSize;
-    vec4 CD = texture(uSampler, (t + 2.5) / c_textureSize);
-    vec4 ABC = mix(AB, BC, t);
-    vec4 BCD = mix(BC, CD, t);
-    return mix(ABC, BCD, t);
+    vec4 P0P1 = texture(uSampler, (t + 0.5) / c_textureSize);
+    vec4 P1P2 = texture(uSampler, (t + 1.5) / c_textureSize);
+    vec4 P2P3 = texture(uSampler, (t + 2.5) / c_textureSize);
+    vec4 P0P1P2 = mix(P0P1, P1P2, t);
+    vec4 P1P2P3 = mix(P1P2, P2P3, t);
+    return mix(P0P1P2, P1P2P3, t);
 }
 
 vec4 CubicCurveFromTexture1D_Bernstein(in float t) {
-    vec4 AB = texture(uSampler, (t + 0.5) / c_textureSize);
-    vec4 BC = texture(uSampler, (t + 1.5) / c_textureSize);
-    vec4 CD = texture(uSampler, (t + 2.5) / c_textureSize);
+    vec4 P0P1 = texture(uSampler, (t + 0.5) / c_textureSize);
+    vec4 P1P2 = texture(uSampler, (t + 1.5) / c_textureSize);
+    vec4 P2P3 = texture(uSampler, (t + 2.5) / c_textureSize);
     float s = (1 - t);
     float s2 = s * s;
     float t2 = t * t;
     // Quadratic Bezier Curve = A*s*s + B*2*s*t + C*t*t
-    return AB*s2 + BC*2.0*s*t + CD*t2;
+    return P0P1*s2 + P1P2*2.0*s*t + P2P3*t2;
 }
 \end{lstlisting}
 
@@ -421,52 +416,52 @@ Using two dimensional textures allows the texture interpolator to perform biline
 
 This allows us to either calculate a quadratic Bezier curve with a single texture read, or allows us to get the quadratic level values needed to make a higher degree curve.
 
-Knowing that a quadratic curve is just the linear interpolation of time $t$ between the points on two linear curves at time $t$, we have to find a way to make a texture that will cause this to happen with bilinear interpolation.  The result is that if we have a $2$x$2$ texture, the top two pixels should be $P_0$ and $P_1$ and the bottom two pixels should be $P_1$ and $P_2$.  When we do a bilinear interpolation such that we plug $t$ into both $u$ and $v$, the end result will be that $\overline{P_0P_1}$ and $\overline{P_1P_2}$ will be calculated from the $u$ axis interpolation, and then those two will be linearly interpolated across the $v$ axis to give us the final result.
+Knowing that a quadratic curve is just the linear interpolation of time $t$ between the points on two linear curves at time $t$, we have to find a way to make a texture that will cause this to happen with bilinear interpolation.  The result is that if we have a $2$x$2$ texture, the top two pixels should be $P_0$ and $P_1$ and the bottom two pixels should be $P_1$ and $P_2$.  When we do a bilinear interpolation such that we plug $t$ into both $u$ and $v$, the end result will be that the interpolations between $\overline{P_0P_1}$ and $\overline{P_1P_2}$ will be calculated from the $u$ axis interpolations, and then those two will be linearly interpolated across the $v$ axis to give us the final result.
 
 Knowing that we can linearly interpolate between two quadratic curves to create a cubic curve, and that we can combine three quadratic curves to create a quartic curve, the pattern seems to be that we need a texture size of $(2,2*(N-1))$ to encode a curve of degree $N$ into a two dimensional texture.
 
 When actually creating that texture, we would once again see redundancies however.  For a cubic curve with control points $P_0,P_1,P_2,P_3$ we would see that the top row of pixels was $P_0,P_1$, then the next row was $P_1,P_2$.  That would be our first quadratic curve.  The third row would start our second quadratic curve which would be $P_1,P_2$ and then the fourth and final row would be $P_2,P_3$.  In this case, $P_1,P_2$ is redundant.  If we increased the degree of the curve, the pattern that we would see is that every curve after the first curve would have a redundant row.
 
-Removing that redundant row, it means that we start with a $2$x$2$ texture for a quadratic curve, and then just add a row of pixels for each degree above quadratic.  That makes the size of our texture required be only $(2,N)$.
+Removing that redundant row, it means that we start with a $2$x$2$ texture for a quadratic curve, and then just add a row of pixels for each degree above quadratic.  That makes the size of our texture required be only $(2,N)$ where $N$ is greater than 1.
 
 If $M$ piecewise curves are desired, each of degree $N$, we can encode them across the $X$ axis to require a texture size of $(2*M,N)$ (\autoref{fig:texlayeout2d}).
 
   \begin{figure}
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0) grid (2,-2);
-      \draw (0.5,-0.5) node {$A$};
-      \draw (1.5,-0.5) node {$B$};
-      \draw (0.5,-1.5) node {$B$};
-      \draw (1.5,-1.5) node {$C$};     
+      \draw (0.5,-0.5) node {$P_0$};
+      \draw (1.5,-0.5) node {$P_1$};
+      \draw (0.5,-1.5) node {$P_1$};
+      \draw (1.5,-1.5) node {$P_2$};     
     \end{tikzpicture}
     \hspace{5mm}  
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0) grid (2,-3);
-      \draw (0.5,-0.5) node {$A$};
-      \draw (1.5,-0.5) node {$B$};
-      \draw (0.5,-1.5) node {$B$};
-      \draw (1.5,-1.5) node {$C$};
-      \draw (0.5,-2.5) node {$C$};
-      \draw (1.5,-2.5) node {$D$};      
+      \draw (0.5,-0.5) node {$P_0$};
+      \draw (1.5,-0.5) node {$P_1$};
+      \draw (0.5,-1.5) node {$P_1$};
+      \draw (1.5,-1.5) node {$P_2$};
+      \draw (0.5,-2.5) node {$P_2$};
+      \draw (1.5,-2.5) node {$P_3$};      
     \end{tikzpicture}
     \hspace{5mm}
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0) grid (4,-3);
-      \draw (0.5,-0.5) node {$A$};
-      \draw (1.5,-0.5) node {$B$};
-      \draw (0.5,-1.5) node {$B$};
-      \draw (1.5,-1.5) node {$C$};
-      \draw (0.5,-2.5) node {$C$};
-      \draw (1.5,-2.5) node {$D$};  
+      \draw (0.5,-0.5) node {$P_0$};
+      \draw (1.5,-0.5) node {$P_1$};
+      \draw (0.5,-1.5) node {$P_1$};
+      \draw (1.5,-1.5) node {$P_2$};
+      \draw (0.5,-2.5) node {$P_2$};
+      \draw (1.5,-2.5) node {$P_3$};  
 
-      \draw (2.5,-0.5) node {$D$};
-      \draw (3.5,-0.5) node {$E$};
-      \draw (2.5,-1.5) node {$E$};
-      \draw (3.5,-1.5) node {$F$};
-      \draw (2.5,-2.5) node {$F$};
-      \draw (3.5,-2.5) node {$G$};          
+      \draw (2.5,-0.5) node {$P_3$};
+      \draw (3.5,-0.5) node {$P_4$};
+      \draw (2.5,-1.5) node {$P_4$};
+      \draw (3.5,-1.5) node {$P_5$};
+      \draw (2.5,-2.5) node {$P_5$};
+      \draw (3.5,-2.5) node {$P_6$};          
     \end{tikzpicture}
-    \caption{\textit{Left:} A quadratic curve with control points $A,B,C$ encoded in a 2d texture that is $(2,2)$ in size. \textit{Middle:} A cubic curve with control points $A,B,C,D$ encoded in a 2d texture that is $(2,3)$ in size.  \textit{Right:} Two piecewise curves encoded in a 2d texture that is $(4,3)$ in size.  The control points for the first curve are $A,B,C,D$ and the control points for the second curve are $D,E,F,G$.} 
+    \caption{\textit{Left:} A quadratic curve encoded in a 2d texture that is $(2,2)$ in size. \textit{Middle:} A cubic curve encoded in a 2d texture that is $(2,3)$ in size.  \textit{Right:} Two piecewise cubic curves encoded in a 2d texture with $C0$ continuity that is $(4,3)$ in size.} 
     \label{fig:texlayeout2d}
   \end{figure}  
 
@@ -478,21 +473,23 @@ uniform sampler2D uSampler;
 const vec2 c_textureSize = vec2(2.0,4.0);
 
 vec4 CubicCurveFromTexture2D_DeCasteljeau(in float t) {
-    vec4 ABC = texture(uSampler, (vec2(0.5, 0.5)+t) / c_textureSize);
-    vec4 BCD = texture(uSampler, (vec2(0.5, 1.5)+t) / c_textureSize);
-    return mix(ABC, BCD, t);
+    vec4 P0P1P2 = texture(uSampler,(vec2(0.5, 0.5)+t)/c_textureSize);
+    vec4 P1P2P3 = texture(uSampler,(vec2(0.5, 1.5)+t)/c_textureSize);
+    return mix(P0P1P2, P1P2P3, t);
 }
 
 vec4 CubicCurveFromTexture2D_Bernstein(in float t) {
-    vec4 ABC = texture(uSampler, (vec2(0.5, 0.5)+t) / c_textureSize);
-    vec4 BCD = texture(uSampler, (vec2(0.5, 1.5)+t) / c_textureSize);
+    vec4 P0P1P2 = texture(uSampler,(vec2(0.5, 0.5)+t)/c_textureSize);
+    vec4 P1P2P3 = texture(uSampler,(vec2(0.5, 1.5)+t)/c_textureSize);
     float s = (1 - t);
     // Linear Bezier Curve = A*s + B*t
-    return ABC*s + BCD*t;
+    return P0P1P2*s + P1P2P3*t;
 }
 \end{lstlisting}
 
 \subsection{Three Dimensional Textures}
+
+TODO: continue from this point cleaning up notation (overline BS as well as A,B,C control points)
 
 Using three dimensional textures (often referred to as volumetric textures) allows the texture interpolator to evaluate trilinear interpolation, which allows calculations of 3rd degree (cubic) Bezier curves (\autoref{fig:decdimensionality}).
 
