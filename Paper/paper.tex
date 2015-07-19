@@ -387,8 +387,8 @@ Taking $N$ linearly interpolated texture samples from a one dimensional texture 
 In the case of a cubic curve with four control points, the one dimensional texture will be 4 pixels in size, and three texture reads will need to be done to get the interpolations along the line segments for $\overline{P_0P_1},\overline{P_1P_2},\overline{P_2P_3}$.  Those will then need to be combined using either the De Casteljeau algorithm, or by using the Bernstein form of a quadratic Bezier curve ($P = P_0*s^2 + P_1*2st + P_2*t^2$) to elevate those three points from degree 1 to degree 3, to get the final point on the curve.  Sample code of this example is provided in \autoref{lst:GLSLCubicTexture1D}.
 
 \begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture.  Linear texture sampling is used to evaluate the linear level of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a quadratic Bezier curve.}, label={lst:GLSLCubicTexture1D}]
-uniform sampler1D uSampler;  // 4x1 texture: $P_0,P_1,P_2,P_3$
-const float c_textureSize = 4.0;
+uniform sampler1D uSampler;  
+const float c_textureSize = 4.0; // $P_0,P_1,P_2,P_3$
 
 vec4 CubicCurveFromTexture1D_DeCasteljeau(in float t) {
     vec4 P0P1 = texture(uSampler, (t + 0.5) / c_textureSize);
@@ -468,9 +468,8 @@ If $M$ piecewise curves are desired, each of degree $N$, we can encode them acro
 GLSL source code is also provided below to help see how that would work for sampling a cubic curve from a two dimensional texture, with two bilinear texture samples combined to create the final cubic curve.
 
 \begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture.  Bilinear texture sampling used to evaluate the first two levels of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp).}, label={lst:GLSLCubicTexture2D}]
-// 2x4 2d texture, rounded to the nearest powers of 2 from 2x3.
 uniform sampler2D uSampler; 
-const vec2 c_textureSize = vec2(2.0,4.0);
+const vec2 c_textureSize = vec2(2.0,4.0); // rounded up from 2x3
 
 vec4 CubicCurveFromTexture2D_DeCasteljeau(in float t) {
     vec4 P0P1P2 = texture(uSampler,(vec2(0.5, 0.5)+t)/c_textureSize);
@@ -489,32 +488,30 @@ vec4 CubicCurveFromTexture2D_Bernstein(in float t) {
 
 \subsection{Three Dimensional Textures}
 
-TODO: continue from this point cleaning up notation (overline BS as well as A,B,C control points)
-
 Using three dimensional textures (often referred to as volumetric textures) allows the texture interpolator to evaluate trilinear interpolation, which allows calculations of 3rd degree (cubic) Bezier curves (\autoref{fig:decdimensionality}).
 
 This allows us to either calculate a cubic Bezier curve with a single texture read, or allows us to get the cubic level values needed to make a higher degree curve.
 
 Knowing that a cubic curve is just the linear interpolation of time $t$ between the points on two quadratic curves at time $t$, we need to find a way to set up a 3d texture to make this happen with trilinear texture sampling.  With a $2$x$2$x$2$ texture, the front $2$x$2$ pixels would encode a quadratic curve for $P_0,P_1,P_2$ and the back $2$x$2$ pixels would encode a quadratic curve for $P_1,P_2,P_3$.  Then, when we sample the texture, plugging $t$ into $u,v$ and $w$, the result will be that it will calculate the points on the quadratic curves $P_0,P_1,P_2$ at time $t$ and also $P_1,P_2,P_3$ at time $t$, and then will interpolate across the $w$ axis to give us the final result.
 
-You can combine two cubic curves to make a quartic curve, or three cubic curves to make a quintic curve.  If you were to put $2$x$2$x$2$ cubic curves back to back, you would notice a redundancy like we saw in lower dimensionality textures.  Instead of going that route though, we can just build on what we did for two dimensional textures.
+You can combine two cubic curves to make a quartic curve, or three cubic curves to make a quintic curve.  If you were to put $2$x$2$x$2$ cubic curves back to back, you would notice a redundancy like we saw in lower dimensionality textures.  Instead of going that route, we can build on what we did for two dimensional textures.
 
 The size of a three dimensional texture needed to encode a curve of degree $N$ is $(2,N-1,2)$.  If you wanted to store $M$ piecewise curves, each of degree $N$, the formula becomes $(2*M,N-1,2)$ (\autoref{fig:texlayeout3d}).
 
 \begin{figure}
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0,0) grid (2,-2,0);
-      \draw (0.5,-0.5) node {$A$};
-      \draw (1.5,-0.5) node {$B$};
-      \draw (0.5,-1.5) node {$B$};
-      \draw (1.5,-1.5) node {$C$};
+      \draw (0.5,-0.5) node {$P_0$};
+      \draw (1.5,-0.5) node {$P_1$};
+      \draw (0.5,-1.5) node {$P_1$};
+      \draw (1.5,-1.5) node {$P_2$};
 
       \begin{scope}[shift={(0.75,0.75,0)}]
         \draw[step=1cm,gray,dashed] (0,0,0) grid (2,-2,0);
-        \draw[gray] (0.5,-0.5) node {$B$};
-        \draw[gray] (1.5,-0.5) node {$C$};
-        \draw[gray] (0.5,-1.5) node {$C$};
-        \draw[gray] (1.5,-1.5) node {$D$};
+        \draw[gray] (0.5,-0.5) node {$P_1$};
+        \draw[gray] (1.5,-0.5) node {$P_2$};
+        \draw[gray] (0.5,-1.5) node {$P_2$};
+        \draw[gray] (1.5,-1.5) node {$P_3$};
       \end{scope}
 
       \draw[dashed] (0,0,0) -- (0.75, 0.75,0);
@@ -525,27 +522,27 @@ The size of a three dimensional texture needed to encode a curve of degree $N$ i
     \hspace{5mm}
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0,0) grid (4,-2,0);
-      \draw (0.5,-0.5) node {$A$};
-      \draw (1.5,-0.5) node {$B$};
-      \draw (0.5,-1.5) node {$B$};
-      \draw (1.5,-1.5) node {$C$};
+      \draw (0.5,-0.5) node {$P_0$};
+      \draw (1.5,-0.5) node {$P_1$};
+      \draw (0.5,-1.5) node {$P_1$};
+      \draw (1.5,-1.5) node {$P_2$};
 
-      \draw (2.5,-0.5) node {$E$};
-      \draw (3.5,-0.5) node {$F$};
-      \draw (2.5,-1.5) node {$F$};
-      \draw (3.5,-1.5) node {$G$};
+      \draw (2.5,-0.5) node {$P_4$};
+      \draw (3.5,-0.5) node {$P_5$};
+      \draw (2.5,-1.5) node {$P_5$};
+      \draw (3.5,-1.5) node {$P_6$};
 
       \begin{scope}[shift={(0.75,0.75,0)}]
         \draw[step=1cm,gray,dashed] (0,0,0) grid (4,-2,0);
-        \draw[gray] (0.5,-0.5) node {$B$};
-        \draw[gray] (1.5,-0.5) node {$C$};
-        \draw[gray] (0.5,-1.5) node {$C$};
-        \draw[gray] (1.5,-1.5) node {$D$};
+        \draw[gray] (0.5,-0.5) node {$P_1$};
+        \draw[gray] (1.5,-0.5) node {$P_2$};
+        \draw[gray] (0.5,-1.5) node {$P_2$};
+        \draw[gray] (1.5,-1.5) node {$P_3$};
 
-        \draw[gray] (2.5,-0.5) node {$F$};
-        \draw[gray] (3.5,-0.5) node {$G$};
-        \draw[gray] (2.5,-1.5) node {$G$};
-        \draw[gray] (3.5,-1.5) node {$H$};
+        \draw[gray] (2.5,-0.5) node {$P_5$};
+        \draw[gray] (3.5,-0.5) node {$P_6$};
+        \draw[gray] (2.5,-1.5) node {$P_6$};
+        \draw[gray] (3.5,-1.5) node {$P_7$};
       \end{scope}
 
       \draw[dashed] (0,0,0) -- (0.75, 0.75,0);
@@ -558,21 +555,21 @@ The size of a three dimensional texture needed to encode a curve of degree $N$ i
 
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0,0) grid (2,-3,0);
-      \draw (0.5,-0.5) node {$A$};
-      \draw (1.5,-0.5) node {$B$};
-      \draw (0.5,-1.5) node {$B$};
-      \draw (1.5,-1.5) node {$C$};
-      \draw (0.5,-2.5) node {$C$};
-      \draw (1.5,-2.5) node {$D$};
+      \draw (0.5,-0.5) node {$P_0$};
+      \draw (1.5,-0.5) node {$P_1$};
+      \draw (0.5,-1.5) node {$P_1$};
+      \draw (1.5,-1.5) node {$P_2$};
+      \draw (0.5,-2.5) node {$P_2$};
+      \draw (1.5,-2.5) node {$P_3$};
 
       \begin{scope}[shift={(0.75,0.75,0)}]
         \draw[step=1cm,gray,dashed] (0,0,0) grid (2,-3,0);
-        \draw[gray] (0.5,-0.5) node {$B$};
-        \draw[gray] (1.5,-0.5) node {$C$};
-        \draw[gray] (0.5,-1.5) node {$C$};
-        \draw[gray] (1.5,-1.5) node {$D$};
-        \draw[gray] (0.5,-2.5) node {$D$};
-        \draw[gray] (1.5,-2.5) node {$E$};
+        \draw[gray] (0.5,-0.5) node {$P_1$};
+        \draw[gray] (1.5,-0.5) node {$P_2$};
+        \draw[gray] (0.5,-1.5) node {$P_2$};
+        \draw[gray] (1.5,-1.5) node {$P_3$};
+        \draw[gray] (0.5,-2.5) node {$P_3$};
+        \draw[gray] (1.5,-2.5) node {$P_4$};
       \end{scope}
 
       \draw[dashed] (0,0,0) -- (0.75, 0.75,0);
@@ -583,36 +580,36 @@ The size of a three dimensional texture needed to encode a curve of degree $N$ i
     \hspace{5mm}
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0,0) grid (4,-3,0);
-      \draw (0.5,-0.5) node {$A$};
-      \draw (1.5,-0.5) node {$B$};
-      \draw (0.5,-1.5) node {$B$};
-      \draw (1.5,-1.5) node {$C$};
-      \draw (0.5,-2.5) node {$C$};
-      \draw (1.5,-2.5) node {$D$};
+      \draw (0.5,-0.5) node {$P_0$};
+      \draw (1.5,-0.5) node {$P_1$};
+      \draw (0.5,-1.5) node {$P_1$};
+      \draw (1.5,-1.5) node {$P_2$};
+      \draw (0.5,-2.5) node {$P_2$};
+      \draw (1.5,-2.5) node {$P_3$};
 
-      \draw (2.5,-0.5) node {$F$};
-      \draw (3.5,-0.5) node {$G$};
-      \draw (2.5,-1.5) node {$G$};
-      \draw (3.5,-1.5) node {$H$};
-      \draw (2.5,-2.5) node {$H$};
-      \draw (3.5,-2.5) node {$I$};
+      \draw (2.5,-0.5) node {$P_5$};
+      \draw (3.5,-0.5) node {$P_6$};
+      \draw (2.5,-1.5) node {$P_6$};
+      \draw (3.5,-1.5) node {$P_7$};
+      \draw (2.5,-2.5) node {$P_7$};
+      \draw (3.5,-2.5) node {$P_8$};
 
       \begin{scope}[shift={(0.75,0.75,0)}]
         \draw[step=1cm,gray,dashed] (0,0,0) grid (4,-3,0);
-        \draw[gray] (0.5,-0.5) node {$B$};
-        \draw[gray] (1.5,-0.5) node {$C$};
-        \draw[gray] (0.5,-1.5) node {$C$};
-        \draw[gray] (1.5,-1.5) node {$D$};
-        \draw[gray] (0.5,-2.5) node {$D$};
-        \draw[gray] (1.5,-2.5) node {$E$};
+        \draw[gray] (0.5,-0.5) node {$P_1$};
+        \draw[gray] (1.5,-0.5) node {$P_2$};
+        \draw[gray] (0.5,-1.5) node {$P_2$};
+        \draw[gray] (1.5,-1.5) node {$P_3$};
+        \draw[gray] (0.5,-2.5) node {$P_3$};
+        \draw[gray] (1.5,-2.5) node {$P_4$};
 
 
-        \draw[gray] (2.5,-0.5) node {$G$};
-        \draw[gray] (3.5,-0.5) node {$H$};
-        \draw[gray] (2.5,-1.5) node {$H$};
-        \draw[gray] (3.5,-1.5) node {$I$};
-        \draw[gray] (2.5,-2.5) node {$I$};
-        \draw[gray] (3.5,-2.5) node {$J$};
+        \draw[gray] (2.5,-0.5) node {$P_6$};
+        \draw[gray] (3.5,-0.5) node {$P_7$};
+        \draw[gray] (2.5,-1.5) node {$P_7$};
+        \draw[gray] (3.5,-1.5) node {$P_8$};
+        \draw[gray] (2.5,-2.5) node {$P_8$};
+        \draw[gray] (3.5,-2.5) node {$P_9$};
       \end{scope}
 
       \draw[dashed] (0,0,0) -- (0.75, 0.75,0);
@@ -652,6 +649,14 @@ The table below is a comparison of texture dimensionality options.  $M$ is the n
 \bf{4D} & 4 (Quartic) & $N-3$ & $(2*M,N-2,2,2)$ & $M*(N-2)*8$\\ \hline
 \end{tabular}
 
+%-------------------------------------------------------------------------
+\section{Extensions}
+\label{sec:extensions}
+
+There are a few ways to extend this technique for more options.
+
+\subsection{Combining Color Channels}
+
 \begin{figure}
     \begin{tikzpicture}
 
@@ -680,23 +685,15 @@ The table below is a comparison of texture dimensionality options.  $M$ is the n
     \label{fig:pixelcount}
   \end{figure}
 
-%-------------------------------------------------------------------------
-\section{Extensions}
-\label{sec:extensions}
-
-There are a few ways to extend this technique for more options.
-
-\subsection{Combining Color Channels}
-
 If you encode Bezier curves into a texture which has multiple color channels - such as the standard four R,G,B,A - you can set up the textures such that once you read in the R,G,B,A, you can combine the channel values together such that you get a fewer number of curves per texture read, but that they are higher degree.
 
-For instance, if you had a 2x2 texture, you could encode the control points A,B,C into the red channel, and the control points B,C,D into the green channel.  Then, after you did a texture read, you could do a lerp between the red and the green channel.  Since the red and green channel each contain a quadratic curve, the result would be a cubic curve, defined by the control points A,B,C,D.  However, you've used up two of the channels for a single curve, so are getting fewer curves per texture read, but they are higher degree.  The blue and the alpha channel could either be quadratic curves, or could also be encoded such that they could be combined together to provide another cubic curve.
+For instance, if you had a 2x2 texture, you could encode the control points $P_0,P_1,P_2$ into the red channel, and the control points $P_1,P_2,P_3$ into the green channel.  Then, after you did a texture read, you could do a lerp between the red and the green channel values.  Since the red and green channel each contain a quadratic curve, the result would be a cubic curve, defined by the control points $P_0,P_1,P_2,P_3$  However, you've used up two of the channels for a single curve, so are getting fewer curves per texture read, but they are higher degree.  The blue and the alpha channel could either be quadratic curves, or could also be encoded such that they could be combined together to provide another cubic curve.
 
 You could also set it up such that R,G,B,A were meant to be combined together to make a quintic (degree 5) curve.  You'd only get a single curve value per texture read, but it would be 3 degrees higher.  You could combine the color channels either with De Casteljeau's algorithm, or with the cubic Bernstein Bezier form. 
 
-If you you are combining M color channels, each of which are values from curves of degree N, the resulting curve value will be degree N+M-1.  The intuitive explanation to this, is that each channel has the ability to add one more control point to the curve, regardless of what texture dimensionality you are working with.
+If you you are combining $M$ color channels, each of which are values from curves of degree $N$, the resulting curve value will be degree $N+M-1$.  The intuitive explanation to this, is that each channel has the ability to add one more control point to the curve, regardless of what texture dimensionality you are working with, and each control point added raises the curve one degree.
 
-An interesting side effect to combining color channels is that the accuracy of the resulting curve gets better.  This is because you are doing some of the math in full precision floating point, instead of the limited precision of the fixed point math in the texture sampler.
+An interesting side effect to combining color channels is that the accuracy of the resulting curve improves.  This is because you are doing some of the math in full precision floating point, instead of the limited precision of the fixed point math in the texture sampler.
 
 \subsection{Piecewise Curves}
 
@@ -856,8 +853,24 @@ TODO: this
 %-------------------------------------------------------------------------
 \section*{Index of Supplemental Materials}
 \label{sec:indexofsupplementalmaterials}
-TODO: this
+TODO: put information about where the zip can be downloaded.
 
+The zip file contains a folder named WebGL which contains the WebGL demos, and a folder named GLFW which contains the GLFW (windows) C++ OpenGL demos.
+
+\paragraph{\textbf{WebGL Folder}}
+\begin{itemize}
+  \item \textit{index.html} --- An index of the demos.
+  \item \textit{demo.html} --- A sandbox for exploring the various options of the technique.
+  \item \textit{flag.html} --- A vector art demo showing a waving flag and allowing you to modify some of the options used when rendering.
+  \item \textit{rational.html} --- Rational curve demo, showing sine and cosine compared to their actual values as computed by a shader program.
+\end{itemize}
+
+\paragraph{\textbf{GLFW Folder}}
+\begin{itemize}
+  \item \textit{Curves} --- The folder that contains the source code and the project and solution file for the demos.
+  \item \textit{glew-1.12.0} --- The glew library used for the demos.
+  \item \textit{glfw-3.1.1} --- The glfw library used for the demos.  
+\end{itemize}
 
 %-------------------------------------------------------------------------
 \section*{Author Contact Information}
