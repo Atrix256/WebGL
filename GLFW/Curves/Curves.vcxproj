@@ -107,6 +107,7 @@
     <ClCompile Include="Shader_Quartic2d.cpp" />
     <ClCompile Include="Shader_Quartic3d.cpp" />
     <ClCompile Include="Shader_RationalTest.cpp" />
+    <ClCompile Include="Shader_RationalTest2.cpp" />
     <ClCompile Include="Shader_Texture1d.cpp" />
     <ClCompile Include="Shader_Texture2d.cpp" />
     <ClCompile Include="Shader_Texture3d.cpp" />

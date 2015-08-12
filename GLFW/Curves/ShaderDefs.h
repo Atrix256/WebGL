@@ -73,6 +73,12 @@ SHADER_BEGIN(RationalTest, 1000, 500)
     SHADER_UNIFORM_TEXTURE_2D(uSampler, float, true)
 SHADER_END()
 
+SHADER_BEGIN(RationalTest2, 1000, 500)
+    SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
+    SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)
+    SHADER_UNIFORM_TEXTURE_2D(uSampler, float, true)
+SHADER_END()
+
 SHADER_BEGIN(Quadratic1d, 1000, 500)
     SHADER_VERTEX_ATTRIBUTE(aVertexPosition, 2, double)
     SHADER_VERTEX_ATTRIBUTE(aTextureCoord, 2, double)

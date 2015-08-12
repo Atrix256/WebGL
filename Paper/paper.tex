@@ -716,7 +716,7 @@ Evaluating a piecewise curve with this technique is very simple.  As an example,
       \node[anchor=south west,inner sep=0] at (0cm,0cm) {\includegraphics[width=12cm,height=6cm]{Rational.png}};  
     \end{tikzpicture}
 
-    \caption{A rational bezier spline showing cosine in green and sine in red.  The white line is the true value of those functions. \textit{Left:} Evaluated with hardware sampling and then division.  \textit{Right:} Evaluated by reading the control points into the shader program, calculating the curves, and then doing a division.}
+    \caption{Rational Bezier spline vs glsl sin() function.  Sin() values in grey on top of the Bezier spline in red.  Red pixels show where the values do not match. }
     \label{fig:rationalbeziersincos}
   \end{figure}
 
@@ -763,7 +763,7 @@ To name a few possibilities with a standard RGBA 2x2 texture, you could encode a
       \node[anchor=south west,inner sep=0] at (8cm,0cm) {\includegraphics[width=4cm,height=4cm]{SampleSW.png}};   
           
     \end{tikzpicture}
-    \caption{\textit{Left:} Curve evaluted with a single texture read and bilinear texture sampling.  \textit{Middle:} Curve evaluated with two linear texture samples, combined in the shader program.  \textit{Right:} Curve evaluated with three texture samples (one per control point), combined in the shader program.}   
+    \caption{ Quality versus texture read count. \textit{Left:} One Texture Read (one bilinear sample). \textit{Middle:} Two Texture Reads (two linear samples). \textit{Right:} Three Texture Reads (three nearest neighbor samples).}   
     \label{fig:samplehwsw}
   \end{figure} 
 
@@ -825,7 +825,9 @@ The table below was created by running a 1000x1000 pixel shader program where ea
 \bf{3D Texture / Cubic Curve} & 135.4 $\mu$s & 146.2 $\mu$s \\ \hline
 \end{tabular}
 
-TODO: do a test with the cards at work, and put those results here as well!
+TODO: Test with at least one other card
+
+The performance characteristics don't change very much based on texture dimensionality. This shows that you can up the degree of the curve by upping the dimension of the texture you store the curve in, without incurring any significant performance costs.
 
 %-------------------------------------------------------------------------
 \section*{Future Work}

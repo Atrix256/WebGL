@@ -1,31 +1,34 @@
-James:
-* could drop 3d textures
-* figure 12 isn't clear
-* testing with 980m doesn't show much difference from 1-3D
- * might try with a slower card
- * alan: might need to explain more that perf doesn't change but you get a higher degree curve for the same # of texture reads
-
-Ian:
-Here are my notes so far:
-
-Too long!
-
-Abstract needs to be more concise. Makes it sound like this would be for evaluating parameter animations. If that is intent need to make piecewise discussion more prominent and would also need to show that using this method for piecewise is better than constant evaluation and CPU evaluation. This is basically the elevator pitch for your technique.
-
-Heart of the technique is basically about using texture interpolation hardware to evaluate the curves. Pick one particular curve type and focus on that in paper and move discussion of other types to supplemental materials or blog post. Show why & when using technique is better than using other techniques.
-
-Figure 11. Graph is confusing because the white line is barely visible. Looks like its a highlight of green/red line. Is white line true sin values or shader sin/cos functions (which are taylor approximations)?
-
-"Limited Applications for Vector Graphics" Take this section out. It has to do with using curves not the technique. Talking about when your technique doesn't work doesn't deserve this much text in main paper.
-
-"Performance Characteristics" This is your most important section, but is the smallest. Technique is producing less accurate results so you need to show that you are significantly faster in at least some scenario and preferably that you are faster when correcting the accuracy problems as well. Need to show numbers for the different accuracy levels and maybe it comes out faster if you're evaluating multiple curves?
-
 Alan:
+* add perf info for at least one more card
 * Reread, fill in todos (like acknowledgements)
 * can chanel proof read?
 I'd like to thank James Anhalt and Ian McCown for providing technical feedback on this paper and suggestions on the direction and necessity (or not) of exploring various avenues in the writing.  I'd also like to thank my wife Chanel for her help with the writing style and language feedback through this process.
+
 =====DONE=====
 
 James:
 * is it "correct" to call 't' 'time t' or just say 'at t'?
 * figure 2 description is confusing
+* figure 12 isn't clear
+* esting with 980m doesn't show much difference from 1-3D
+ * explained perf characteristics a bit better
+
+Ian:
+* Figure 11. Graph is confusing because the white line is barely visible. Looks like its a highlight of green/red line. Is white line true sin values or shader sin/cos functions (which are taylor approximations)?
+
+
+Punting:
+* James: could drop 3d textures
+ * I think it adds.  Let's see what the reviewers think
+* Ian: * "Limited Applications for Vector Graphics" Take this section out. It has to do with using curves not the technique. Talking about when your technique doesn't work doesn't deserve this much text in main paper.
+ * I think it's important.  Let's see what the reviewers thing
+* Ian: * Heart of the technique is basically about using texture interpolation hardware to evaluate the curves. Pick one particular curve type and focus on that in paper and move discussion of other types to supplemental materials or blog post. Show why & when using technique is better than using other techniques.
+ * Again, might be totally wrong, but let's see what the reviewers think
+* Ian: Too long
+ * the reviewers will probably agree, but let's find out
+* Ian: * "Performance Characteristics" This is your most important section, but is the smallest. Technique is producing less accurate results so you need to show that you are significantly faster in at least some scenario and preferably that you are faster when correcting the accuracy problems as well. Need to show numbers for the different accuracy levels and maybe it comes out faster if you're evaluating multiple curves?
+ * probably right.  I want to hear what the reviewers think though.
+* Ian: * Abstract needs to be more concise. Makes it sound like this would be for evaluating parameter animations. If that is intent need to make piecewise discussion more prominent and would also need to show that using this method for piecewise is better than constant evaluation and CPU evaluation. This is basically the elevator pitch for your technique.
+ * ditto... not trying to ignore comments, and they are probably right, but want to see what reviewers say too.
+* James: might try a slower card
+ * might work, especially on mobile. no access to a significantly slower card though ):

@@ -70,23 +70,23 @@
 \newlabel{sec:extensions}{{4}{13}{Extensions}{section.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Combining Color Channels}{13}{subsection.4.1}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Piecewise Curves}{14}{subsection.4.2}}
-\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces A rational bezier spline showing cosine in green and sine in red. The white line is the true value of those functions. \textit  {Left:} Evaluated with hardware sampling and then division. \textit  {Right:} Evaluated by reading the control points into the shader program, calculating the curves, and then doing a division.\relax }}{15}{figure.caption.11}}
-\newlabel{fig:rationalbeziersincos}{{11}{15}{A rational bezier spline showing cosine in green and sine in red. The white line is the true value of those functions. \textit {Left:} Evaluated with hardware sampling and then division. \textit {Right:} Evaluated by reading the control points into the shader program, calculating the curves, and then doing a division.\relax }{figure.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Rational Bezier spline vs glsl sin() function. Sin() values in grey on top of the Bezier spline in red. Red pixels show where the values do not match. \relax }}{15}{figure.caption.11}}
+\newlabel{fig:rationalbeziersincos}{{11}{15}{Rational Bezier spline vs glsl sin() function. Sin() values in grey on top of the Bezier spline in red. Red pixels show where the values do not match. \relax }{figure.caption.11}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Rational Bezier Curves}{15}{subsection.4.3}}
 \newlabel{eqn:rationalbezier}{{7}{15}{Rational Bezier Curves}{equation.4.7}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces \textit  {Left:} Curve evaluted with a single texture read and bilinear texture sampling. \textit  {Middle:} Curve evaluated with two linear texture samples, combined in the shader program. \textit  {Right:} Curve evaluated with three texture samples (one per control point), combined in the shader program.\relax }}{16}{figure.caption.12}}
-\newlabel{fig:samplehwsw}{{12}{16}{\textit {Left:} Curve evaluted with a single texture read and bilinear texture sampling. \textit {Middle:} Curve evaluated with two linear texture samples, combined in the shader program. \textit {Right:} Curve evaluated with three texture samples (one per control point), combined in the shader program.\relax }{figure.caption.12}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces  Quality versus texture read count. \textit  {Left:} One Texture Read (one bilinear sample). \textit  {Middle:} Two Texture Reads (two linear samples). \textit  {Right:} Three Texture Reads (three nearest neighbor samples).\relax }}{16}{figure.caption.12}}
+\newlabel{fig:samplehwsw}{{12}{16}{Quality versus texture read count. \textit {Left:} One Texture Read (one bilinear sample). \textit {Middle:} Two Texture Reads (two linear samples). \textit {Right:} Three Texture Reads (three nearest neighbor samples).\relax }{figure.caption.12}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Multidimensional Bezier Curves}{16}{subsection.4.4}}
 \@writefile{toc}{\contentsline {section}{\numberline {5}Addressing Accuracy Issues}{16}{section.5}}
 \newlabel{sec:addressingaccuracyissues}{{5}{16}{Addressing Accuracy Issues}{section.5}{}}
 \citation{Loop:2005:RIC:1073204.1073303,Nehab:2008:RRG:1409060.1409088}
 \citation{Green:2007:IAM:1281500.1281665}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Limited Applications for Vector Graphics}{17}{section.6}}
-\newlabel{sec:limitedapplicationsforvectorgraphics}{{6}{17}{Limited Applications for Vector Graphics}{section.6}{}}
-\@writefile{brf}{\backcite{Loop:2005:RIC:1073204.1073303,Nehab:2008:RRG:1409060.1409088}{{17}{6}{figure.caption.13}}}
-\@writefile{brf}{\backcite{Green:2007:IAM:1281500.1281665}{{17}{6}{figure.caption.13}}}
-\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces \textit  {Left:}An animated flag textured with vector graphics using the techniques in this paper, using an 8x4 RGBA source texture to generate curves and color gradients. \textit  {Right:} Zooming in on part of the image to show the quality of the vector graphics.\relax }}{18}{figure.caption.13}}
-\newlabel{fig:vectorgfx}{{13}{18}{\textit {Left:}An animated flag textured with vector graphics using the techniques in this paper, using an 8x4 RGBA source texture to generate curves and color gradients. \textit {Right:} Zooming in on part of the image to show the quality of the vector graphics.\relax }{figure.caption.13}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces \textit  {Left:}An animated flag textured with vector graphics using the techniques in this paper, using an 8x4 RGBA source texture to generate curves and color gradients. \textit  {Right:} Zooming in on part of the image to show the quality of the vector graphics.\relax }}{17}{figure.caption.13}}
+\newlabel{fig:vectorgfx}{{13}{17}{\textit {Left:}An animated flag textured with vector graphics using the techniques in this paper, using an 8x4 RGBA source texture to generate curves and color gradients. \textit {Right:} Zooming in on part of the image to show the quality of the vector graphics.\relax }{figure.caption.13}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Limited Applications for Vector Graphics}{18}{section.6}}
+\newlabel{sec:limitedapplicationsforvectorgraphics}{{6}{18}{Limited Applications for Vector Graphics}{section.6}{}}
+\@writefile{brf}{\backcite{Loop:2005:RIC:1073204.1073303,Nehab:2008:RRG:1409060.1409088}{{18}{6}{figure.caption.13}}}
+\@writefile{brf}{\backcite{Green:2007:IAM:1281500.1281665}{{18}{6}{figure.caption.13}}}
 \citation{doi:10.1080/2151237X.2008.10129269}
 \bibstyle{jcgt}
 \bibdata{paper}
