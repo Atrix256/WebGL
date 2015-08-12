@@ -1,10 +1,9 @@
 James:
-* figure 2 description is confusing
-* is it "correct" to call 't' 'time t' or just say 'at t'?
 * could drop 3d textures
 * figure 12 isn't clear
 * testing with 980m doesn't show much difference from 1-3D
  * might try with a slower card
+ * alan: might need to explain more that perf doesn't change but you get a higher degree curve for the same # of texture reads
 
 Ian:
 Here are my notes so far:
@@ -20,3 +19,13 @@ Figure 11. Graph is confusing because the white line is barely visible. Looks li
 "Limited Applications for Vector Graphics" Take this section out. It has to do with using curves not the technique. Talking about when your technique doesn't work doesn't deserve this much text in main paper.
 
 "Performance Characteristics" This is your most important section, but is the smallest. Technique is producing less accurate results so you need to show that you are significantly faster in at least some scenario and preferably that you are faster when correcting the accuracy problems as well. Need to show numbers for the different accuracy levels and maybe it comes out faster if you're evaluating multiple curves?
+
+Alan:
+* Reread, fill in todos (like acknowledgements)
+* can chanel proof read?
+I'd like to thank James Anhalt and Ian McCown for providing technical feedback on this paper and suggestions on the direction and necessity (or not) of exploring various avenues in the writing.  I'd also like to thank my wife Chanel for her help with the writing style and language feedback through this process.
+=====DONE=====
+
+James:
+* is it "correct" to call 't' 'time t' or just say 'at t'?
+* figure 2 description is confusing
