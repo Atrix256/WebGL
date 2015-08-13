@@ -816,18 +816,16 @@ A demonstration of these usage cases can be seen in \autoref{fig:vectorgfx}.
 
 The table below was created by running a 1000x1000 pixel shader program where each pixel evaluated a curve using either linear texture sampling (HW or hardware evaluation), or did multiple texture reads to get the control points and then calculated the curve values inside of the shader program (SW or software shader program evaluation).  The numbers shown are the time spent rendering each frame, in microseconds and the texture format is R8G8B8A8.  Actual performance characteristics in real world scenarios will be based on other factors, such as whether the texture is in the texture cache, or whether you are texture fetch bound or compute bound in the shader program.
 
-\begin{tabular}{|l|l l|}
+\begin{tabular}{|l|l l|l l|}
 \hline
-& \multicolumn{2}{|c|}{NV GF GTX 980m} \\
-& \bf{HW} & \bf{SW}\\ \hline
-\bf{1D Texture / Linear Curve} & 131.8 $\mu$s & 132.7 $\mu$s \\ \hline
-\bf{2D Texture / Quadratic Curve} & 131.1 $\mu$s & 135.1 $\mu$s \\ \hline
-\bf{3D Texture / Cubic Curve} & 135.4 $\mu$s & 146.2 $\mu$s \\ \hline
+& \multicolumn{2}{|c|}{NV GF GTX 980m} & \multicolumn{2}{|c|}{NV GF GTX 770}\\
+& \bf{HW} & \bf{SW} & \bf{HW} & \bf{SW} \\ \hline
+\bf{1D Texture / Linear Curve} & 131.8 $\mu$s & 132.7 $\mu$s & 103.0 $\mu$s & 104.1 $\mu$s \\ \hline
+\bf{2D Texture / Quadratic Curve} & 131.1 $\mu$s & 135.1 $\mu$s & 104.1 $\mu$s & 118.2 $\mu$s \\ \hline
+\bf{3D Texture / Cubic Curve} & 135.4 $\mu$s & 146.2 $\mu$s & 104.1 $\mu$s & 130.1 $\mu$s \\ \hline
 \end{tabular}
 
-TODO: Test with at least one other card
-
-The performance characteristics don't change very much based on texture dimensionality. This shows that you can up the degree of the curve by upping the dimension of the texture you store the curve in, without incurring any significant performance costs.
+The performance characteristics don't change very much based on texture dimensionality. This shows that you can up the degree of the curve by upping the dimension of the texture you store the curve in, without incurring any significant performance costs.  While software implementations are a bit slower, they are not significantly slower.  Again, the usage case for deciding whether to offload curve work to the sampler (and if so, how much of it), or to do it in the shader program depends on your specific circumstances, and the resource usage of your application.
 
 %-------------------------------------------------------------------------
 \section*{Future Work}
