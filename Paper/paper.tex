@@ -38,7 +38,7 @@
     \draw (0.08,0.75) node[] {\Huge{B}};
     \draw (0.25,0.75) node[] {\Huge{C}};    
   \end{tikzpicture}
-  \caption{\textit{Left:} 2x2 texture containing control points for a quadratic Bezier curve in each color channel. \textit{Middle:} The texture as viewed with bilinear sampling. \textit{Right:} The resulting quadratic Bezier curves when sampling along the yellow line (Alpha curve omitted).}
+  \caption{\textit{Left:} 2x2 texture containing control points for a quadratic Bezier curve in each color channel. \textit{Middle:} The texture as viewed with bilinear sampling. \textit{Right:} The resulting quadratic Bezier curves when sampling along the yellow line.}
   \label{fig:teaser}
 }
 
@@ -54,7 +54,7 @@ Modern graphics techniques expose internal parameters to allow re-use and to hel
 %-------------------------------------------------------------------------
 \section{Introduction}
 \label{sec:introduction}
-There are two basic ways for a shader program to have customized curve data.  One way is to evaluate the curve on the CPU at discrete intervals and put those points into a texture that can be used by the GPU.  The other way is to pass curve control point data from the CPU to the shader program as shader constants, allowing the shader program to evaluate the curve at a given $t$.
+There are two basic ways for a shader program to access customized curve data.  One way is to evaluate the curve on the CPU at discrete intervals and put those points into a texture that can be used by the GPU.  The other way is to pass curve control point data from the CPU to the shader program as shader constants, allowing the shader program to evaluate the curve at a given $t$.
 
 Baking curve points into a texture means that the shader program doesn't need to know what type of curve it was that made the data, nor how many control points it had, but comes at the loss of quality since there are a finite number of curve points sampled, and the data between points is just a linear interpolation between the samples.  If higher quality is desired, you can increase the resolution of the texture to trade accuracy for texture memory.
 
@@ -62,7 +62,7 @@ Passing control point data to a shader program as shader constants allows you to
 
 \begin{figure}
   \includegraphics[width=5in]{Figure2.png}
-  \caption{Quadratic Curve  \textit{Left:} Yellow is the curve calculated from shader program constants.  Red is the same curve baked out in a 4x1 texture.  \textit{Right:}  Yellow uses the technique from this paper to encode the curve in a 2x2 texture.  Red is the same curve baked out in a 4x1 texture again for comparison.}
+  \caption{Quadratic Curve.  \textit{Left:} Yellow is the curve calculated from shader program constants.  Red is the same curve baked out in a 4x1 texture.  \textit{Right:}  Yellow uses the technique from this paper to encode the curve in a 2x2 texture.  Red is the same curve baked out in a 4x1 texture again for comparison.}
   \label{fig:quickcomparison}
 \end{figure}
 
@@ -194,7 +194,7 @@ The common pixel formats contain four color channels –-- Red, Green, Blue and 
         \draw (0.08,0.75) node[] {\Huge{B}};
         \draw (0.25,0.75) node[] {\Huge{C}};            
     \end{tikzpicture}
-    \caption{\textit{Left:} a 2x2 texture storing control points for a quadratic Bezier curve in each color channel.  \textit{Middle:} The same texture as viewed when using bilinear texture sampling.  The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. \textit{Right:} The curves resulting from sampling along the yellow line (Alpha curve omitted).}   
+    \caption{\textit{Left:} a 2x2 texture storing control points for a quadratic Bezier curve in each color channel.  \textit{Middle:} The same texture as viewed when using bilinear texture sampling.  The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. \textit{Right:} The curves resulting from sampling along the yellow line.}   
     \label{fig:texbilcurve}
   \end{figure}  
 
@@ -255,7 +255,7 @@ If we replace $A$,$B$,$C$ with $P_0$, $P_1$, $P_2$, and $s$ with $(1-t)$ we then
 \label{eqn:bilinearinterpolation3}
 \end{equation}
 
-This pattern continues for trilinear interpolation mapping to a cubic curve, and beyond.  $N$ dimensional linear texture sampling is just the linear interpolation between two linear texture samples of dimension $N-1$.  Bezier curves of degree $N$ are just the linear interpolation between two Bezier curves of degree $N-1$.
+This pattern continues for trilinear interpolation mapping to a cubic curve, and beyond.  $N$ dimensional linear texture sampling is just the linear interpolation between two linear texture samples of dimension $N-1$.  Bezier curves of degree $N$ are just the linear interpolation between two Bezier curves of degree $N-1$.  These operations are equivalent.
 
 \subsection{Accuracy}
 
@@ -687,7 +687,7 @@ There are a few ways to extend this technique for more options.
 
 If you encode Bezier curves into a texture which has multiple color channels - such as the standard four R,G,B,A - you can set up the textures such that once you read in the R,G,B,A, you can combine the channel values together such that you get a fewer number of curves per texture read, but that they are higher degree.
 
-For instance, if you had a 2x2 texture, you could encode the control points $P_0,P_1,P_2$ into the red channel, and the control points $P_1,P_2,P_3$ into the green channel.  Then, after you did a texture read, you could do a lerp between the red and the green channel values.  Since the red and green channel each contain a quadratic curve, the result would be a cubic curve, defined by the control points $P_0,P_1,P_2,P_3$  However, you've used up two of the channels for a single curve, so are getting fewer curves per texture read, but they are higher degree.  The blue and the alpha channel could either be quadratic curves, or could also be encoded such that they could be combined together to provide another cubic curve.
+For instance, if you had a 2x2 texture, you could encode the control points $P_0,P_1,P_2$ into the red channel, and the control points $P_1,P_2,P_3$ into the green channel.  Then, after you did a texture read, you could do a lerp between the red and the green channel values by $t$.  Since the red and green channel each contain a quadratic curve, the result would be a cubic curve, defined by the control points $P_0,P_1,P_2,P_3$  However, you've used up two of the channels for a single curve, so are getting fewer curves per texture read, but they are higher degree.  The blue and the alpha channel could either be quadratic curves, or could also be encoded such that they could be combined together to provide another cubic curve.
 
 You could also set it up such that R,G,B,A were meant to be combined together to make a quintic (degree 5) curve.  You'd only get a single curve value per texture read, but it would be 3 degrees higher.  You could combine the color channels either with De Casteljeau's algorithm, or with the cubic Bernstein Bezier form. 
 
@@ -716,7 +716,7 @@ Evaluating a piecewise curve with this technique is very simple.  As an example,
       \node[anchor=south west,inner sep=0] at (0cm,0cm) {\includegraphics[width=12cm,height=6cm]{Rational.png}};  
     \end{tikzpicture}
 
-    \caption{Rational Bezier spline vs glsl sin() function.  Sin() values in grey on top of the Bezier spline in red.  Red pixels show where the values do not match. }
+    \caption{Rational Bezier spline vs glsl sin() function.  Sin() values in grey on top of the Bezier spline in red.  Red pixels show where the values don't match. }
     \label{fig:rationalbeziersincos}
   \end{figure}
 
@@ -741,7 +741,7 @@ To compute the value of rational Bezier curves, you first take your texture samp
 
 There is a limitation to encoding rational Bezier curves in this form due to the fact that texture values range from 0 to 1, but when using rational Bezier curves, weights greater than 1 are sometimes desired.  The good news is that you can normalize the weights by dividing all weight values by the largest weight value, such that the largest weight value becomes 1.  The result will be the same as if you had values greater than 1 in the weights.
 
-Just as b-splines can be converted into piecewise Bezier curves, NURBS can also be converted into piecewise rational Bezier curves, again using Boehm's algorithm, which means these techniques can also apply to NURBS, if they are first preprocessed into rational Bezier curves.
+Just as b-splines can be converted into piecewise Bezier curves, NURBS can also be converted into piecewise rational Bezier curves, again using Boehm's algorithm, which means these techniques can also apply to NURBS, if they are first preprocessed into piecewise rational Bezier curves.
 
 \subsection{Multidimensional Bezier Curves}
 
