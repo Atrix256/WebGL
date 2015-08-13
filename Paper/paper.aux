@@ -16,13 +16,13 @@
 \gdef\HyperFirstAtBeginDocument#1{#1}
 \providecommand\HyField@AuxAddToFields[1]{}
 \providecommand\HyField@AuxAddToCoFields[2]{}
-\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textit  {Left:} 2x2 texture containing control points for a quadratic Bezier curve in each color channel. \textit  {Middle:} The texture as viewed with bilinear sampling. \textit  {Right:} The resulting quadratic Bezier curves when sampling along the yellow line (Alpha curve omitted).\relax }}{1}{figure.1}}
-\newlabel{fig:teaser}{{1}{1}{\textit {Left:} 2x2 texture containing control points for a quadratic Bezier curve in each color channel. \textit {Middle:} The texture as viewed with bilinear sampling. \textit {Right:} The resulting quadratic Bezier curves when sampling along the yellow line (Alpha curve omitted).\relax }{figure.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textit  {Left:} 2x2 texture containing control points for a quadratic Bezier curve in each color channel. \textit  {Middle:} The texture as viewed with bilinear sampling. \textit  {Right:} The resulting quadratic Bezier curves when sampling along the yellow line.\relax }}{1}{figure.1}}
+\newlabel{fig:teaser}{{1}{1}{\textit {Left:} 2x2 texture containing control points for a quadratic Bezier curve in each color channel. \textit {Middle:} The texture as viewed with bilinear sampling. \textit {Right:} The resulting quadratic Bezier curves when sampling along the yellow line.\relax }{figure.1}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}}
 \newlabel{sec:introduction}{{1}{1}{Introduction}{section.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Quadratic Curve \textit  {Left:} Yellow is the curve calculated from shader program constants. Red is the same curve baked out in a 4x1 texture. \textit  {Right:} Yellow uses the technique from this paper to encode the curve in a 2x2 texture. Red is the same curve baked out in a 4x1 texture again for comparison.\relax }}{2}{figure.caption.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces Quadratic Curve. \textit  {Left:} Yellow is the curve calculated from shader program constants. Red is the same curve baked out in a 4x1 texture. \textit  {Right:} Yellow uses the technique from this paper to encode the curve in a 2x2 texture. Red is the same curve baked out in a 4x1 texture again for comparison.\relax }}{2}{figure.caption.2}}
 \providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
-\newlabel{fig:quickcomparison}{{2}{2}{Quadratic Curve \textit {Left:} Yellow is the curve calculated from shader program constants. Red is the same curve baked out in a 4x1 texture. \textit {Right:} Yellow uses the technique from this paper to encode the curve in a 2x2 texture. Red is the same curve baked out in a 4x1 texture again for comparison.\relax }{figure.caption.2}{}}
+\newlabel{fig:quickcomparison}{{2}{2}{Quadratic Curve. \textit {Left:} Yellow is the curve calculated from shader program constants. Red is the same curve baked out in a 4x1 texture. \textit {Right:} Yellow uses the technique from this paper to encode the curve in a 2x2 texture. Red is the same curve baked out in a 4x1 texture again for comparison.\relax }{figure.caption.2}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {2}The Technique}{3}{section.2}}
 \newlabel{sec:thetechnique}{{2}{3}{The Technique}{section.2}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Intuition}{3}{subsection.2.1}}
@@ -30,8 +30,8 @@
 \newlabel{fig:decasteljeauBilinear}{{3}{4}{\textit {Left:} A quadratic Bezier curve evaluated at {\bf {t}}=0.6 using the De Casteljeau algorithm. \textit {Right:} The De Casteljeau algorithm using bilinear interpolation.\relax }{figure.caption.3}{}}
 \newlabel{lst:GLSLCurves}{{1}{4}{GLSL implementation of bilinear interpolation and the De Casteljeau algorithm for a quadratic Bezier curve}{lstlisting.1}{}}
 \@writefile{lol}{\contentsline {lstlisting}{\numberline {1}GLSL implementation of bilinear interpolation and the De Casteljeau algorithm for a quadratic Bezier curve.}{4}{lstlisting.1}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textit  {Left:} a 2x2 texture storing control points for a quadratic Bezier curve in each color channel. \textit  {Middle:} The same texture as viewed when using bilinear texture sampling. The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. \textit  {Right:} The curves resulting from sampling along the yellow line (Alpha curve omitted).\relax }}{5}{figure.caption.4}}
-\newlabel{fig:texbilcurve}{{4}{5}{\textit {Left:} a 2x2 texture storing control points for a quadratic Bezier curve in each color channel. \textit {Middle:} The same texture as viewed when using bilinear texture sampling. The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. \textit {Right:} The curves resulting from sampling along the yellow line (Alpha curve omitted).\relax }{figure.caption.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces \textit  {Left:} a 2x2 texture storing control points for a quadratic Bezier curve in each color channel. \textit  {Middle:} The same texture as viewed when using bilinear texture sampling. The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. \textit  {Right:} The curves resulting from sampling along the yellow line.\relax }}{5}{figure.caption.4}}
+\newlabel{fig:texbilcurve}{{4}{5}{\textit {Left:} a 2x2 texture storing control points for a quadratic Bezier curve in each color channel. \textit {Middle:} The same texture as viewed when using bilinear texture sampling. The yellow line indicates where texture samples are taken from to evaluate the quadratic Bezier curve. \textit {Right:} The curves resulting from sampling along the yellow line.\relax }{figure.caption.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Mathematical Basis}{5}{subsection.2.2}}
 \newlabel{eqn:bernsteinform}{{1}{5}{Mathematical Basis}{equation.2.1}{}}
 \citation{NVIDIA}
@@ -40,66 +40,66 @@
 \newlabel{eqn:bilinearinterpolation}{{4}{6}{Mathematical Basis}{equation.2.4}{}}
 \newlabel{eqn:bilinearinterpolation2}{{5}{6}{Mathematical Basis}{equation.2.5}{}}
 \newlabel{eqn:bilinearinterpolation3}{{6}{6}{Mathematical Basis}{equation.2.6}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Accuracy}{6}{subsection.2.3}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \textit  {Left:} Sampled curves. \textit  {Middle:} Zooming in on a curve calculated with shader program constants. \textit  {Right:} Zooming in on a curve calculated using the method in this paper\relax }}{7}{figure.caption.5}}
 \newlabel{fig:quickaccuracy}{{5}{7}{\textit {Left:} Sampled curves. \textit {Middle:} Zooming in on a curve calculated with shader program constants. \textit {Right:} Zooming in on a curve calculated using the method in this paper\relax }{figure.caption.5}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces A tree showing the De Casteljeau algorithm for a cubic curve. The labels on the right show what type of curves are evaluated at that level, as well as the $N$ dimensional sampling that is required to evaluate nodes at that level with a single texture read.\relax }}{7}{figure.caption.6}}
-\newlabel{fig:decdimensionality}{{6}{7}{A tree showing the De Casteljeau algorithm for a cubic curve. The labels on the right show what type of curves are evaluated at that level, as well as the $N$ dimensional sampling that is required to evaluate nodes at that level with a single texture read.\relax }{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Accuracy}{7}{subsection.2.3}}
 \@writefile{brf}{\backcite{NVIDIA}{{7}{2.3}{figure.caption.5}}}
 \@writefile{toc}{\contentsline {section}{\numberline {3}Texture Dimensionality}{7}{section.3}}
 \newlabel{sec:texturedimensionality}{{3}{7}{Texture Dimensionality}{section.3}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}One Dimensional Textures}{8}{subsection.3.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}One Dimensional Textures}{7}{subsection.3.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces A tree showing the De Casteljeau algorithm for a cubic curve. The labels on the right show what type of curves are evaluated at that level, as well as the $N$ dimensional sampling that is required to evaluate nodes at that level with a single texture read.\relax }}{8}{figure.caption.6}}
+\newlabel{fig:decdimensionality}{{6}{8}{A tree showing the De Casteljeau algorithm for a cubic curve. The labels on the right show what type of curves are evaluated at that level, as well as the $N$ dimensional sampling that is required to evaluate nodes at that level with a single texture read.\relax }{figure.caption.6}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces \textit  {Top:} A cubic curve encoded in a 1d texture with a size of 4 pixels. \textit  {Middle:} Two piecewise cubic curves encoded in a 1d texture with $C0$ continuity. \textit  {Bottom:} With $C0$ continuity, a redundant $P_3$ can be removed to store these curves in 7 pixels instead of 8. \relax }}{9}{figure.caption.7}}
 \newlabel{fig:texlayeout1d}{{7}{9}{\textit {Top:} A cubic curve encoded in a 1d texture with a size of 4 pixels. \textit {Middle:} Two piecewise cubic curves encoded in a 1d texture with $C0$ continuity. \textit {Bottom:} With $C0$ continuity, a redundant $P_3$ can be removed to store these curves in 7 pixels instead of 8. \relax }{figure.caption.7}{}}
 \newlabel{lst:GLSLCubicTexture1D}{{2}{9}{GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture. Linear texture sampling is used to evaluate the linear level of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a quadratic Bezier curve}{lstlisting.2}{}}
 \@writefile{lol}{\contentsline {lstlisting}{\numberline {2}GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture. Linear texture sampling is used to evaluate the linear level of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a quadratic Bezier curve.}{9}{lstlisting.2}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Two Dimensional Textures}{10}{subsection.3.2}}
-\newlabel{lst:GLSLCubicTexture2D}{{3}{10}{GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture. Bilinear texture sampling used to evaluate the first two levels of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp)}{lstlisting.3}{}}
-\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture. Bilinear texture sampling used to evaluate the first two levels of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp).}{10}{lstlisting.3}}
 \@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces \textit  {Left:} A quadratic curve encoded in a 2d texture that is $(2,2)$ in size. \textit  {Middle:} A cubic curve encoded in a 2d texture that is $(2,3)$ in size. \textit  {Right:} Two piecewise cubic curves encoded in a 2d texture with $C0$ continuity that is $(4,3)$ in size.\relax }}{11}{figure.caption.8}}
 \newlabel{fig:texlayeout2d}{{8}{11}{\textit {Left:} A quadratic curve encoded in a 2d texture that is $(2,2)$ in size. \textit {Middle:} A cubic curve encoded in a 2d texture that is $(2,3)$ in size. \textit {Right:} Two piecewise cubic curves encoded in a 2d texture with $C0$ continuity that is $(4,3)$ in size.\relax }{figure.caption.8}{}}
+\newlabel{lst:GLSLCubicTexture2D}{{3}{11}{GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture. Bilinear texture sampling used to evaluate the first two levels of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp)}{lstlisting.3}{}}
+\@writefile{lol}{\contentsline {lstlisting}{\numberline {3}GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture. Bilinear texture sampling used to evaluate the first two levels of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp).}{11}{lstlisting.3}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Three Dimensional Textures}{11}{subsection.3.3}}
 \@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces \textit  {Top Left:} A cubic curve encoded in a $(2,2,2)$ sized texture, decoded with a single trilinear texture sample. \textit  {Top Right:} Two piecewise cubic curves encoded in a $(4,2,2)$ sized texture, decoded with a single trilinear texture sample. \textit  {Bottom Left:} A Quartic curve encoded in a $(2,3,2)$ sized texture, decoded with two trilinear texture samples. \textit  {Bottom Right:} Two piecewise quartic curves encoded in a $(4,3,2)$ sized texture, decoded with two trilinear texture samples.\relax }}{12}{figure.caption.9}}
 \newlabel{fig:texlayeout3d}{{9}{12}{\textit {Top Left:} A cubic curve encoded in a $(2,2,2)$ sized texture, decoded with a single trilinear texture sample. \textit {Top Right:} Two piecewise cubic curves encoded in a $(4,2,2)$ sized texture, decoded with a single trilinear texture sample. \textit {Bottom Left:} A Quartic curve encoded in a $(2,3,2)$ sized texture, decoded with two trilinear texture samples. \textit {Bottom Right:} Two piecewise quartic curves encoded in a $(4,3,2)$ sized texture, decoded with two trilinear texture samples.\relax }{figure.caption.9}{}}
 \newlabel{lst:GLSLCubicTexture3D}{{4}{12}{GLSL for evaluating a cubic curve encoded in a $(2,2,2)$ pixel 3d texture. Trilinear texture sampling used to evaluate all three levels of the De Casteljeau algorithm}{lstlisting.4}{}}
 \@writefile{lol}{\contentsline {lstlisting}{\numberline {4}GLSL for evaluating a cubic curve encoded in a $(2,2,2)$ pixel 3d texture. Trilinear texture sampling used to evaluate all three levels of the De Casteljeau algorithm.}{12}{lstlisting.4}}
-\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Pixel count for curve degree, with different texture dimensionalities.\relax }}{13}{figure.caption.10}}
-\newlabel{fig:pixelcount}{{10}{13}{Pixel count for curve degree, with different texture dimensionalities.\relax }{figure.caption.10}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Summary of Texture Dimensionality}{13}{subsection.3.4}}
 \@writefile{toc}{\contentsline {section}{\numberline {4}Extensions}{13}{section.4}}
 \newlabel{sec:extensions}{{4}{13}{Extensions}{section.4}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Combining Color Channels}{13}{subsection.4.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Pixel count for curve degree, with different texture dimensionalities.\relax }}{14}{figure.caption.10}}
+\newlabel{fig:pixelcount}{{10}{14}{Pixel count for curve degree, with different texture dimensionalities.\relax }{figure.caption.10}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Piecewise Curves}{14}{subsection.4.2}}
-\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Rational Bezier spline vs glsl sin() function. Sin() values in grey on top of the Bezier spline in red. Red pixels show where the values do not match. \relax }}{15}{figure.caption.11}}
-\newlabel{fig:rationalbeziersincos}{{11}{15}{Rational Bezier spline vs glsl sin() function. Sin() values in grey on top of the Bezier spline in red. Red pixels show where the values do not match. \relax }{figure.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Rational Bezier spline vs glsl sin() function. Sin() values in grey on top of the Bezier spline in red. Red pixels show where the values don't match. \relax }}{15}{figure.caption.11}}
+\newlabel{fig:rationalbeziersincos}{{11}{15}{Rational Bezier spline vs glsl sin() function. Sin() values in grey on top of the Bezier spline in red. Red pixels show where the values don't match. \relax }{figure.caption.11}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Rational Bezier Curves}{15}{subsection.4.3}}
 \newlabel{eqn:rationalbezier}{{7}{15}{Rational Bezier Curves}{equation.4.7}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces  Quality versus texture read count. \textit  {Left:} One Texture Read (one bilinear sample). \textit  {Middle:} Two Texture Reads (two linear samples). \textit  {Right:} Three Texture Reads (three nearest neighbor samples).\relax }}{16}{figure.caption.12}}
 \newlabel{fig:samplehwsw}{{12}{16}{Quality versus texture read count. \textit {Left:} One Texture Read (one bilinear sample). \textit {Middle:} Two Texture Reads (two linear samples). \textit {Right:} Three Texture Reads (three nearest neighbor samples).\relax }{figure.caption.12}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Multidimensional Bezier Curves}{16}{subsection.4.4}}
-\@writefile{toc}{\contentsline {section}{\numberline {5}Addressing Accuracy Issues}{16}{section.5}}
-\newlabel{sec:addressingaccuracyissues}{{5}{16}{Addressing Accuracy Issues}{section.5}{}}
 \citation{Loop:2005:RIC:1073204.1073303,Nehab:2008:RRG:1409060.1409088}
 \citation{Green:2007:IAM:1281500.1281665}
-\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces \textit  {Left:}An animated flag textured with vector graphics using the techniques in this paper, using an 8x4 RGBA source texture to generate curves and color gradients. \textit  {Right:} Zooming in on part of the image to show the quality of the vector graphics.\relax }}{17}{figure.caption.13}}
-\newlabel{fig:vectorgfx}{{13}{17}{\textit {Left:}An animated flag textured with vector graphics using the techniques in this paper, using an 8x4 RGBA source texture to generate curves and color gradients. \textit {Right:} Zooming in on part of the image to show the quality of the vector graphics.\relax }{figure.caption.13}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {6}Limited Applications for Vector Graphics}{18}{section.6}}
-\newlabel{sec:limitedapplicationsforvectorgraphics}{{6}{18}{Limited Applications for Vector Graphics}{section.6}{}}
-\@writefile{brf}{\backcite{Loop:2005:RIC:1073204.1073303,Nehab:2008:RRG:1409060.1409088}{{18}{6}{figure.caption.13}}}
-\@writefile{brf}{\backcite{Green:2007:IAM:1281500.1281665}{{18}{6}{figure.caption.13}}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Addressing Accuracy Issues}{17}{section.5}}
+\newlabel{sec:addressingaccuracyissues}{{5}{17}{Addressing Accuracy Issues}{section.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Limited Applications for Vector Graphics}{17}{section.6}}
+\newlabel{sec:limitedapplicationsforvectorgraphics}{{6}{17}{Limited Applications for Vector Graphics}{section.6}{}}
+\@writefile{brf}{\backcite{Loop:2005:RIC:1073204.1073303,Nehab:2008:RRG:1409060.1409088}{{17}{6}{figure.caption.13}}}
+\@writefile{brf}{\backcite{Green:2007:IAM:1281500.1281665}{{17}{6}{figure.caption.13}}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces \textit  {Left:}An animated flag textured with vector graphics using the techniques in this paper, using an 8x4 RGBA source texture to generate curves and color gradients. \textit  {Right:} Zooming in on part of the image to show the quality of the vector graphics.\relax }}{18}{figure.caption.13}}
+\newlabel{fig:vectorgfx}{{13}{18}{\textit {Left:}An animated flag textured with vector graphics using the techniques in this paper, using an 8x4 RGBA source texture to generate curves and color gradients. \textit {Right:} Zooming in on part of the image to show the quality of the vector graphics.\relax }{figure.caption.13}{}}
 \citation{doi:10.1080/2151237X.2008.10129269}
-\bibstyle{jcgt}
-\bibdata{paper}
-\bibcite{Green:2007:IAM:1281500.1281665}{\citename {Green }2007}
 \@writefile{toc}{\contentsline {section}{\numberline {7}Performance Characteristics}{19}{section.7}}
 \newlabel{sec:performancecharacteristics}{{7}{19}{Performance Characteristics}{section.7}{}}
 \newlabel{sec:futurework}{{7}{19}{Future Work}{section*.14}{}}
 \@writefile{brf}{\backcite{doi:10.1080/2151237X.2008.10129269}{{19}{7}{section*.14}}}
-\newlabel{sec:acknowledgements}{{7}{19}{Acknowledgements}{section*.15}{}}
+\bibstyle{jcgt}
+\bibdata{paper}
+\bibcite{Green:2007:IAM:1281500.1281665}{\citename {Green }2007}
 \bibcite{Loop:2005:RIC:1073204.1073303}{\citename {Loop and Blinn }2005}
 \bibcite{Nehab:2008:RRG:1409060.1409088}{\citename {Nehab and Hoppe }2008}
 \bibcite{NVIDIA}{\citename {{NVIDIA} }2015}
 \bibcite{doi:10.1080/2151237X.2008.10129269}{\citename {Ruijters et\nobreakspace  {}al\unhbox \voidb@x \hbox {.} }2008}
+\newlabel{sec:acknowledgements}{{7}{20}{Acknowledgements}{section*.15}{}}
 \newlabel{sec:indexofsupplementalmaterials}{{7}{20}{Index of Supplemental Materials}{section*.17}{}}
 \@writefile{toc}{\contentsline {paragraph}{\textbf  {WebGL Folder}}{20}{section*.18}}
-\@writefile{toc}{\contentsline {paragraph}{\textbf  {GLFW Folder}}{20}{section*.19}}
+\@writefile{toc}{\contentsline {paragraph}{\textbf  {GLFW Folder}}{21}{section*.19}}
