@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.24)  13 AUG 2015 12:17
+This is pdfTeX, Version 3.14159265-2.6-1.40.16 (TeX Live 2015/W32TeX) (preloaded format=pdflatex 2015.6.24)  26 AUG 2015 11:29
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1252,40 +1252,45 @@ Package xcolor Warning: Incompatible color definition on input line 865.
 
 [20]
 
-Package xcolor Warning: Incompatible color definition on input line 882.
+Package xcolor Warning: Incompatible color definition on input line 879.
 
 
-Package xcolor Warning: Incompatible color definition on input line 883.
+Package xcolor Warning: Incompatible color definition on input line 880.
 
 
-Package xcolor Warning: Incompatible color definition on input line 887.
+Underfull \hbox (badness 10000) in paragraph at lines 878--881
+[][]\OT1/ptm/m/n/10 alan.wolfe@gmail.com[][]
+ []
 
 
-Underfull \hbox (badness 10000) in alignment at lines 887--887
+Package xcolor Warning: Incompatible color definition on input line 884.
+
+
+Underfull \hbox (badness 10000) in alignment at lines 884--884
 [][] [] []
  []
 
 
-Package xcolor Warning: Incompatible color definition on input line 887.
+Package xcolor Warning: Incompatible color definition on input line 884.
 
 <CC-BY-ND.png, id=314, 97.0827pt x 33.9669pt>
 File: CC-BY-ND.png Graphic file (type png)
  <use CC-BY-ND.png>
-Package pdftex.def Info: CC-BY-ND.png used on input line 887.
+Package pdftex.def Info: CC-BY-ND.png used on input line 884.
 (pdftex.def)             Requested size: 71.13188pt x 24.8884pt.
 
 
-Package xcolor Warning: Incompatible color definition on input line 889.
+Package xcolor Warning: Incompatible color definition on input line 886.
 
 [21 <./CC-BY-ND.png>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 889.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 889.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 886.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 886.
  (./paper.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 889.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 889.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 886.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 886.
 Package rerunfilecheck Info: File `paper.brf' has not changed.
 (rerunfilecheck)             Checksum: 3580A34D07435FDA25AEC6CC9A110496;288.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 889.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 886.
  ) 
 Here is how much of TeX's memory you used:
  29169 strings out of 493089
@@ -1313,7 +1318,7 @@ fonts/type1/urw/helvetic/uhvbo8a.pfb><c:/texlive/2015/texmf-dist/fonts/type1/ur
 w/helvetic/uhvr8a.pfb><c:/texlive/2015/texmf-dist/fonts/type1/urw/times/utmb8a.
 pfb><c:/texlive/2015/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><c:/texlive/20
 15/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on paper.pdf (21 pages, 1009421 bytes).
+Output written on paper.pdf (21 pages, 1009356 bytes).
 PDF statistics:
  417 PDF objects out of 1000 (max. 8388607)
  342 compressed objects within 4 object streams
