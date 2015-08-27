@@ -62,7 +62,7 @@ Passing control point data to a shader program as shader constants allows you to
 
 \begin{figure}
   \includegraphics[width=5in]{Figure2.png}
-  \caption{Quadratic Curve.  \textit{Left:} Yellow is the curve calculated from shader program constants.  Red is the same curve baked out in a 4x1 texture.  \textit{Right:}  Yellow uses the technique from this paper to encode the curve in a 2x2 texture.  Red is the same curve baked out in a 4x1 texture again for comparison.}
+  \caption{Quadratic Curve.  \textit{Left:} Calculated from shader program constants.  \textit{Middle:} The technique in this paper, using a 2x2 texture and a single texture sample per pixel.  \textit{Right:} Baked out curve, using a 4x1 texture and a single texture sample per pixel.}
   \label{fig:quickcomparison}
 \end{figure}
 
@@ -429,6 +429,7 @@ If $M$ piecewise curves are desired, each of degree $N$, we can encode them acro
   \begin{figure}
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0) grid (2,-2);
+      \draw[yellow,->,line width=0.5mm]    (0.5,-0.5) -- (1.5,-1.5);
       \draw (0.5,-0.5) node {$P_0$};
       \draw (1.5,-0.5) node {$P_1$};
       \draw (0.5,-1.5) node {$P_1$};
@@ -437,6 +438,8 @@ If $M$ piecewise curves are desired, each of degree $N$, we can encode them acro
     \hspace{5mm}  
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0) grid (2,-3);
+      \draw[yellow,->,line width=0.5mm]    (0.5,-0.5) -- (1.5,-1.5);
+      \draw[yellow,->,line width=0.5mm]    (0.5,-1.5) -- (1.5,-2.5);
       \draw (0.5,-0.5) node {$P_0$};
       \draw (1.5,-0.5) node {$P_1$};
       \draw (0.5,-1.5) node {$P_1$};
@@ -447,6 +450,8 @@ If $M$ piecewise curves are desired, each of degree $N$, we can encode them acro
     \hspace{5mm}
     \begin{tikzpicture}
       \draw[step=1cm,gray,very thin] (0,0) grid (4,-3);
+      \draw[yellow,->,line width=0.5mm]    (0.5,-0.5) -- (1.5,-1.5);
+      \draw[yellow,->,line width=0.5mm]    (0.5,-1.5) -- (1.5,-2.5);      
       \draw (0.5,-0.5) node {$P_0$};
       \draw (1.5,-0.5) node {$P_1$};
       \draw (0.5,-1.5) node {$P_1$};
@@ -454,6 +459,8 @@ If $M$ piecewise curves are desired, each of degree $N$, we can encode them acro
       \draw (0.5,-2.5) node {$P_2$};
       \draw (1.5,-2.5) node {$P_3$};  
 
+      \draw[yellow,->,line width=0.5mm]    (2.5,-0.5) -- (3.5,-1.5);
+      \draw[yellow,->,line width=0.5mm]    (2.5,-1.5) -- (3.5,-2.5);   
       \draw (2.5,-0.5) node {$P_3$};
       \draw (3.5,-0.5) node {$P_4$};
       \draw (2.5,-1.5) node {$P_4$};
@@ -461,7 +468,7 @@ If $M$ piecewise curves are desired, each of degree $N$, we can encode them acro
       \draw (2.5,-2.5) node {$P_5$};
       \draw (3.5,-2.5) node {$P_6$};          
     \end{tikzpicture}
-    \caption{\textit{Left:} A quadratic curve encoded in a 2d texture that is $(2,2)$ in size. \textit{Middle:} A cubic curve encoded in a 2d texture that is $(2,3)$ in size.  \textit{Right:} Two piecewise cubic curves encoded in a 2d texture with $C0$ continuity that is $(4,3)$ in size.} 
+    \caption{\textit{Left:} A quadratic curve encoded in a 2d texture that is $(2,2)$ in size. \textit{Middle:} A cubic curve encoded in a 2d texture that is $(2,3)$ in size.  \textit{Right:} Two piecewise cubic curves encoded in a 2d texture with $C0$ continuity that is $(4,3)$ in size.  The yellow lines show how the curves are sampled from the texture over t.} 
     \label{fig:texlayeout2d}
   \end{figure}  
 
@@ -842,7 +849,7 @@ Lastly, throughout this paper, texture coordinates were set up such that the tex
 %-------------------------------------------------------------------------
 \section*{Acknowledgements}
 \label{sec:acknowledgements}
-TODO: this
+I would like to give my deepest thanks to Ian McCown, James Anhalt III and Dr. Josh Grass for reading this over and giving feedback before submission.  You all had significant responsibilities at the time, ranging from having a young newborn to moving to another continent, and as people I have a lot of respect for, I really appreciate that all three of you made time to have a look and give me meaningful feedback.  Thank you also to my wife Chanel for your support and patience during this process!
 
 %-------------------------------------------------------------------------
 \small
