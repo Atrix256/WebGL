@@ -1,0 +1,1454 @@
+<!--
+    WebGL initialization and basic utility code is based on the source code found here:
+    http://learningwebgl.com/blog/?page_id=1217
+
+    Smoothing of texture coordinates by using smoothstep or a quintic curve from here:
+    http://iquilezles.org/www/articles/hwinterpolation/hwinterpolation.htm
+    http://iquilezles.org/www/articles/texture/texture.htm
+
+    The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
+
+    TODO:
+    * make a 2 axis colors mode that does two samples - one for each axis
+-->
+<html>
+<head>
+<title>GPU Efficient Texture Based Bezier Curve Evaluation - Curves Features Demo</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec2 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        gl_Position = vec4(aVertexPosition, 1.0, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+</script>
+
+<script id="shader-vs-cp" type="x-shader/x-vertex">
+    attribute vec2 aVertexPosition;
+    uniform vec2 uOffset;
+
+    varying vec2 vPosition;
+
+    void main(void) {
+        gl_Position = vec4(aVertexPosition+uOffset, 1.0, 1.0);
+        vPosition = aVertexPosition;
+    }
+</script>
+
+<script id="shader-fs-cp" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform vec3 uColor;
+
+    varying vec2 vPosition;
+
+    void main(void) {
+        if (length(vPosition) > 0.024)
+            discard;
+        gl_FragColor = vec4(uColor,1.0);   
+    }
+</script>
+
+<script type="text/javascript">
+
+    var gl;
+    var g_frameCounter = 0;
+
+    function nextPowerOfTwo(v) {
+        v = v-1;
+        v|=v>>1;
+        v|=v>>2;
+        v|=v>>4;
+        v|=v>>8;
+        v|=v>>16;
+        return v+1;
+    }
+
+    function pascalsTriangle(n)
+    {
+        var ret = [1];
+        for (i = 0; i < n; ++i)
+            ret.push(ret[i] * (n - i) / (i + 1));
+        return ret;
+    }
+
+    function pad (num, size) {
+        var s = num+"";
+        while (s.length < size) s = " " + s;
+        return s;
+    }
+
+    function getShader(gl, id) {
+        var shaderScript = document.getElementById(id);
+        if (!shaderScript)
+            return null;
+
+        var str = "";
+        var k = shaderScript.firstChild;
+        while (k) {
+            if (k.nodeType == 3)
+                str += k.textContent;
+            k = k.nextSibling;
+        }
+
+        var shader;
+        if (shaderScript.type == "x-shader/x-fragment")
+            shader = gl.createShader(gl.FRAGMENT_SHADER);
+        else if (shaderScript.type == "x-shader/x-vertex")
+            shader = gl.createShader(gl.VERTEX_SHADER);
+        else
+            return null;
+
+        gl.shaderSource(shader, str);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert(gl.getShaderInfoLog(shader));
+            return null;
+        }
+
+        return shader;
+    }
+
+    function createFragmentShader(gl, source) {
+        var shader = gl.createShader(gl.FRAGMENT_SHADER);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert(gl.getShaderInfoLog(shader));
+            return null;
+        }
+        return shader;
+    }
+
+    var g_settings = {};
+
+    function GetNumUIControlPoints ()
+    {
+        return (g_settings.m_desiredTextureSizeY + g_settings.m_orderBoost) * (g_settings.m_desiredTextureSizeX/2) + 1;
+    }
+
+    var g_fragmentShaderHeader = 
+        "#extension GL_OES_standard_derivatives : enable\n"+
+        "#extension OES_texture_float : enable\n"+
+        "#extension OES_texture_float_linear : enable\n" +
+        "precision mediump float;\n" + 
+        "uniform sampler2D uSampler;\n" + 
+        "varying vec2 vTextureCoord;\n\n";
+
+    var g_fragmentShaderFooter = "}";
+
+    function buildFragmentShader_texture (samplingMode, imageFormat) {
+        var shaderSource = 
+            g_fragmentShaderHeader +
+            "vec4 SamplePixel (vec2 p) {\n";
+
+        if (samplingMode == "nearest" || samplingMode == "bilinear") {
+            shaderSource +=
+                "   return texture2D(uSampler, p);\n}\n\n";
+        }
+        else if (samplingMode == "bilinearSmoothstep") {
+            shaderSource +=
+                "   //Apply a cubic curve (smoothstep) to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
+                "   //smoothstep is otherwise known as a clamp and y=3x^2-2x^3\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   f = smoothstep(0.0, 1.0, f);\n" +
+                "   p = i + f;\n\n" +
+                "   p = (p - 0.5)/myTexResolution;\n" +
+                "   return texture2D(uSampler, p);\n}\n\n";            
+        }
+        else if (samplingMode == "bilinearQuintic") {
+            shaderSource +=
+                "   //Apply a quintic curve to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   f = f*f*f*(f*(f*6.0-15.0)+10.0);\n" +
+                "   p = i + f;\n\n" +
+                "   p = (p - 0.5)/myTexResolution;\n" +
+                "   return texture2D(uSampler, p);\n}\n\n";                  
+        }
+        else if (samplingMode == "bilinearsw") {
+            shaderSource +=
+                "   // Do four pixel reads and combine with bilinear sampling to get the final result\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   vec4 sampleA = texture2D(uSampler, (i + vec2(0.0,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleB = texture2D(uSampler, (i + vec2(1.0,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleC = texture2D(uSampler, (i + vec2(0.0,1.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleD = texture2D(uSampler, (i + vec2(1.0,1.0) - 0.5) / myTexResolution);\n" +
+                "   return mix(mix(sampleA, sampleB, f.x), mix(sampleC, sampleD, f.x), f.y);\n}\n\n";                  
+        }        
+        else if (samplingMode == "bilinearhwsw") {
+            shaderSource +=
+                "   // Do two pixel reads and combine with lerp to get the final result\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   vec4 sampleA = texture2D(uSampler, (i + vec2(f.x,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleB = texture2D(uSampler, (i + vec2(f.x,1.0) - 0.5) / myTexResolution);\n" +
+                "   return mix(sampleA, sampleB, f.y);\n}\n\n";             
+        }         
+
+        if (imageFormat == "RGBAF32_255") {
+            shaderSource +=
+                "void main(void) {\n" +
+                "   gl_FragColor = SamplePixel(vTextureCoord) / 255.0;\n" + 
+                g_fragmentShaderFooter;
+        }
+        else {
+            shaderSource +=
+                "void main(void) {\n" +
+                "   gl_FragColor = SamplePixel(vTextureCoord);\n" + 
+                g_fragmentShaderFooter;            
+        }
+
+        document.getElementById("ShaderSource").innerText = shaderSource;
+        return createFragmentShader(gl,shaderSource);
+    }
+
+    function buildFragmentShader_visual (samplingMode, renderMode, polar, imageFormat) {
+        var shaderSource = "/*\n   Description:\n   " + g_settings.m_shaderDescription + "\n\n   Texture Layout:\n   " + g_settings.m_textureLayout + "\n*/\n\n" + g_fragmentShaderHeader;
+
+        shaderSource +=
+            "vec4 SamplePixel (vec2 p) {\n";
+
+        var postSample = "";
+        if (imageFormat == "RGBAF32_255")
+            postSample = " / 255.0";
+
+        if (samplingMode == "nearest" || samplingMode == "bilinear") {
+            shaderSource +=
+                "   return texture2D(uSampler, p)" + postSample + ";\n}\n\n";
+        }
+        else if (samplingMode == "bilinearSmoothstep") {
+            shaderSource +=
+                "   //Apply a cubic curve (smoothstep) to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
+                "   //smoothstep is otherwise known as 3x^2 - 2x^3\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   f = smoothstep(0.0, 1.0, f);\n" +
+                "   p = i + f;\n\n" +
+                "   p = p/myTexResolution;\n" +
+                "   return texture2D(uSampler, p)" + postSample + ";\n}\n\n";            
+        }
+        else if (samplingMode == "bilinearQuintic") {
+            shaderSource +=
+                "   //Apply a quintic curve to smooth the texture coordinates a bit to help the 24.8 texture coordinate interpolation\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   f = f*f*f*(f*(f*6.0-15.0)+10.0);\n" +
+                "   p = i + f;\n\n" +
+                "   p = p/myTexResolution;\n" +
+                "   return texture2D(uSampler, p)" + postSample + ";\n}\n\n";                  
+        }
+        else if (samplingMode == "bilinearsw") {
+            shaderSource +=
+                "   // Do four pixel reads and combine with bilinear interpolation to get the final result\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   vec4 sampleA = texture2D(uSampler, (i + vec2(0.0,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleB = texture2D(uSampler, (i + vec2(1.0,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleC = texture2D(uSampler, (i + vec2(0.0,1.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleD = texture2D(uSampler, (i + vec2(1.0,1.0) - 0.5) / myTexResolution);\n" +
+                "   return mix(mix(sampleA, sampleB, f.x), mix(sampleC, sampleD, f.x), f.y)" + postSample + ";\n}\n\n";                  
+        } 
+        else if (samplingMode == "bilinearhwsw") {
+            shaderSource +=
+                "   // Do two pixel reads and combine with lerp to get the final result\n" +
+                "   vec2 myTexResolution = vec2(" + g_settings.m_actualTextureSizeX.toFixed(1) + ", " + g_settings.m_actualTextureSizeY.toFixed(1) + ");\n" +
+                "   p = p*myTexResolution + 0.5;\n\n" +
+                "   vec2 i = floor(p);\n" +
+                "   vec2 f = p - i;\n" +
+                "   vec4 sampleA = texture2D(uSampler, (i + vec2(f.x,0.0) - 0.5) / myTexResolution);\n" +
+                "   vec4 sampleB = texture2D(uSampler, (i + vec2(f.x,1.0) - 0.5) / myTexResolution);\n" +
+                "   return mix(sampleA, sampleB, f.y)" + postSample + ";\n}\n\n";             
+        }                  
+
+        shaderSource +=
+            "vec2 AdjustTextureCoords (vec2 texCoord) {\n";
+
+        // convert to polar coordinates if we should
+        if (polar) {
+        	shaderSource +=
+        		"   // Convert the texture coordinares from cartesian to polar space.\n" +
+        		"   vec2 adjustedTextureCoord = (texCoord - vec2(0.5)) * 2.0;\n" +
+        		"   adjustedTextureCoord.x *= -1.0;\n" +
+        		"   adjustedTextureCoord.y *= -1.0;\n" +
+        		"   vec2 textureCoord;\n" +
+        		"   textureCoord.x = (atan(adjustedTextureCoord.y, adjustedTextureCoord.x) + 3.14159265359) / 6.28318530718;\n" +
+        		"   textureCoord.y = length(adjustedTextureCoord);\n" +
+                "   return textureCoord;\n"
+        }
+        else {
+        	shaderSource += "   return texCoord;\n";
+        }
+
+        shaderSource +=
+            "}\n\n" +
+            "vec4 GetCurveValues (vec2 textureCoord) {\n";
+
+        // calculate how many texture samples there will be
+        var textureSampleCount = (samplingMode != "nearest") ? g_settings.m_desiredTextureSizeY - 1 : g_settings.m_desiredTextureSizeY + 1;
+        if (textureSampleCount < 1)
+            textureSampleCount = 1;
+
+        shaderSource += "   // Calculate the powers of s and t that we will need.\n";
+
+        if (g_settings.m_desiredTextureSizeX > 2)
+        {
+        	shaderSource +=
+        		"   float xOffset = floor(textureCoord.x * " + (g_settings.m_desiredTextureSizeX/2).toFixed(1) + ") * 2.0 / " + g_settings.m_actualTextureSizeX.toFixed(1) + ";\n" +
+            	"   float t1 = fract(textureCoord.x * " + (g_settings.m_desiredTextureSizeX/2).toFixed(1) + ");\n";
+        }
+        else
+        {
+        	shaderSource +=
+        		"   float xOffset = 0.0;\n" +
+            	"   float t1 = textureCoord.x;\n";
+        }
+
+        var powersNeeded = textureSampleCount;
+        if (powersNeeded < g_settings.m_orderBoost + 1)
+            powersNeeded = g_settings.m_orderBoost + 1;
+
+        if (powersNeeded > 1)
+        {
+            shaderSource +=
+                "   float s1 = (1.0 - t1);\n";
+
+            for (i = 2; i < powersNeeded; ++i) 
+            {
+                shaderSource += "   float t" + i.toString() + " = t" + (i-1).toString() + " * t1;\n";
+                shaderSource += "   float s" + i.toString() + " = s" + (i-1).toString() + " * s1;\n";
+            }
+        }
+        shaderSource += "\n";
+
+        if (samplingMode != "nearest")
+        {
+            shaderSource +=
+                "   // Calculate our sample value.\n" + 
+                "   // The center of each pixel is where the color is.\n"+
+                "   float sampleX = (0.25 + t1 / 2.0) / " + (g_settings.m_actualTextureSizeX / 2).toFixed(1) + " + xOffset;\n";
+
+            // do the texture sample(s)
+            if (textureSampleCount == 1)
+            {
+                shaderSource +=
+                    "   float sampleY = (0.25 + t1 / 2.0);\n\n" +
+                    "   // Do the texture sample\n" +
+                    "   vec4 curveValues = SamplePixel(vec2(sampleX, sampleY));\n\n";
+            }
+            else
+            {
+                shaderSource +=
+                    "   float sampleY = (0.25 + t1 / 2.0) / " + (g_settings.m_actualTextureSizeY / 2).toFixed(1) + ";\n\n" +
+                    "   // Do the texture samples\n";
+                for (i = 1; i <= textureSampleCount; ++i)
+                {
+                    shaderSource += "   vec4 P" + i.toString() + " = SamplePixel(vec2(sampleX, sampleY + " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
+                }
+                shaderSource += "\n";
+            }
+        }
+        else
+        {
+            shaderSource += "   // Do the texture samples\n";
+            for (i = 1; i < textureSampleCount; ++i)
+            {
+                shaderSource += "   vec4 P" + i.toString() + " = SamplePixel(vec2(xOffset + 1.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (i-1).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n";
+            }
+            shaderSource += "   vec4 P" + textureSampleCount.toString() + " = SamplePixel(vec2(xOffset + 3.0 / " + (g_settings.m_actualTextureSizeX*2).toFixed(1) + ", " + (textureSampleCount-2).toFixed(1) + " / " + g_settings.m_actualTextureSizeY.toFixed(1) + "));\n\n";
+        }
+
+        // combine texture samples if we have multiple.  Otherwise we've already done all the work we need to do
+        if (textureSampleCount > 1)
+        {
+            // Use the binomial theorem to generate the Nth order bezier curve function
+            shaderSource += 
+                "   // Calculate the desired bezier curve by putting the points we have through the appropriate bezier curve equation.\n";
+            coefficients = pascalsTriangle(textureSampleCount-1);
+            shaderSource += "   vec4 curveValues = \n";
+            for (i = 1; i <= textureSampleCount; ++i)
+            {
+                shaderSource += "      P" + i.toString() + " * " + coefficients[i-1].toFixed(1);
+                if (i > 1)
+                    shaderSource += " * t" + (i-1).toString();
+
+                var j = textureSampleCount - i + 1;
+                if (j > 1)
+                    shaderSource += " * s" + (j-1).toString();
+
+                if ( i < textureSampleCount)
+                    shaderSource += " +\n";
+                else
+                    shaderSource += ";\n\n";
+            }
+        }
+
+        // combine color channels for order boost
+        if (g_settings.m_orderBoost == 1) {
+            shaderSource +=
+                "   // Combine resulting pixels for +1 order boost\n" +
+                "   curveValues.x = \n" +
+                "       curveValues.x * 1.0 * s1 +\n" +
+                "       curveValues.y * 1.0 * t1;\n" +
+                "   curveValues.y = \n" +
+                "       curveValues.z * 1.0 * s1 +\n" +
+                "       curveValues.w * 1.0 * t1;\n\n";
+        }
+        else if (g_settings.m_orderBoost == 3) {
+            shaderSource +=
+                "   // Combine resulting pixels for +3 order boost\n" +
+                "   curveValues.x = \n" +
+                "       curveValues.x * 1.0 * s3 +\n" +
+                "       curveValues.y * 3.0 * t1 * s2 +\n" +
+                "       curveValues.z * 3.0 * t2 * s1 +\n" +
+                "       curveValues.w * 1.0 * t3;\n\n";
+        }
+
+        shaderSource +=
+            "   return curveValues;\n" +
+            "}\n\nvoid main(void) {\n" +
+            "   //Calculate our texture coordinates\n" +
+            "   vec2 textureCoord = AdjustTextureCoords(vTextureCoord);\n\n" +
+            "   // Get our curve values\n" +
+            "   vec4 curveValues = GetCurveValues(textureCoord);\n\n";
+
+        if (renderMode == "curves") {
+            shaderSource +=
+                "   // Calculate slope using dfdx so we can use the gradient to aproximate distance\n" +
+                "   vec4 slope = dFdx(curveValues) / dFdx(vTextureCoord.x);\n\n";
+        }
+        else if (renderMode == "colors2d") {
+            shaderSource +=
+                "   // modulate our curve values by the other axis\n" +
+                "   curveValues *= GetCurveValues(textureCoord.yx);\n\n";
+        }
+
+        shaderSource +=
+            "   // R,G,B curves add to their color channels respectively, alpha adds to all.\n" + 
+            "   vec3 outColor;\n";
+
+		if (renderMode == "curves") {
+			shaderSource +=
+            	"   outColor.x = smoothstep(0.01,0.0,abs(textureCoord.y - curveValues.x) / length(vec2(slope.x, -1.0)));\n";
+
+            if (g_settings.m_orderBoost < 3)
+            {
+                shaderSource +=
+                	"   outColor.y = smoothstep(0.01,0.0,abs(textureCoord.y - curveValues.y) / length(vec2(slope.y, -1.0)));\n";
+
+                if (g_settings.m_orderBoost < 1)
+                {
+                    shaderSource +=
+                    	"   outColor.z = smoothstep(0.01,0.0,abs(textureCoord.y - curveValues.z) / length(vec2(slope.z, -1.0)));\n" +
+                    	"   float v = smoothstep(0.01,0.0,abs(textureCoord.y - curveValues.w) / length(vec2(slope.w, -1.0)));\n" +
+                    	"   outColor.x += v;\n" +
+                    	"   outColor.y += v;\n" +
+                    	"   outColor.z += v;\n";
+                }
+                else
+                {
+                    shaderSource +=
+                        "   outColor.z = 0.0;\n";
+                }
+            }
+            else
+            {
+                shaderSource +=
+                    "   outColor.y = 0.0;\n" +
+                    "   outColor.z = 0.0;\n";
+            }  	
+		}
+        else if (renderMode == "colors" || renderMode == "colors2d")
+        {
+            shaderSource += 
+                "   outColor.x = curveValues.x * 0.5;\n";
+
+            if (g_settings.m_orderBoost < 3)
+            {
+                shaderSource += 
+                    "   outColor.y = curveValues.y * 0.5;\n";
+
+                if (g_settings.m_orderBoost < 1)
+                {
+                    shaderSource +=
+                        "   outColor.z = curveValues.z * 0.5;\n" +
+                        "   float v = curveValues.w * 0.5;\n" +
+                        "   outColor.x += v;\n" +
+                        "   outColor.y += v;\n" +
+                        "   outColor.z += v;\n";
+                }
+                else
+                {
+                    shaderSource +=
+                        "   outColor.z = 0.0;\n" + 
+                        "   outColor *= 2.0;\n";
+                }
+            }
+            else
+            {
+                shaderSource +=
+                    "   outColor.y = 0.0;\n" +
+                    "   outColor.z = 0.0;\n" +
+                    "   outColor *= 2.0;\n";
+            }            
+        }
+		else {
+	        shaderSource += 
+	            "   outColor.x = step(textureCoord.y, curveValues.x) * 0.5;\n";
+
+            if (g_settings.m_orderBoost < 3)
+            {
+                shaderSource += 
+    	            "   outColor.y = step(textureCoord.y, curveValues.y) * 0.5;\n";
+
+                if (g_settings.m_orderBoost < 1)
+                {
+                    shaderSource +=
+        	            "   outColor.z = step(textureCoord.y, curveValues.z) * 0.5;\n" +
+        	            "   float v = step(textureCoord.y, curveValues.w) * 0.5;\n" +
+        	            "   outColor.x += v;\n" +
+        	            "   outColor.y += v;\n" +
+        	            "   outColor.z += v;\n";
+                }
+                else
+                {
+                    shaderSource +=
+                        "   outColor.z = 0.0;\n";
+                }
+            }
+            else
+            {
+                shaderSource +=
+                    "   outColor.y = 0.0;\n" +
+                    "   outColor.z = 0.0;\n";
+            }
+		}
+
+        shaderSource += 
+            "\n" +
+            "   // make the output color\n" +
+            "   gl_FragColor = vec4(clamp(outColor,0.0,1.0), 1.0);\n" +
+            g_fragmentShaderFooter;
+
+        document.getElementById("ShaderSource").innerText = shaderSource;
+        return createFragmentShader(gl,shaderSource);
+    }
+
+    function buildFragmentShader () {
+        var renderMode = document.getElementById("RenderMode").value;
+        var samplingMode = document.getElementById("SamplingMode").value;        
+        var imageFormat = document.getElementById("ImageFormat").value;        
+        if (renderMode == "texture")
+            return buildFragmentShader_texture(samplingMode, imageFormat);
+
+        var polar = document.getElementById("RenderPolar").checked;
+        return buildFragmentShader_visual(samplingMode, renderMode, polar, imageFormat);
+
+        alert("Could not find shader to generate");
+        return null;
+    }
+
+    var FSshaderProgram;
+    var CPShaderProgram;
+
+    function initShaders() {
+        // make the full screen shader program
+        var fragmentShader = buildFragmentShader();
+        var vertexShader = getShader(gl, "shader-vs");
+
+        FSshaderProgram = gl.createProgram();
+        gl.attachShader(FSshaderProgram, vertexShader);
+        gl.attachShader(FSshaderProgram, fragmentShader);
+        gl.linkProgram(FSshaderProgram);
+
+        if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
+            alert("Could not initialise FS shader");
+
+        gl.useProgram(FSshaderProgram);
+
+        FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
+
+        FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
+        gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
+
+        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
+
+        // make the control point shader program
+        fragmentShader = getShader(gl, "shader-fs-cp");
+        vertexShader = getShader(gl, "shader-vs-cp");
+
+        CPshaderProgram = gl.createProgram();
+        gl.attachShader(CPshaderProgram, vertexShader);
+        gl.attachShader(CPshaderProgram, fragmentShader);
+        gl.linkProgram(CPshaderProgram);
+
+        if (!gl.getProgramParameter(CPshaderProgram, gl.LINK_STATUS))
+            alert("Could not initialise CP shader");        
+
+        gl.useProgram(CPshaderProgram);
+
+        CPshaderProgram.vertexPositionAttribute = gl.getAttribLocation(CPshaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(CPshaderProgram.vertexPositionAttribute);
+
+        CPshaderProgram.uOffsetLocation = gl.getUniformLocation(CPshaderProgram, "uOffset");
+        gl.uniform2f(CPshaderProgram.uOffsetLocation, 0, 0);
+
+        CPshaderProgram.uColorLocation = gl.getUniformLocation(CPshaderProgram, "uColor");
+        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 0);
+    }
+
+    function createTexture(byteArrayWithRGBAData, width, height) {
+        var filter = (document.getElementById("SamplingMode").value != "nearest" && document.getElementById("SamplingMode").value != "bilinearsw")
+            ? gl.LINEAR
+            : gl.NEAREST;
+
+        var format;
+        var data;
+        if (document.getElementById("ImageFormat").value == "RGBAF32") {
+        	format = gl.FLOAT;
+        	data = new Float32Array(byteArrayWithRGBAData);
+            for (i = 0; i < data.length; ++i)
+                data[i] /= 255;
+        }
+        else if (document.getElementById("ImageFormat").value == "RGBAF32_255") {
+            format = gl.FLOAT;
+            data = new Float32Array(byteArrayWithRGBAData);
+        }        
+        else
+        {
+        	format = gl.UNSIGNED_BYTE;
+			data = new Uint8Array(byteArrayWithRGBAData);        	
+        }
+
+        var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, format, data);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filter);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filter);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return texture;
+    }
+
+    var bezierTexture;
+    var g_controlPoints = [
+        [128,   0,  50, 190],
+        [  0, 255,   0,   0],
+        [190,  64, 255,  75]
+    ];
+
+    function initTexture() {
+        // Get the control point data from our sliders
+        for (i = 0; i < GetNumUIControlPoints(); ++i)
+        {
+            g_controlPoints[i] = [
+                document.getElementById("R"+i.toString()).value * 2.55,
+                document.getElementById("G"+i.toString()).value * 2.55,
+                document.getElementById("B"+i.toString()).value * 2.55,
+                document.getElementById("A"+i.toString()).value * 2.55,
+            ];
+        }
+
+        // put the control point data on the page
+        var controlPointData = "{\n";
+
+        controlPointData += "  \"R\":\n  [\n    ";
+        for (i = 0; i < GetNumUIControlPoints(); ++i)
+        {
+            controlPointData += pad((document.getElementById("R"+i.toString()).value / 100).toFixed(2), 5);
+
+            if (i < GetNumUIControlPoints()-1)
+                controlPointData += ",\n    ";
+            else
+                controlPointData += "\n";
+        }
+        controlPointData += "  ]";
+
+        if (g_settings.m_orderBoost < 3)
+        {
+            controlPointData += ",\n  \"G\":\n  [\n    ";
+            for (i = 0; i < GetNumUIControlPoints(); ++i)
+            {
+                controlPointData += pad((document.getElementById("G"+i.toString()).value / 100).toFixed(2), 5);
+
+                if (i < GetNumUIControlPoints()-1)
+                    controlPointData += ",\n    ";
+                else
+                    controlPointData += "\n";
+            }
+            controlPointData += "  ]";
+        }
+        else
+        {
+            controlPointData += "\n";
+        }
+
+        if (g_settings.m_orderBoost < 1)
+        {
+            controlPointData += ",\n  \"B\":\n  [\n    ";
+            for (i = 0; i < GetNumUIControlPoints(); ++i)
+            {
+                controlPointData += pad((document.getElementById("B"+i.toString()).value / 100).toFixed(2), 5);
+
+                if (i < GetNumUIControlPoints()-1)
+                    controlPointData += ",\n    ";
+                else
+                    controlPointData += "\n";
+            }
+            controlPointData += "  ]";
+
+
+            controlPointData += ",\n  \"A\":\n  [\n    ";
+            for (i = 0; i < GetNumUIControlPoints(); ++i)
+            {
+                controlPointData += pad((document.getElementById("A"+i.toString()).value / 100).toFixed(2), 5);
+
+                if (i < GetNumUIControlPoints()-1)
+                    controlPointData += ",\n    ";
+                else
+                    controlPointData += "\n";
+            }
+            controlPointData += "  ]\n";
+        }
+        else
+        {
+            controlPointData += "\n";
+        }
+        
+        controlPointData += "}";
+        document.getElementById("CurveData").innerText = controlPointData;
+
+        // make our texture data
+        var textureData = new Array;
+
+        if (g_settings.m_orderBoost == 0)
+        {
+            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
+            {
+                for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
+                {
+                	var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
+                    textureData.push(g_controlPoints[i+offset][0]);
+                    textureData.push(g_controlPoints[i+offset][1]);
+                    textureData.push(g_controlPoints[i+offset][2]);
+                    textureData.push(g_controlPoints[i+offset][3]);
+
+                    textureData.push(g_controlPoints[i+offset+1][0]);
+                    textureData.push(g_controlPoints[i+offset+1][1]);
+                    textureData.push(g_controlPoints[i+offset+1][2]);
+                    textureData.push(g_controlPoints[i+offset+1][3]);                    
+                }
+
+                for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
+                    textureData = textureData.concat([255,255,255,255]);
+            }
+        }
+        else if (g_settings.m_orderBoost == 1)
+        {
+            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
+            {
+                for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
+                {
+                    var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
+                    textureData.push(g_controlPoints[i+offset  ][0]);
+                    textureData.push(g_controlPoints[i+offset+1][0]);
+                    textureData.push(g_controlPoints[i+offset  ][1]);
+                    textureData.push(g_controlPoints[i+offset+1][1]);
+
+                    textureData.push(g_controlPoints[i+offset+1][0]);
+                    textureData.push(g_controlPoints[i+offset+2][0]);
+                    textureData.push(g_controlPoints[i+offset+1][1]);
+                    textureData.push(g_controlPoints[i+offset+2][1]);                    
+                }
+
+                for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
+                    textureData = textureData.concat([255,255,255,255]);
+            }
+        }
+        else if (g_settings.m_orderBoost == 3)
+        {
+            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
+            {
+                for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
+                {
+                    var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
+                    textureData.push(g_controlPoints[i+offset  ][0]);
+                    textureData.push(g_controlPoints[i+offset+1][0]);
+                    textureData.push(g_controlPoints[i+offset+2][0]);
+                    textureData.push(g_controlPoints[i+offset+3][0]);
+
+                    textureData.push(g_controlPoints[i+offset+1][0]);
+                    textureData.push(g_controlPoints[i+offset+2][0]);
+                    textureData.push(g_controlPoints[i+offset+3][0]);
+                    textureData.push(g_controlPoints[i+offset+4][0]);                    
+                }
+
+                for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
+                    textureData = textureData.concat([255,255,255,255]);
+            }
+        }
+
+        // fill in the rest of the texture we had to allocate with opaque black.
+        // we have to round up to the next even numbered texture size, which can cause this needing to happen.
+        for (i = g_settings.m_desiredTextureSizeY; i < g_settings.m_actualTextureSizeY; ++i)
+            for (j = 0; j < g_settings.m_actualTextureSizeX; ++j)
+                textureData = textureData.concat([255,255,255,255]);
+
+        // create the texture
+        bezierTexture = createTexture(
+            textureData,
+            g_settings.m_actualTextureSizeX, g_settings.m_actualTextureSizeY
+        );
+
+        // put the texture data on the page
+        var pixelData = "[";
+        for (i = 0; i < textureData.length; ++i) {
+            if (i % (4*g_settings.m_actualTextureSizeX) == 0)
+                pixelData += "\n";
+            else if (i % 4 == 0)
+                pixelData += "     ";
+
+			if (document.getElementById("ImageFormat").value == "RGBAF32")
+				pixelData += pad((textureData[i]/255).toFixed(2).toString(),5);
+            else if (document.getElementById("ImageFormat").value == "RGBAF32_255")
+                pixelData += pad(Math.round(textureData[i]).toString(),4);
+			else
+            	pixelData += pad(Math.round(textureData[i]).toString(),4);
+
+            if (i < textureData.length - 1)
+                pixelData+= ",";
+        }
+        pixelData += "\n]";
+        document.getElementById("TextureData").innerText = pixelData;
+    }
+
+    var screenQuadBuffer;
+    var screenQuadTextureCoordinateBuffer;
+    var controlPointBuffer;
+
+    function initBuffers() {
+        // make the full screen quad vertex buffer
+        screenQuadBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        vertices = [
+            // Front face
+            -1.0, -1.0,
+             1.0, -1.0,
+             1.0,  1.0,
+            -1.0, -1.0,
+             1.0,  1.0,
+            -1.0,  1.0,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        screenQuadBuffer.itemSize = 2;
+        screenQuadBuffer.numItems = 6;
+
+        // make the full screen quad texture coordinate buffer
+        screenQuadTextureCoordinateBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        vertices = [
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 0,
+            1, 1,
+            0, 1,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        screenQuadTextureCoordinateBuffer.itemSize = 2;
+        screenQuadTextureCoordinateBuffer.numItems = 6;
+
+        // make the control point quad vertex buffer
+        controlPointBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
+        var size = 0.025;
+        vertices = [
+            // Front face
+            -size, -size,
+             size, -size,
+             size,  size,
+            -size, -size,
+             size,  size,
+            -size,  size,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        controlPointBuffer.itemSize = 2;
+        controlPointBuffer.numItems = 6;        
+    }
+
+    function fromPolar(pos) {
+
+    	var anglePercent = (pos[0] * 0.5 + 0.5);
+    	var distancePercent = (pos[1] * 0.5 + 0.5);
+
+    	return [
+    		Math.cos(anglePercent * 2.0 * Math.PI) * distancePercent,
+    		Math.sin(anglePercent* 2.0 * Math.PI) * distancePercent
+		];
+    }
+
+    function drawScene() {
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // draw the full screen quad
+        gl.useProgram(FSshaderProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.textureCoordinateAttribute, screenQuadTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, bezierTexture);
+        gl.uniform1i(FSshaderProgram.samplerUniform, 0);
+        gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
+
+        var polar = document.getElementById("RenderPolar").checked;
+
+        // draw the control points if we aren't in texture rendering mode
+        if (document.getElementById("RenderMode").value != "texture" && g_settings.m_drawControlPoints == true)
+        {
+            gl.useProgram(CPshaderProgram);        
+            gl.bindBuffer(gl.ARRAY_BUFFER, controlPointBuffer);
+            gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, controlPointBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+            var numUIControlPoints = GetNumUIControlPoints();
+
+            // Draw Red curve control points
+            for (i = 0; i < numUIControlPoints; ++i)
+            {
+                gl.uniform3f(CPshaderProgram.uColorLocation, 1, 0, 0);
+                var pos = [(i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][0]/255.0 - 0.5)];
+                if (polar)
+                	pos = fromPolar(pos);
+                gl.uniform2f(CPshaderProgram.uOffsetLocation, pos[0], pos[1]);
+                gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+            }
+
+            if (g_settings.m_orderBoost < 3)
+            {
+                // Draw Green curve control points
+                for (i = 0; i < numUIControlPoints; ++i)
+                {
+                    gl.uniform3f(CPshaderProgram.uColorLocation, 0, 1, 0);
+                    var pos = [(i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][1]/255.0 - 0.5)];
+                	if (polar)
+                		pos = fromPolar(pos);                    
+                    gl.uniform2f(CPshaderProgram.uOffsetLocation, pos[0], pos[1]);
+                    gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+                } 
+
+                if (g_settings.m_orderBoost < 1)
+                {
+                    // Draw Blue curve control points
+                    for (i = 0; i < numUIControlPoints; ++i)
+                    {
+                        gl.uniform3f(CPshaderProgram.uColorLocation, 0, 0, 1);
+                        var pos = [(i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][2]/255.0 - 0.5)];
+                		if (polar)
+                			pos = fromPolar(pos);                        
+                        gl.uniform2f(CPshaderProgram.uOffsetLocation, pos[0], pos[1]);
+                        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+                    }           
+
+                    // Draw Alpha curve control points
+                    for (i = 0; i < numUIControlPoints; ++i)
+                    {
+                        gl.uniform3f(CPshaderProgram.uColorLocation, 1, 1, 1);
+                        var pos = [(i / (numUIControlPoints-1)) * 2.0 - 1.0, 2.0 * (g_controlPoints[i][3]/255.0 - 0.5)];
+                		if (polar)
+                			pos = fromPolar(pos);                        
+                        gl.uniform2f(CPshaderProgram.uOffsetLocation, pos[0], pos[1]);
+                        gl.drawArrays(gl.TRIANGLES,0,controlPointBuffer.numItems);
+                    } 
+                }
+            }    
+        } 
+    }
+
+    function tick() {
+        requestAnimFrame(tick);
+        drawScene();
+        g_frameCounter++;
+    }
+
+    var g_maxControlPoints = 0;
+
+    function initSettings() {
+        // calculate the texture size we need
+        g_settings.m_desiredTextureSizeX = parseInt(document.getElementById("TextureSizeX").value);
+        g_settings.m_desiredTextureSizeY = parseInt(document.getElementById("TextureSizeY").value);
+
+        // round the texture size up to the next power of 2
+        g_settings.m_actualTextureSizeX = nextPowerOfTwo(g_settings.m_desiredTextureSizeX);
+        g_settings.m_actualTextureSizeY = nextPowerOfTwo(g_settings.m_desiredTextureSizeY);
+
+        // other settings
+        g_settings.m_orderBoost = parseInt(document.getElementById("OrderBoost").value);
+        g_settings.m_drawControlPoints = document.getElementById("DrawControlPoints").checked;
+
+        // show or hide sliders for control points, as needed
+        var numUIControlPoints = GetNumUIControlPoints();
+        var maxNumber = numUIControlPoints;
+        if (maxNumber < g_maxControlPoints)
+            maxNumber = g_maxControlPoints;
+        g_maxControlPoints = maxNumber;
+
+        for (i = 0; i < maxNumber; ++i)
+        {
+            var value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][0] == 'undefined') ? 0 : g_controlPoints[i][0] / 2.55;
+            if (!document.getElementById("R"+i.toString())) {
+            	var node = document.createElement("span");
+            	node.setAttribute("id", "LR"+i.toString());
+            	node.appendChild(document.createTextNode((i).toString() + ":"));
+            	document.getElementById("RedControlPoints").appendChild(node);
+
+            	node = document.createElement("input");
+            	node.setAttribute("id", "R"+i.toString());
+            	node.setAttribute("type", "range");
+            	node.setAttribute("min", "0");
+            	node.setAttribute("max", "100");
+            	node.setAttribute("onInput", "initTexture();");
+            	node.setAttribute("onChange", "initTexture();");
+            	node.setAttribute("value", value);
+				document.getElementById("RedControlPoints").appendChild(node);   
+
+				document.getElementById("RedControlPoints").appendChild(document.createElement("br"));
+            }
+            var invisible = (i >= numUIControlPoints);
+            document.getElementById("R" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+            document.getElementById("LR" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+
+            value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][1] == 'undefined') ? 0 : g_controlPoints[i][1] / 2.55;
+            if (!document.getElementById("G"+i.toString())) {
+            	var node = document.createElement("span");
+            	node.setAttribute("id", "LG"+i.toString());
+            	node.appendChild(document.createTextNode((i).toString() + ":"));
+            	document.getElementById("GreenControlPoints").appendChild(node);
+
+            	node = document.createElement("input");
+            	node.setAttribute("id", "G"+i.toString());
+            	node.setAttribute("type", "range");
+            	node.setAttribute("min", "0");
+            	node.setAttribute("max", "100");
+            	node.setAttribute("onInput", "initTexture();");
+            	node.setAttribute("onChange", "initTexture();");
+            	node.setAttribute("value", value);
+				document.getElementById("GreenControlPoints").appendChild(node);   
+
+				document.getElementById("GreenControlPoints").appendChild(document.createElement("br"));            	
+            }
+            invisible = (i >= numUIControlPoints || g_settings.m_orderBoost > 1);
+            document.getElementById("G" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+            document.getElementById("LG" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+
+            value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[2] == 'undefined') ? 0 : g_controlPoints[i][2] / 2.55;
+            if (!document.getElementById("B"+i.toString())) {
+            	var node = document.createElement("span");
+            	node.setAttribute("id", "LB"+i.toString());
+            	node.appendChild(document.createTextNode((i).toString() + ":"));
+            	document.getElementById("BlueControlPoints").appendChild(node);
+
+            	node = document.createElement("input");
+            	node.setAttribute("id", "B"+i.toString());
+            	node.setAttribute("type", "range");
+            	node.setAttribute("min", "0");
+            	node.setAttribute("max", "100");
+            	node.setAttribute("onInput", "initTexture();");
+            	node.setAttribute("onChange", "initTexture();");
+            	node.setAttribute("value", value);
+				document.getElementById("BlueControlPoints").appendChild(node);   
+
+				document.getElementById("BlueControlPoints").appendChild(document.createElement("br"));              	
+            }
+            invisible = (i >= numUIControlPoints || g_settings.m_orderBoost > 0);
+            document.getElementById("B" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+            document.getElementById("LB" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+
+            value = (typeof g_controlPoints[i] == 'undefined' || typeof g_controlPoints[i][3] == 'undefined') ? 0 : g_controlPoints[i][3] / 2.55;
+            if (!document.getElementById("A"+i.toString())) {
+            	var node = document.createElement("span");
+            	node.setAttribute("id", "LA"+i.toString());
+            	node.appendChild(document.createTextNode((i).toString() + ":"));
+            	document.getElementById("AlphaControlPoints").appendChild(node);
+
+            	node = document.createElement("input");
+            	node.setAttribute("id", "A"+i.toString());
+            	node.setAttribute("type", "range");
+            	node.setAttribute("min", "0");
+            	node.setAttribute("max", "100");
+            	node.setAttribute("onInput", "initTexture();");
+            	node.setAttribute("onChange", "initTexture();");
+            	node.setAttribute("value", value);
+				document.getElementById("AlphaControlPoints").appendChild(node);   
+
+				document.getElementById("AlphaControlPoints").appendChild(document.createElement("br"));             	
+            }
+            document.getElementById("A" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+            document.getElementById("LA" + i.toString()).style.visibility = (invisible) ? "hidden" : "visible";
+        }
+
+        document.getElementById("GreenControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 1) ? "hidden" : "visible";
+        document.getElementById("BlueControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 0) ? "hidden" : "visible";
+        document.getElementById("AlphaControlPointsContainer").style.visibility = (g_settings.m_orderBoost > 0) ? "hidden" : "visible";
+
+        // show the shader description
+        var numCurves = g_settings.m_desiredTextureSizeX / 2;
+        var bilinear = (document.getElementById("SamplingMode").value != "nearest");
+        var textureSampleCount = bilinear ? g_settings.m_desiredTextureSizeY - 1 : g_settings.m_desiredTextureSizeY + 1;
+        if (textureSampleCount < 1)
+            textureSampleCount = 1;
+
+        g_settings.m_shaderDescription = textureSampleCount.toString() + " texture sample" + ((textureSampleCount > 1) ? "s" : "") + " taken to make " + numCurves.toString() + " curve";
+
+        if (numCurves > 1)
+            g_settings.m_shaderDescription += "s end to end";
+
+        g_settings.m_shaderDescription +=
+            " for each color channel, where each curve is order " + g_settings.m_desiredTextureSizeY.toString() + ".";
+
+        if (g_settings.m_orderBoost == 1)
+        {
+            g_settings.m_shaderDescription +=
+                "  Then the R,G curves and also the B,A curves are combined with the linear bezier curve function (lerp), to end up with two curves that are each of order " + (g_settings.m_desiredTextureSizeY + g_settings.m_orderBoost).toString() + ".";
+        }
+        else if (g_settings.m_orderBoost == 3)
+        {
+            g_settings.m_shaderDescription +=
+                "  Then the R,G,B,A curves are combined with the cubic bezier curve function, to end up with one curve that is order " + (g_settings.m_desiredTextureSizeY + g_settings.m_orderBoost).toString() + ".";
+        }
+
+        g_settings.m_shaderDescription += "  The source texture dimensions are " + g_settings.m_actualTextureSizeX + "x" + g_settings.m_actualTextureSizeY;
+
+        if (g_settings.m_actualTextureSizeX != g_settings.m_desiredTextureSizeX || g_settings.m_actualTextureSizeY != g_settings.m_desiredTextureSizeY)
+            g_settings.m_shaderDescription += ", but that was rounded up to the next powers of two and really only needed to be " + g_settings.m_desiredTextureSizeX + "x" + g_settings.m_desiredTextureSizeY;
+
+        g_settings.m_shaderDescription += "."
+
+        if (document.getElementById("RenderPolar").checked)
+        	g_settings.m_shaderDescription += "  Rendered Polar."
+
+        if (document.getElementById("SamplingMode").value == "bilinearSmoothstep")
+            g_settings.m_shaderDescription += "  Texture coordinates softened with a cubic curve (smoothstep)."
+        else if (document.getElementById("SamplingMode").value == "bilinearQuintic")
+            g_settings.m_shaderDescription += "  Texture coordinates softened with a quintic curve."
+        else if (document.getElementById("SamplingMode").value == "bilinearhwsw")
+            g_settings.m_shaderDescription += "  Two linear reads done on hardware, lerped in the fragment shader.";
+        else if (document.getElementById("SamplingMode").value == "bilinearsw")
+            g_settings.m_shaderDescription += "  Four pixel reads done on hardware, bilinearly interpolated in fragment shader.";        
+
+        document.getElementById("ShaderDesc").innerHTML = g_settings.m_shaderDescription;
+
+        // make the texture layout description
+        g_settings.m_textureLayout = "";
+        if (g_settings.m_orderBoost == 0)
+        {
+            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
+            {
+                for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
+                {
+                    var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
+                    g_settings.m_textureLayout += "[R" + (i+offset).toString() + ",G" + (i+offset).toString() + ",B" + (i+offset).toString() + ",A" + (i+offset).toString() + "],";
+                    g_settings.m_textureLayout += "[R" + (i+offset+1).toString() + ",G" + (i+offset+1).toString() + ",B" + (i+offset+1).toString() + ",A" + (i+offset+1).toString() + "],";                  
+                }
+
+                for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
+                {
+                    g_settings.m_textureLayout += "[x,x,x,x],";
+                }
+
+                g_settings.m_textureLayout += "\n   ";
+            }
+        }
+        else if (g_settings.m_orderBoost == 1)
+        {
+            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
+            {
+                for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
+                {
+                    var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
+                    g_settings.m_textureLayout += "[R" + (i+offset).toString() + ",R" + (i+offset+1).toString() + ",G" + (i+offset).toString() + ",G" + (i+offset+1).toString() + "],";
+                    g_settings.m_textureLayout += "[R" + (i+offset+1).toString() + ",R" + (i+offset+2).toString() + ",G" + (i+offset+1).toString() + ",G" + (i+offset+2).toString() + "],";                
+                }
+
+                for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
+                {
+                    g_settings.m_textureLayout += "[x,x,x,x],";
+                }
+
+                g_settings.m_textureLayout += "\n   ";
+            }
+        }
+        else if (g_settings.m_orderBoost == 3)
+        {
+            for (i = 0; i < g_settings.m_desiredTextureSizeY; ++i)
+            {
+                for (j = 0; j < g_settings.m_desiredTextureSizeX / 2; ++j)
+                {
+                    var offset = j * (g_settings.m_desiredTextureSizeY+g_settings.m_orderBoost);
+                    g_settings.m_textureLayout += "[R" + (i+offset).toString() + ",R" + (i+offset+1).toString() + ",R" + (i+offset+2).toString() + ",R" + (i+offset+3).toString() + "],";
+                    g_settings.m_textureLayout += "[R" + (i+offset+1).toString() + ",R" + (i+offset+2).toString() + ",R" + (i+offset+3).toString() + ",R" + (i+offset+4).toString() + "],";                  
+                }
+
+                for (j = g_settings.m_desiredTextureSizeX; j < g_settings.m_actualTextureSizeX; ++j)
+                {
+                    g_settings.m_textureLayout += "[x,x,x,x],";
+                }
+
+                g_settings.m_textureLayout += "\n   ";
+            }
+        }
+
+        // fill in the rest of the texture we had to allocate with opaque black.
+        // we have to round up to the next even numbered texture size, which can cause this needing to happen.
+        for (i = g_settings.m_desiredTextureSizeY; i < g_settings.m_actualTextureSizeY; ++i)
+        {
+            for (j = 0; j < g_settings.m_actualTextureSizeX; ++j)
+            {
+                g_settings.m_textureLayout += "[x,x,x,x],";
+            }
+            g_settings.m_textureLayout += "\n   ";
+        }
+
+    }
+
+    function VerifyExtension(ext) {
+        if (!gl.getExtension(ext))
+            alert("Could not find extension " + ext);
+    }
+
+    function initGL() {
+        var canvas = document.getElementById("webglcanvas");
+        var canvassize = document.getElementById("CanvasSize").value;
+        canvas.width = canvassize;
+        canvas.height = canvassize;
+        // details of options below here: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+        gl = WebGLUtils.setupWebGL(canvas, {alpha:true, depth: false, stencil: false, antialias: false, premultipliedAlpha:false, preserveDrawingBuffer: false});
+
+        VerifyExtension("OES_standard_derivatives");
+        VerifyExtension("OES_texture_float");
+        VerifyExtension("OES_texture_float_linear");
+
+        gl.viewportWidth = canvas.width;
+        gl.viewportHeight = canvas.height;
+        initSettings();
+        initShaders();
+        initBuffers();
+        initTexture();
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    }
+
+    function DoOnLoad() {
+        initGL();
+        setInterval(function(){ document.getElementById("fps").innerText = "FPS: " + g_frameCounter + " (" + Math.round(100 * 1000.0/g_frameCounter) / 100 + " ms)"; g_frameCounter = 0; }, 1000);
+        tick();
+    }
+
+    function ResizeCanvas() {
+        initGL();
+    }
+
+    function OnChangeSettings()
+    {
+        initSettings();
+        initShaders();
+        initTexture();
+    }
+
+    function SetCPs (color, value)
+    {
+        for (i = 0; i < GetNumUIControlPoints(); ++i)
+            document.getElementById(color+i.toString()).value = value;
+        initTexture();
+    }
+
+    function SetCPsRandom (color)
+    {
+        for (i = 0; i < GetNumUIControlPoints(); ++i)
+            document.getElementById(color+i.toString()).value = Math.random() * 100;
+        initTexture();
+    }
+</script>
+</head>
+
+<body onload="DoOnLoad()">
+    <h1>GPU Efficient Texture Based Bezier Curve Evaluation - Curves Features Demo</h1>
+    <a href="index.html">Back to Index</a><br><br>
+    <table>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td>Texture Size Y Axis (Order):</td>
+                        <td>
+                            <select id="TextureSizeY" OnChange="OnChangeSettings();">
+                                <option value="1">1: Linear (Order 1)</option>
+                                <option value="2" selected="selected">2: Quadratic (Order 2)</option>
+                                <option value="3">3: Cubic (Order 3)</option>
+                                <option value="4">4: Quartic (Order 4)</option>
+                                <option value="5">5: Quintic (Order 5)</option>
+                                <option value="6">6: Sextic (Order 6)</option>
+                                <option value="7">7: Septic (Order 7)</option>
+                                <option value="8">8: Octic (Order 8)</option>
+                            </select>            
+                        </td>
+                    </tr>        
+                    <tr>
+                        <td>Texture Size X axis (# Curves):</td>
+                        <td>
+                            <select id="TextureSizeX" OnChange="OnChangeSettings();">
+                                <option value="2">2: 1 curve  [T=0..1]</option>
+                                <option value="4">4: 2 curves [T=0..2]</option>
+                                <option value="6">6: 3 curves [T=0..3]</option>
+                                <option value="8">8: 4 curves [T=0..4]</option>
+                                <option value="10">10: 5 curves [T=0..5]</option>
+                                <option value="12">12: 6 curves [T=0..6]</option>
+                                <option value="14">14: 7 curves [T=0..7]</option>
+                                <option value="16">16: 8 curves [T=0..8]</option>                                                                                                
+                            </select>            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Curves Per Pixel (Order Boost):</td>
+                        <td>
+                            <select id="OrderBoost" OnChange="OnChangeSettings();">
+                                <option value="0">4: +0 order [R] [G] [B] [A]</option>
+                                <option value="1">2: +1 order [R&amp;G], [B&amp;A]</option>
+                                <option value="3">1: +3 order [R&amp;G&amp;B&amp;A]</option>
+                            </select>           
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table>
+                    <tr>
+                        <td>Sampling:</td>
+                        <td>
+                            <select id="SamplingMode" onChange="OnChangeSettings();">
+                                <option value="bilinear">Hardware Bilinear (1 pixel read)</option>
+                                <option value="bilinearSmoothstep">Hardware Bilinear + Cubic Curve (Smoothstep) (1 pixel read)</option>
+                                <option value="bilinearQuintic">Hardware Bilinear + Quintic Curve (1 pixel read)</option>
+                                <option value="bilinearhwsw">Hardware Linear / Software Linear (2 pixel reads) </option>
+                                <option value="nearest">Fragment Shader Blends Control Points (3 texture reads)</option>
+                                <option value="bilinearsw">Software Bilinear (4 texture reads) </option>                                
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Render:</td>
+                        <td>
+                            <select id="RenderMode" onChange="OnChangeSettings();">
+                                <option value="halfspace">HalfSpace</option>
+                                <option value="curves">Curves (dFdx for gradient distance)</option>
+                                <option value="colors">Gradient</option>
+                                <option value="colors2d">Gradient 2 axis</option>
+                                <option value="texture">Source Texture</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Resolution:</td>
+                        <td><select id="CanvasSize" onChange="ResizeCanvas();">
+                            <option value="250">250x250</option>
+                            <option value="500" selected="selected">500x500</option>
+                            <option value="1000">1000x1000</option>
+                        </select>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+            <td>
+                <table>
+                    <tr>
+                        <td>Image Format</td>
+                        <td>
+                            <select id="ImageFormat" onChange="initGL();">
+                                <option value="RGBAU8">RGBA 8 bit unsigned</option>
+                                <option value="RGBAF32">RGBA 32 bit float (0..1)</option>
+                                <option value="RGBAF32_255">RGBA 32 bit float (0..255)</option>
+                            </select>                            
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Render Polar</td>
+                        <td><input id="RenderPolar" type="checkbox" onChange="OnChangeSettings();"></td>
+                    </tr>                
+                    <tr>
+                        <td>Show Control Points</td>
+                        <td><input id="DrawControlPoints" type="checkbox"  checked="true" onChange="OnChangeSettings();"></td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <div id="fps">FPS: --</div>
+    <table>
+        <tr>
+            <td valign="top">
+                <canvas id="webglcanvas" style="border: none" width="500" height="500"></canvas>
+            </td>
+            <td valign="top" style="border:2px solid red" id="RedControlPointsContainer">
+                Red:<br>
+                <input type="button" onClick="SetCPs('R',0)" value="Zero"/>
+                <input type="button" onClick="SetCPs('R',100)" value="One"/>
+                <input type="button" onClick="SetCPsRandom('R')" value="Random"/><br>
+                <span id="RedControlPoints"></span>
+            </td>
+            <td valign="top" style="border:2px solid green" id="GreenControlPointsContainer">
+                Green:<br>
+                <input type="button" onClick="SetCPs('G',0)" value="Zero"/>
+                <input type="button" onClick="SetCPs('G',100)" value="One"/>
+                <input type="button" onClick="SetCPsRandom('G')" value="Random"/><br>
+                <span id="GreenControlPoints"></span>
+            </td>
+            <td valign="top" style="border:2px solid blue" id="BlueControlPointsContainer">                
+                Blue:<br>
+                <input type="button" onClick="SetCPs('B',0)" value="Zero"/>
+                <input type="button" onClick="SetCPs('B',100)" value="One"/>
+                <input type="button" onClick="SetCPsRandom('B')" value="Random"/><br>
+                <span id="BlueControlPoints"></span>
+            </td>
+            <td valign="top" style="border:2px solid black" id="AlphaControlPointsContainer">                
+                Alpha:<br>
+                <input type="button" onClick="SetCPs('A',0)" value="Zero"/>
+                <input type="button" onClick="SetCPs('A',100)" value="One"/>
+                <input type="button" onClick="SetCPsRandom('A')" value="Random"/><br>
+                <span id="AlphaControlPoints"></span>
+            </td>
+        </tr>
+    </table><br>
+    <b>Description: </b><span id="ShaderDesc"></span><br><br>
+    <b>Fragment Shader Source (GLSL):</b>
+    <pre id="ShaderSource" style="border:1px solid black; white-space: pre-wrap;"></pre>
+    <b>Control Point Data (JSON):</b>
+    <pre id="CurveData" style="border:1px solid black; white-space: pre-wrap;"></pre>
+    <b>Texture Data (JSON):</b>
+    <pre id="TextureData" style="border:1px solid black; white-space: pre-wrap;"></pre>
+    <a href="index.html">Back to Index</a><br><br>
+</body>
+
+</html>

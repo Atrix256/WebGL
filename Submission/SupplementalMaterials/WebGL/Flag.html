@@ -1,0 +1,1089 @@
+<!--
+    WebGL initialization and basic utility code is based on the source code found here:
+    http://learningwebgl.com/blog/?page_id=1217
+
+    The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
+-->
+<html>
+<head>
+<title>GPU Efficient Texture Based Bezier Curve Evaluation - Applications To Vector Art</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="glMatrix-0.9.5.min.js"></script>
+<script type="text/javascript" src="webgl-utils.js"></script>
+
+<script id="quincunx-vs" type="x-shader/x-vertex">
+    attribute vec2 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        gl_Position = vec4(aVertexPosition, 1.0, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+</script>
+
+<script id="quincunx-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D uSamplerA;
+    uniform sampler2D uSamplerB;
+    uniform vec2 uSampleOffset;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        vec3 Center = texture2D(uSamplerA, vTextureCoord).xyz;
+
+        vec3 A = texture2D(uSamplerB, vTextureCoord).xyz;
+        vec3 B = texture2D(uSamplerB, vTextureCoord + vec2(uSampleOffset.x,0.0)).xyz;
+        vec3 C = texture2D(uSamplerB, vTextureCoord + vec2(0.0,uSampleOffset.y)).xyz;
+        vec3 D = texture2D(uSamplerB, vTextureCoord + vec2(uSampleOffset.x,uSampleOffset.y)).xyz;
+
+        vec3 outColor = Center / 2.0 + (A+B+C+D) / 8.0;
+
+        gl_FragColor = vec4(outColor,1.0);
+    }
+</script>
+
+<script id="fourrook-vs" type="x-shader/x-vertex">
+    attribute vec2 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        gl_Position = vec4(aVertexPosition, 1.0, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+</script>
+
+<script id="fourrook-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D uSamplerA;
+    uniform sampler2D uSamplerB;
+    uniform sampler2D uSamplerC;
+    uniform sampler2D uSamplerD;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        vec3 A = texture2D(uSamplerA, vTextureCoord).xyz;
+        vec3 B = texture2D(uSamplerB, vTextureCoord).xyz;
+        vec3 C = texture2D(uSamplerC, vTextureCoord).xyz;
+        vec3 D = texture2D(uSamplerD, vTextureCoord).xyz;
+
+        gl_FragColor = vec4((A+B+C+D)/4.0,1.0);
+    }
+</script>
+
+<script id="flag-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec3 aVertexNormal;
+    attribute vec2 aTextureCoord;
+
+    varying vec2 vTextureCoord;
+    varying vec3 vNormal;
+
+    uniform mat4 uPMatrix;    
+    uniform mat3 uNMatrix;
+    uniform vec2 uRenderOffset;
+    
+    void main(void) {
+    	vec4 pos = uPMatrix * vec4(aVertexPosition, 1.0);
+    	pos += vec4(uRenderOffset * pos.w,0.0,0.0);
+        gl_Position = pos;
+        vTextureCoord = aTextureCoord;
+
+        // calculate normal
+        vNormal = uNMatrix * aVertexNormal;
+    }
+</script>
+
+<script id="flag-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    uniform sampler2D uSampler;
+    uniform vec2 uTextureResolution;
+    uniform int uSamplingMode;
+    uniform float uTimeSeconds;
+
+    varying vec2 vTextureCoord;
+    varying vec3 vNormal;   
+
+    vec4 SamplePixel (vec2 pixel) {
+
+        // Hardware bilinear sampling - 1 texture read
+        if (uSamplingMode == 0)
+            return texture2D(uSampler, (pixel + vec2(0.5)) / uTextureResolution);
+
+        vec2 frac = fract(pixel);
+        vec2 floorPixel = floor(pixel) + 0.5;
+
+        // Hardware linear / Software linear sampling - 2 texture reads
+        if (uSamplingMode == 1)
+        {
+        	vec4 A = texture2D(uSampler, (floorPixel+vec2(frac.x,0.0)) / uTextureResolution);
+        	vec4 B = texture2D(uSampler, (floorPixel+vec2(frac.x,1.0)) / uTextureResolution);
+			return mix(A,B,frac.y);
+        }
+
+        // Software bilinear sampling - 4 texture reads
+        vec4 A = texture2D(uSampler, (floorPixel+vec2(0.0,0.0)) / uTextureResolution);
+        vec4 B = texture2D(uSampler, (floorPixel+vec2(1.0,0.0)) / uTextureResolution);
+        vec4 C = texture2D(uSampler, (floorPixel+vec2(0.0,1.0)) / uTextureResolution);
+        vec4 D = texture2D(uSampler, (floorPixel+vec2(1.0,1.0)) / uTextureResolution);
+        return mix(mix(A,B,frac.x), mix(C,D,frac.x), frac.y);
+    }
+
+    vec3 DrawLandScape () {
+        // sample the landscape curves
+        float time = vTextureCoord.x * 4.0;
+        vec2 pixel = vec2(floor(time)*2.0, 0.0) + vec2(fract(time));
+        vec4 curveValues = SamplePixel(pixel);
+
+        // calculate and return color
+        vec3 outColor;
+        if (vTextureCoord.y < curveValues.x)
+            outColor = vec3(0.0,1.0,0.0);
+        else if (vTextureCoord.y < curveValues.y)
+            outColor = vec3(0.0,0.5,0.0);
+        else if (vTextureCoord.y < curveValues.z)
+            outColor = vec3(0.0,0.0,0.4);
+        else if (vTextureCoord.y < curveValues.w)
+            outColor = vec3(0.0,0.25,0.0);
+        else
+            outColor = SamplePixel(vec2(6.0 + vTextureCoord.y, 2.0 + vTextureCoord.y)).rgb;
+
+        return outColor;
+    }
+
+    vec3 DrawCastle (vec3 inColor) {
+
+        // scale the castle to a specific rectangle
+        vec2 adjustedTextureCoord = vec2((vTextureCoord.x - (2.2/4.0)) * 3.0, vTextureCoord.y * 2.0 - 0.55);
+        if (adjustedTextureCoord.x < 0.0 || adjustedTextureCoord.x > 1.0 ||
+            adjustedTextureCoord.y < 0.0 || adjustedTextureCoord.y > 1.0)
+            return inColor;
+
+        // mnirror the castle on the x axis
+        adjustedTextureCoord.x *= 2.0;
+        if (adjustedTextureCoord.x > 1.0)
+            adjustedTextureCoord.x = 2.0 - adjustedTextureCoord.x;
+
+        // sample the castle curves
+        float time = fract(adjustedTextureCoord.x * 4.0);
+        vec4 curveValues = SamplePixel(vec2(time, 2.0));
+
+        // use the appropriate curve values to make sure a pixel is part of the castle
+        float section = floor(adjustedTextureCoord.x * 4.0);
+        if (section < 1.0)
+        {
+            if (adjustedTextureCoord.y > curveValues.x)
+                return inColor;
+        }
+        else if (section < 2.0)
+        {
+            if (adjustedTextureCoord.y > curveValues.y)
+                return inColor;
+        }
+        else if (section < 3.0)
+        {
+            if (adjustedTextureCoord.y > curveValues.z)
+                return inColor;
+        }
+        else
+        {
+            if (adjustedTextureCoord.y > curveValues.w)
+                return inColor;
+        }
+
+        // sample the castle color curve and return that as greyscale
+        float t1 = adjustedTextureCoord.y;
+        float s1 = (1.0 - t1);
+        float t2 = t1 * t1;
+        float s2 = s1 * s1;
+        float t3 = t2 * t1;
+        float s3 = s2 * s1;
+        curveValues = SamplePixel(vec2(2.0 + t1, 3.0));
+
+        curveValues.x = 
+           curveValues.x * 1.0 * s3 +
+           curveValues.y * 3.0 * t1 * s2 +
+           curveValues.z * 3.0 * t2 * s1 +
+           curveValues.w * 1.0 * t3;
+
+        return vec3(curveValues.x);
+    }
+
+    vec3 DrawCastleDoors (vec3 inColor) {
+
+        // scale the doors to a specific rectangle
+        vec2 adjustedTextureCoord = vec2((vTextureCoord.x - (2.57/4.0)) * 7.0, vTextureCoord.y * 4.0 - 1.10);
+        if (adjustedTextureCoord.x < 0.0 || adjustedTextureCoord.x > 1.0 ||
+            adjustedTextureCoord.y < 0.0 || adjustedTextureCoord.y > 1.0)
+            return inColor;
+
+        // sample the curve
+        float t1 = adjustedTextureCoord.x;
+        float s1 = (1.0 - t1);
+        float t2 = t1 * t1;
+        float s2 = s1 * s1;
+        float t3 = t2 * t1;
+        float s3 = s2 * s1;
+        vec4 curveValues = SamplePixel(vec2(2.0 + t1, 2.0));
+
+        curveValues.x = 
+           curveValues.x * 1.0 * s3 +
+           curveValues.y * 3.0 * t1 * s2 +
+           curveValues.z * 3.0 * t2 * s1 +
+           curveValues.w * 1.0 * t3;       
+
+        // make it black if this pixel is part of the door
+        if (adjustedTextureCoord.y < curveValues.x)
+            return vec3(0.0);
+        else
+            return inColor;
+    }
+
+    vec3 DrawSun (vec3 inColor) {
+
+        // scale the sun to a specific circle
+        vec2 relativePos = vTextureCoord - vec2(0.3,0.75);
+        relativePos.y /= 2.0;
+        relativePos /= (1.0/12.0);
+
+        // don't write to pixels outside the circle
+        float dist = length(relativePos);
+        if ( dist> 1.0)
+            return inColor;
+
+        // get the angle as a percentage so we can do a polar texture lookup
+        float angle = (atan(relativePos.y, relativePos.x) + 3.14) / 6.28;
+        angle = fract(angle + fract(uTimeSeconds*0.2));
+        float time = fract(angle * 8.0);
+        vec4 curveValues = SamplePixel(vec2(4.0 + time, 2.0 + time));
+
+        // handle animation between keyframes
+        float curveDist;
+        float animTime = fract(uTimeSeconds*0.125) * 4.0;
+        if (animTime < 1.0)
+            curveDist = mix(curveValues.x, curveValues.y, fract(animTime));
+        else if (animTime < 2.0)
+            curveDist = mix(curveValues.y, curveValues.z, fract(animTime));
+        else if (animTime < 3.0)
+            curveDist = mix(curveValues.z, curveValues.w, fract(animTime));
+        else
+            curveDist = mix(curveValues.w, curveValues.x, fract(animTime));
+
+        // if the pixel is inside the curve, draw it, using the curve based gradient
+        if (dist < curveDist)
+        {
+            float t1 = (curveDist - dist) / curveDist;
+            float s1 = (1.0 - t1);
+            float t2 = t1 * t1;
+            float s2 = s1 * s1;
+            float t3 = t2 * t1;
+            float s3 = s2 * s1;
+            curveValues = SamplePixel(vec2(t1, 3.0));
+
+            curveValues.x = 
+               curveValues.x * 1.0 * s3 +
+               curveValues.y * 3.0 * t1 * s2 +
+               curveValues.z * 3.0 * t2 * s1 +
+               curveValues.w * 1.0 * t3;    
+
+            return vec3(1.0,curveValues.x,0.0);
+        }
+        // else the pixel is outside the curve, so return whatever color is already there
+        else
+            return inColor;
+    }
+
+    void main(void) {
+        // draw back to front
+        vec3 outColor = DrawLandScape();
+        outColor = DrawCastle(outColor);
+        outColor = DrawCastleDoors(outColor);
+        outColor = DrawSun(outColor);
+
+        // apply ambient and diffuse lighting and return the final color
+        float directionalLightWeighting = min(max(dot(normalize(vNormal), normalize(vec3(0.4,0.4,-1))), 0.0),1.0);
+        vec3 lightWeighting = vec3(0.2 +0.8 * directionalLightWeighting);
+        gl_FragColor = vec4(clamp(outColor.xyz*lightWeighting,0.0,1.0), 1.0);
+    }
+
+</script>
+
+<script type="text/javascript">
+
+    /*
+    Texture Layout:  8x4
+      A A A A A A A A
+      A A A A A A A A
+      B B C C D D F F
+      E E G G D D F F
+
+    A = Landscape: 8x2 - 4 qudratic bezier curves end to end
+    B = Castle: 2x1 - 4 linear bezier curves end to end (r1->r2, g1->g2, b1->b2, a1->a2), mirrored on x axis.
+    C = Castle doors: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  mirrored on x axis.
+    D = Sun frame 1-4: 2x2 - 4 quadratic curves (1 in each color channel).  Repeated 8 times, rendered polar.  Each curve (color channel) is a keyframe in the animation
+    E = Sun Green Gradient: 2x1 - 1 4th order bezier curve encoded in RGBA (combine 4 linear curves to one 4th order).  controls green color over distance from edge of sun.
+    F = Sky Gradient: 2x2 - 1 Quadratic Bezier curve per color channel.  RGB = sky color gradient.  A = unused.
+    G = Castle Color: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  Controls greyscale color of castle over height.
+    */
+
+    var g_textureData = [
+      41,  87, 145, 127,       46,  87, 140, 217,       43, 117, 145, 140,       41, 135, 145, 135,       33,  87, 150, 153,       43,  66, 143, 235,       59, 107, 150, 148,       69, 150, 150, 130,
+      46,  87, 140, 217,       43, 117, 145, 140,       41, 135, 145, 135,       33,  87, 150, 153,       43,  66, 143, 235,       59, 107, 150, 148,       69, 150, 150, 130,       66,  92, 150, 135,
+     200, 255, 200, 220,      255, 200, 220, 220,        0, 255, 255, 255,      255, 255, 255,   0,      255, 128,   0, 255,        0, 128, 255, 255,      255, 255,   0,   0,      255, 255,   0,   0,
+     255, 255, 255,   0,      255, 255,   0, 128,      200,  75, 170,   0,       75, 170,   0, 127,        0, 128, 255, 255,      255, 128,   0, 255,      255, 255,   0,   0,      255,   0,   0,   0,
+    ]
+    var g_textureSizeX = 8;
+    var g_textureSizeY = 4;
+
+    var gl;
+    var g_frameCounter = 0;
+
+    function pad (num, size) {
+        var s = num+"";
+        while (s.length < size) s = " " + s;
+        return s;
+    }
+
+    function getShader(gl, id) {
+        var shaderScript = document.getElementById(id);
+        if (!shaderScript)
+            return null;
+
+        var str = "";
+        var k = shaderScript.firstChild;
+        while (k) {
+            if (k.nodeType == 3)
+                str += k.textContent;
+            k = k.nextSibling;
+        }
+
+        var shader;
+        if (shaderScript.type == "x-shader/x-fragment")
+        {
+            shader = gl.createShader(gl.FRAGMENT_SHADER);
+            document.getElementById("FragmentShaderSource").innerText = str;
+        }
+        else if (shaderScript.type == "x-shader/x-vertex")
+        {
+            shader = gl.createShader(gl.VERTEX_SHADER);
+            document.getElementById("VertexShaderSource").innerText = str;
+        }
+        else
+            return null;
+
+        gl.shaderSource(shader, str);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert(gl.getShaderInfoLog(shader));
+            return null;
+        }
+
+        return shader;
+    }
+
+    var FSshaderProgram;
+    var QuincunxShaderProgram;
+    var FourRookShaderProgram;
+
+    function initShaders() {
+        // make the quincunx shader
+        {
+            var fragmentShader = getShader(gl, "quincunx-fs");
+            var vertexShader = getShader(gl, "quincunx-vs");
+
+            QuincunxShaderProgram = gl.createProgram();
+            gl.attachShader(QuincunxShaderProgram, vertexShader);
+            gl.attachShader(QuincunxShaderProgram, fragmentShader);
+            gl.linkProgram(QuincunxShaderProgram);
+
+            if (!gl.getProgramParameter(QuincunxShaderProgram, gl.LINK_STATUS))
+                alert("Could not initialise quincunx shader");
+
+            gl.useProgram(QuincunxShaderProgram);
+
+            QuincunxShaderProgram.textureCoordinateAttribute = gl.getAttribLocation(QuincunxShaderProgram, "aTextureCoord");
+            gl.enableVertexAttribArray(QuincunxShaderProgram.textureCoordinateAttribute);
+
+            QuincunxShaderProgram.samplerAUniform = gl.getUniformLocation(QuincunxShaderProgram, "uSamplerA");
+            QuincunxShaderProgram.samplerBUniform = gl.getUniformLocation(QuincunxShaderProgram, "uSamplerB");
+            QuincunxShaderProgram.sampleOffsetUniform = gl.getUniformLocation(QuincunxShaderProgram, "uSampleOffset");
+        }
+
+        // make the fourrook shader
+        {
+            var fragmentShader = getShader(gl, "fourrook-fs");
+            var vertexShader = getShader(gl, "fourrook-vs");
+
+            FourRookShaderProgram = gl.createProgram();
+            gl.attachShader(FourRookShaderProgram, vertexShader);
+            gl.attachShader(FourRookShaderProgram, fragmentShader);
+            gl.linkProgram(FourRookShaderProgram);
+
+            if (!gl.getProgramParameter(FourRookShaderProgram, gl.LINK_STATUS))
+                alert("Could not initialise fourrook shader");
+
+            gl.useProgram(FourRookShaderProgram);
+
+            FourRookShaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FourRookShaderProgram, "aTextureCoord");
+            gl.enableVertexAttribArray(FourRookShaderProgram.textureCoordinateAttribute);
+
+            FourRookShaderProgram.samplerAUniform = gl.getUniformLocation(FourRookShaderProgram, "uSamplerA");
+            FourRookShaderProgram.samplerBUniform = gl.getUniformLocation(FourRookShaderProgram, "uSamplerB");
+            FourRookShaderProgram.samplerCUniform = gl.getUniformLocation(FourRookShaderProgram, "uSamplerC");
+            FourRookShaderProgram.samplerDUniform = gl.getUniformLocation(FourRookShaderProgram, "uSamplerD");
+        }
+
+        // make the flag shader
+        {
+            var fragmentShader = getShader(gl, "flag-fs");
+            var vertexShader = getShader(gl, "flag-vs");
+
+            FSshaderProgram = gl.createProgram();
+            gl.attachShader(FSshaderProgram, vertexShader);
+            gl.attachShader(FSshaderProgram, fragmentShader);
+            gl.linkProgram(FSshaderProgram);
+
+            if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
+                alert("Could not initialise FS shader");
+
+            gl.useProgram(FSshaderProgram);
+
+            FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
+            gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
+
+            FSshaderProgram.vertexNormalAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexNormal");
+            gl.enableVertexAttribArray(FSshaderProgram.vertexNormalAttribute);
+
+            FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
+            gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
+
+            FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
+            FSshaderProgram.textureResolutionUniform = gl.getUniformLocation(FSshaderProgram, "uTextureResolution");
+            FSshaderProgram.samplingModeUniform = gl.getUniformLocation(FSshaderProgram, "uSamplingMode");
+            FSshaderProgram.timeSecondsUniform = gl.getUniformLocation(FSshaderProgram, "uTimeSeconds");
+
+            FSshaderProgram.pMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uPMatrix");
+            FSshaderProgram.nMatrixUniform = gl.getUniformLocation(FSshaderProgram, "uNMatrix");
+            FSshaderProgram.nRenderOffsetUniform = gl.getUniformLocation(FSshaderProgram, "uRenderOffset");
+        }        
+    }
+
+    function createTexture(byteArrayWithRGBAData, width, height) {
+        var data = new Uint8Array(byteArrayWithRGBAData);
+        var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return texture;
+    }
+
+    var bezierTexture;
+    var flagBuffer;
+    var flagNormalBuffer;
+    var flagTextureCoordinateBuffer;
+
+    var screenQuadBuffer;
+    var screenQuadTextureCoordinateBuffer;
+
+    var pMatrix = mat4.create();    
+
+    function setMatrixUniforms() {
+        gl.uniformMatrix4fv(FSshaderProgram.pMatrixUniform, false, pMatrix);
+
+        var normalMatrix = mat3.create();
+        mat4.toInverseMat3(pMatrix, normalMatrix);
+        mat3.transpose(normalMatrix);
+        gl.uniformMatrix3fv(FSshaderProgram.nMatrixUniform, false, normalMatrix);        
+    }    
+
+    function GetBias(time,bias)
+    {
+        return (time / ((((1.0/bias) - 2.0)*(1.0 - time))+1.0));
+    }  
+
+    function getZ (x, y)
+    {
+    	var envelope = (1-x) / 0.25;
+        if (envelope < 0)
+            envelope = 0;
+    	if (envelope > 1)
+    		envelope = 1;
+
+        // make it a bit non linear to help hide the envelope seam
+        envelope = GetBias(envelope, 0.6);
+
+    	if (g_timeMs < 1000)
+    		envelope *= g_timeMs / 1000;
+
+    	var xWave = Math.sin((x+g_timeMs / 500)*5) * envelope;
+    	var yWave = Math.sin((y+g_timeMs / 1376)*12) * 0.2 * envelope;
+
+        return xWave + yWave;
+    }
+
+    var scaleX = 10;
+    var scaleY = 5;
+    function PushVert (vertices,x,y)
+    {
+        vertices.push((x - 0.5) * scaleX, (y - 0.5) * scaleY, getZ(x,y));
+    }
+
+    function PushNormal (vertices,normals,x,y)
+    {
+		var h = 0.001;		
+		var up     = [x,y+h,0];
+		var p      = [x,y,0];
+        var vright = [x+h,y,0];
+
+		vright[2] = getZ(vright[0], vright[1]);
+		up[2]    = getZ(up[0], up[1]);
+		p[2]     = getZ(p[0], p[1]);
+
+        vright[0] *= scaleX;
+        vright[1] *= scaleY;
+        p[0] *= scaleX;
+        p[1] *= scaleY;
+        up[0] *= scaleX;
+        up[1] *= scaleY;
+
+        var v1 = [0,0,0];
+        var v2 = [0,0,0];
+        vec3.subtract(p, vright, v1);
+        vec3.subtract(p, up, v2);
+
+		norm = vec3.normalize(vec3.cross(v1,v2));
+
+		normals.push(norm[0], norm[1], norm[2]);
+    }
+
+    var flagNumCells = 20;
+    function initBuffers() {
+        vertices = new Array;
+        textureCoords = new Array;
+        var delta = 1.0 / flagNumCells;
+		for (y = 0; y < flagNumCells; ++y)
+		{
+			var percenty = y / flagNumCells;
+	        for (x = 0; x < flagNumCells; ++x)
+	        {
+	        	var percentx = x / flagNumCells;
+
+                PushVert(vertices, percentx, percenty);
+				PushVert(vertices, percentx + delta, percenty);
+				PushVert(vertices, percentx + delta, percenty + delta);
+
+				textureCoords.push(percentx, percenty);
+				textureCoords.push(percentx+delta, percenty);
+				textureCoords.push(percentx+delta, percenty+delta);
+
+				PushVert(vertices, percentx, percenty);
+				PushVert(vertices, percentx + delta, percenty + delta);
+				PushVert(vertices, percentx, percenty + delta);
+
+				textureCoords.push(percentx, percenty);
+				textureCoords.push(percentx+delta, percenty+delta);
+				textureCoords.push(percentx, percenty+delta);
+	        }
+	    }
+
+	    // calculate normals
+        normals = new Array;	    
+		for (y = 0; y < flagNumCells; ++y)
+		{
+			var percenty = y / flagNumCells;
+	        for (x = 0; x < flagNumCells; ++x)
+	        {
+	        	var percentx = x / flagNumCells;
+
+	        	PushNormal(vertices,normals,percentx,percenty);
+	        	PushNormal(vertices,normals,percentx+delta,percenty);
+	        	PushNormal(vertices,normals,percentx+delta,percenty+delta);
+
+	        	PushNormal(vertices,normals,percentx,percenty);
+	        	PushNormal(vertices,normals,percentx+delta,percenty+delta);
+	        	PushNormal(vertices,normals,percentx,percenty+delta);
+			}	    
+		}
+
+	    // make the vertex buffer
+        flagBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);  
+        flagBuffer.itemSize = 3;
+        flagBuffer.numItems = vertices.length / flagBuffer.itemSize;
+
+	    // make the normal buffer
+	    flagNormalBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagNormalBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(normals), gl.STATIC_DRAW);  
+        flagNormalBuffer.itemSize = 3;
+        flagNormalBuffer.numItems = normals.length / flagNormalBuffer.itemSize;        
+              
+        // make the texture coordinate buffer
+        flagTextureCoordinateBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagTextureCoordinateBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(textureCoords), gl.STATIC_DRAW);
+        flagTextureCoordinateBuffer.itemSize = 2;
+        flagTextureCoordinateBuffer.numItems = textureCoords.length / flagTextureCoordinateBuffer.itemSize;
+
+        // make the screen quad buffer
+        screenQuadBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        vertices = [
+            // Front face
+            -1.0, -1.0,
+             1.0, -1.0,
+             1.0,  1.0,
+            -1.0, -1.0,
+             1.0,  1.0,
+            -1.0,  1.0,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        screenQuadBuffer.itemSize = 2;
+        screenQuadBuffer.numItems = 6;      
+
+        // make the full screen quad texture coordinate buffer
+        screenQuadTextureCoordinateBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        vertices = [
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 0,
+            1, 1,
+            0, 1,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        screenQuadTextureCoordinateBuffer.itemSize = 2;
+        screenQuadTextureCoordinateBuffer.numItems = 6; 
+    }
+
+    var g_frameBuffers;
+    var g_frameBufferTextures;
+    function initTextureFramebuffers () {
+    	var numBuffers = 0;
+    	// No anti aliasing means we render directly to the default frame buffer
+    	if (document.getElementById("AntiAliasing").value == "none")
+    		numBuffers = 0;
+		// Quincunx means we render the scene to two different frame buffers, then combine them into the default frame buffer    	}
+    	else if (document.getElementById("AntiAliasing").value == "quincunx")
+    		numBuffers = 2;
+    	// FourRook means we render the scene to four different frame buffers, then combine them into the default frame buffer
+    	else if (document.getElementById("AntiAliasing").value == "fourrook")
+    		numBuffers = 4;
+
+    	// create our buffers
+    	g_frameBuffers = new Array;
+    	g_frameBufferTextures = new Array;   	
+		for (var i = 0; i < numBuffers; ++i) {
+			g_frameBuffers.push(gl.createFramebuffer())
+			gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[i]);
+
+			g_frameBufferTextures.push(gl.createTexture());
+			gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[i]);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+			gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
+			gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.viewportWidth, gl.viewportHeight, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+			var renderbuffer = gl.createRenderbuffer();
+			gl.bindRenderbuffer(gl.RENDERBUFFER, renderbuffer);
+			gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, gl.viewportWidth, gl.viewportHeight);
+
+			gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, g_frameBufferTextures[i], 0);
+			gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, renderbuffer);
+
+			gl.bindTexture(gl.TEXTURE_2D, null);
+			gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+			gl.bindFramebuffer(gl.FRAMEBUFFER, null);    		
+		}
+    }
+
+  	var g_timeMs = 0;
+  	var g_lastTimeMs = 0;
+    function animate() {
+        if (document.getElementById("Animate").checked)
+        {
+	        var timeMs = new Date().getTime();
+	        if (g_lastTimeMs != 0)
+	        	g_timeMs += timeMs - g_lastTimeMs;
+			g_lastTimeMs = timeMs;
+
+        	initBuffers();			
+		}
+		else
+		{
+			g_lastTimeMs = 0;
+		}
+    }  
+
+    var g_cameraRotX = 0;
+    var g_cameraRotY = 0;
+    var g_cameraTransX = 0;
+    var g_cameraTransY = 0;
+    var g_cameraZoom = 0.25;
+    function drawSceneInternal (offsetX, offsetY) {
+
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LESS);
+
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // perspective matrix
+        mat4.perspective(45, gl.viewportWidth / gl.viewportHeight, 0.1, 100.0, pMatrix);
+        mat4.translate(pMatrix, [g_cameraTransX, g_cameraTransY, - g_cameraZoom * 40]);
+        mat4.rotate(pMatrix, g_cameraRotX * Math.PI * 2, [0,1,0]);
+        mat4.rotate(pMatrix, g_cameraRotY * Math.PI * 2, [1,0,0]);
+
+        // draw the flag
+        gl.useProgram(FSshaderProgram);
+        gl.uniform2f(FSshaderProgram.nRenderOffsetUniform, offsetX / gl.viewportWidth, offsetY / gl.viewportHeight);
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, flagBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagNormalBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.vertexNormalAttribute, flagNormalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, flagTextureCoordinateBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.textureCoordinateAttribute, flagTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, bezierTexture);
+        gl.uniform1i(FSshaderProgram.samplerUniform, 0);
+		gl.uniform2f(FSshaderProgram.textureResolutionUniform, g_textureSizeX, g_textureSizeY);
+        gl.uniform1i(FSshaderProgram.samplingModeUniform, document.getElementById("SamplingMode").value);
+        gl.uniform1f(FSshaderProgram.timeSecondsUniform, g_timeMs / 1000.0);
+        setMatrixUniforms();
+        gl.drawArrays(gl.TRIANGLES,0,flagBuffer.numItems);
+    }
+
+    function drawSceneQuincunx () {
+        gl.disable(gl.DEPTH_TEST);
+
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // combine the textures
+        gl.useProgram(QuincunxShaderProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        gl.vertexAttribPointer(QuincunxShaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        gl.vertexAttribPointer(QuincunxShaderProgram.textureCoordinateAttribute, screenQuadTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[0]);
+        gl.uniform1i(QuincunxShaderProgram.samplerAUniform, 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[1]);
+        gl.uniform1i(QuincunxShaderProgram.samplerBUniform, 1);
+
+        gl.uniform2f(QuincunxShaderProgram.sampleOffsetUniform, 1.0 / gl.viewportWidth, 1.0 / gl.viewportHeight);
+
+        gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
+    }
+
+    function drawSceneFourRook () {
+        gl.disable(gl.DEPTH_TEST);
+
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        // combine the textures
+        gl.useProgram(FourRookShaderProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        gl.vertexAttribPointer(FourRookShaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        gl.vertexAttribPointer(FourRookShaderProgram.textureCoordinateAttribute, screenQuadTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[0]);
+        gl.uniform1i(FourRookShaderProgram.samplerAUniform, 0);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[1]);
+        gl.uniform1i(FourRookShaderProgram.samplerBUniform, 1);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[2]);
+        gl.uniform1i(FourRookShaderProgram.samplerCUniform, 2);
+
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, g_frameBufferTextures[3]);
+        gl.uniform1i(FourRookShaderProgram.samplerDUniform, 3);
+
+        gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
+    }
+
+    function drawScene () {
+    	// No AA -> render straight to the default render target
+    	if (g_frameBuffers.length == 0)
+    	{
+    		drawSceneInternal(0.0, 0.0);
+    		return;
+    	}
+
+    	// quincunx AA -> render once then render again with offset of (0.5,0.5) then combine in the following pattern:
+    	// 
+		//  B        C
+		//  *--------*
+		//  |   A    |
+		//  |   *    |
+		//  |        |
+		//  *--------*
+		//  D        E
+		//
+		// where A comes from the first render with a weighting of 1/2
+		// B,C,D,E come from the second render, each with a weighting of 1/8
+		//
+  		if (g_frameBuffers.length == 2)
+  		{
+  			gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[0]);
+  			drawSceneInternal(0,0);
+  			gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[1]);
+  			drawSceneInternal(0.5,0.5);
+  			gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            drawSceneQuincunx();
+            return;
+  		}
+
+        // fourrook AA -> render four times with offsets as described below, then average for each pixel
+        //
+        //  +-----------+
+        //  |  |  |A |  |
+        //  |--|--|--|--|
+        //  |D |  |  |  |
+        //  |--|--|--|--|
+        //  |  |  |  |B |
+        //  |--|--|--|--|
+        //  |  |C |  |  |
+        //  +-----------+
+        //
+        gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[0]);
+        drawSceneInternal(1/8,3/8);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[1]);
+        drawSceneInternal(3/8,-1/8);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[2]);
+        drawSceneInternal(-1/8,-3/8);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, g_frameBuffers[3]);
+        drawSceneInternal(-3/8,1/8);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        drawSceneFourRook();
+    }
+
+    function tick() {
+        requestAnimFrame(tick);
+        drawScene();
+       	animate();
+        g_frameCounter++;
+    }
+
+    function VerifyExtension(ext) {
+    	if (!gl.getExtension(ext))
+    		alert("Could not find extension " + ext);
+    }
+
+    function initGL() {
+        var canvas = document.getElementById("webglcanvas");
+        var canvassize = document.getElementById("CanvasSize").value;
+        canvas.width = canvassize*2;
+        canvas.height = canvassize;
+        // details of options below here: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+        gl = WebGLUtils.setupWebGL(canvas, {alpha:true, depth: true, stencil: false, antialias: false, premultipliedAlpha:false, preserveDrawingBuffer: false});
+
+		VerifyExtension("OES_standard_derivatives");
+		VerifyExtension("OES_texture_float");
+
+        gl.viewportWidth = canvas.width;
+        gl.viewportHeight = canvas.height;
+
+        initShaders();
+        initBuffers();
+        initTextureFramebuffers();
+
+        gl.clearColor(0.4, 0.5, 0.6, 1.0);
+    }
+
+    function DoOnLoad() {
+        initGL();
+        setInterval(function(){ document.getElementById("fps").innerText = "FPS: " + g_frameCounter + " (" + Math.round(100 * 1000.0/g_frameCounter) / 100 + " ms)"; g_frameCounter = 0; }, 1000);
+
+        // create the texture
+        bezierTexture = createTexture(
+            g_textureData,
+            g_textureSizeX,
+            g_textureSizeY
+        );
+
+        // put the texture data on the page
+        var pixelData = "[";
+        for (i = 0; i < g_textureData.length; ++i) {
+            if (i % (4*g_textureSizeX) == 0)
+                pixelData += "\n";
+            else if (i % 4 == 0)
+                pixelData += "     ";
+            pixelData += pad(Math.round(g_textureData[i]).toString(),4);
+
+            if (i < g_textureData.length - 1)
+                pixelData+= ",";
+        }
+        pixelData += "\n]";
+        document.getElementById("TextureData").innerText = pixelData;
+
+        tick();
+    }
+
+    function ResizeCanvas() {
+        initGL();
+    }
+
+</script>
+</head>
+
+<body onload="DoOnLoad()">
+    <h1>GPU Efficient Texture Based Bezier Curve Evaluation - Applications To Vector Art</h1>
+    <a href="index.html">Back to Index</a><br><br>
+    <table>
+        <tr>
+            <td>
+                <table>
+                    <tr>
+                        <td>Sampling:</td>
+                        <td>
+                            <select id="SamplingMode">
+                                <option value="0">Hardware Bilinear (1 texture read)</option>
+                                <option value="1">Hardware Linear / Software Linear (2 texture reads)</option>
+                                <option value="2">Software Bilinear (4 texture reads)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Anti Aliasing:</td>
+                        <td>
+                            <select id="AntiAliasing" onChange="ResizeCanvas();">
+                                <option value="none">None</option>
+                                <option value="quincunx">Quincunx</option>
+                                <option value="fourrook">4-Rook SSAA</option>
+                            </select>
+                        </td>
+                    </tr>                    
+                    <tr>
+                        <td>Resolution:</td>
+                        <td><select id="CanvasSize" onChange="ResizeCanvas();">
+                            <option value="256">512x256</option>
+                            <option value="512" selected="selected">1024x512</option>
+                            <option value="1024">2048x1024</option>
+                        </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Animate</td>
+                        <td><input id="Animate" type="checkbox" checked="true"></td>
+                    </tr>                      
+                    <tr>
+                        <td colspan="2"><input type="button" value="Reset Time" onClick="g_timeMs = 0; initBuffers();"/></td>
+                    </tr>                    
+                </table>
+            </td>
+            <td>
+                <table>
+                    <tr>
+                        <td>Rotate X</td>
+                        <td><input type="range" min="0" max="100" onChange="g_cameraRotX = this.value/100;" onInput="g_cameraRotX = this.value/100;" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td>Rotate Y</td>
+                        <td><input type="range" min="0" max="100" onChange="g_cameraRotY = this.value/100;" onInput="g_cameraRotY = this.value/100;" value="0"/></td>
+                    </tr>                                    
+
+                    <tr>
+                        <td>Translate X</td>
+                        <td><input type="range" min="-100" max="100" onChange="g_cameraTransX = this.value/-10;" onInput="g_cameraTransX = this.value/-10;" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td>Translate Y</td>
+                        <td><input type="range" min="-100" max="100" onChange="g_cameraTransY = this.value/-10;" onInput="g_cameraTransY = this.value/-10;" value="0"/></td>
+                    </tr>
+                    <tr>
+                        <td>Zoom</td>
+                        <td><input type="range" min="0" max="100" onChange="g_cameraZoom = this.value/100;" onInput="g_cameraZoom = this.value/100;" value="25"/></td>
+                    </tr>   
+                </table>
+            </td>
+        </tr>
+    </table>
+    <div id="fps">FPS: --</div>
+    <canvas id="webglcanvas" style="border: none" width="1024" height="512"></canvas><br><br>
+    <b>Description: </b>A waving flag using vector art stored in an 8x4 texture.<br><br>
+    <b>8x4 Texture Description:</b>
+    <table style="border:1px solid black">
+        <tr>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+        </tr>
+        <tr>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+            <td style="border:1px solid black">A</td>
+        </tr>
+        <tr>
+            <td style="border:1px solid black">B</td>
+            <td style="border:1px solid black">B</td>
+            <td style="border:1px solid black">C</td>
+            <td style="border:1px solid black">C</td>
+            <td style="border:1px solid black">D</td>
+            <td style="border:1px solid black">D</td>
+            <td style="border:1px solid black">F</td>
+            <td style="border:1px solid black">F</td>
+        </tr>
+        <tr>
+            <td style="border:1px solid black">E</td>
+            <td style="border:1px solid black">E</td>
+            <td style="border:1px solid black">G</td>
+            <td style="border:1px solid black">G</td>
+            <td style="border:1px solid black">D</td>
+            <td style="border:1px solid black">D</td>
+            <td style="border:1px solid black">F</td>
+            <td style="border:1px solid black">F</td>
+        </tr>                        
+    </table>
+    <ul>
+        <li><b>A:</b> Landscape: 8x2 - 4 qudratic bezier curves end to end</li>
+        <li><b>B:</b> Castle: 2x1 - 4 linear bezier curves end to end (r1->r2, g1->g2, b1->b2, a1->a2), mirrored on x axis.</li>
+        <li><b>C:</b> Castle doors: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  mirrored on x axis.</li>
+        <li><b>D:</b> Sun frame 1-4: 2x2 - 4 quadratic curves (1 in each color channel).  Repeated 8 times, rendered polar.  Each curve (color channel) is a keyframe in the animation</li>
+        <li><b>E:</b> Sun Green Gradient: 2x1 - 1 4th order bezier curve encoded in RGBA (combine 4 linear curves to one 4th order).  controls green color over distance from edge of sun.</li>
+        <li><b>F:</b> Sky Gradient: 2x2 - 1 Quadratic Bezier curve per color channel.  RGB = sky color gradient.  A = unused.</li>
+        <li><b>G:</b> Castle Color: 2x1 - 1 4th order bezier curve encoded in RGBA (combines 4 linear curves to one 4th order).  Controls greyscale color of castle over height.</li>
+    </ul>
+    <b>8x4 Texture Data (JSON):</b>
+    <pre id="TextureData" style="border:1px solid black; white-space: pre-wrap;"></pre>      
+    <b>Vertex Shader Source (GLSL):</b>
+    <pre id="VertexShaderSource" style="border:1px solid black; white-space: pre-wrap;"></pre>
+    <b>Fragment Shader Source (GLSL):</b>
+    <pre id="FragmentShaderSource" style="border:1px solid black; white-space: pre-wrap;"></pre>
+    <a href="index.html">Back to Index</a><br><br>
+</body>
+
+</html>

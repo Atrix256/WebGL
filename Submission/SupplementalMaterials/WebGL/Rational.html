@@ -1,0 +1,346 @@
+<!--
+    WebGL initialization and basic utility code is based on the source code found here:
+    http://learningwebgl.com/blog/?page_id=1217
+
+    The rest was written by myself: Alan Wolfe  awolfe@blizzard.com
+-->
+<html>
+<head>
+<title>GPU Efficient Texture Based Bezier Curve Evaluation - Sine and Cosine via Rational Curves</title>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+<script type="text/javascript" src="webgl-utils.js"></script>
+
+<script id="shader-vs" type="x-shader/x-vertex">
+    attribute vec2 aVertexPosition;
+    attribute vec2 aTextureCoord;
+
+    varying vec2 vTextureCoord;
+
+    void main(void) {
+        gl_Position = vec4(aVertexPosition, 1.0, 1.0);
+        vTextureCoord = aTextureCoord;
+    }
+</script>
+
+<script id="shader-fs" type="x-shader/x-fragment">
+#extension GL_OES_standard_derivatives : enable
+precision mediump float;
+uniform sampler2D uSampler;
+varying vec2 vTextureCoord;
+
+vec4 SampleTime(vec2 time, bool linearSampling) {
+    // Bilinear sampling:
+    // Hardware based bilinear sampling
+    if (linearSampling)
+        return texture2D(uSampler, (time + 0.5) / 2.0);
+
+    // Nearest sampling:
+    // Software bilinear sampling (higher quality)
+    vec2 frac = fract(time);
+
+    vec2 floorTime = floor(time) + 0.5;
+
+    vec4 A = texture2D(uSampler, (floorTime + vec2(0.0, 0.0)) / 2.0);
+    vec4 B = texture2D(uSampler, (floorTime + vec2(1.0, 0.0)) / 2.0);
+    vec4 C = texture2D(uSampler, (floorTime + vec2(0.0, 1.0)) / 2.0);
+    vec4 D = texture2D(uSampler, (floorTime + vec2(1.0, 1.0)) / 2.0);
+
+    return mix(mix(A, B, frac.x), mix(C, D, frac.x), frac.y);
+}
+
+void main(void) {
+    vec4 colorValue = vec4(0.0);
+    vec4 outColor;
+
+    bool linearSampling = false;
+    float time = 0.0;
+
+    if (vTextureCoord.x < 0.995)
+    {
+        time = vTextureCoord.x / 0.995;
+        linearSampling = true;
+    }
+    else if (vTextureCoord.x > 1.005)
+    {
+        time = fract(vTextureCoord.x - 0.005) / 0.995;
+        linearSampling = false;
+    }
+    else
+    {
+        gl_FragColor = vec4(1.0);
+        return;
+    }
+
+    // we want to process all 4 quadrants between texture coordinates 0 and 1
+    float origTime = time;
+    time *= 4.0;
+    int quadrant = int(floor(time));
+    time = fract(time);
+
+    // reverse time in quadrant 1 and 3
+    if (quadrant == 1 || quadrant == 3)
+        time = 1.0 - time;
+
+    // sample the curves in R,G,B,A
+    colorValue = SampleTime(vec2(time), linearSampling);
+
+    // Calculate rational sin curve in R,A (x,w) and rational cosine curve in G,A (y,w)
+    vec2 scValue = vec2(colorValue.x / colorValue.w, colorValue.y / colorValue.w);
+
+    // calculate actual sine and cosine values
+    vec2 actualscValue = vec2(sin(origTime * 6.28), cos(origTime * 6.28));
+
+    // scale / offset to make the screen's 0-1 map to -1 to 1 for the graphs
+    scValue = scValue * 0.5 + 0.5;
+    actualscValue = actualscValue * 0.5 + 0.5;
+
+    // sine needs to be flipped over in quadrant 2 and 3 (III and IV)
+    if (quadrant == 2 || quadrant == 3)
+        scValue.x = 1.0 - scValue.x;
+
+    // cosine needs to be flipped over in quadrant 1 and 2 (II and III)
+    if (quadrant == 1 || quadrant == 2)
+        scValue.y = 1.0 - scValue.y;
+
+    // scale to 90% size
+    scValue = scValue * 0.9 + 0.05;
+    actualscValue = actualscValue * 0.9 + 0.05;
+
+    // calculate the slopes
+    vec2 slope = dFdx(scValue) / dFdx(vTextureCoord.x);
+    vec2 actualSlope = dFdx(actualscValue) / dFdx(vTextureCoord.x);
+
+    // smoothstep to make it a line with width, using the gradient (from slope) to estimate distance from pixel to graph
+    scValue.x = smoothstep(0.01, 0.0, abs(vTextureCoord.y - scValue.x) / length(vec2(slope.x, -1.0)));
+    scValue.y = smoothstep(0.01, 0.0, abs(vTextureCoord.y - scValue.y) / length(vec2(slope.y, -1.0)));
+    actualscValue.x = smoothstep(0.003, 0.0, abs(vTextureCoord.y - actualscValue.x) / length(vec2(actualSlope.x, -1.0)));
+    actualscValue.y = smoothstep(0.003, 0.0, abs(vTextureCoord.y - actualscValue.y) / length(vec2(actualSlope.y, -1.0)));
+
+    // color pixel based on values
+    outColor = vec4(scValue.x, actualscValue.x, actualscValue.x, 1.0);
+    outColor += vec4(actualscValue.y, scValue.y, actualscValue.y, 1.0);
+
+    // clamp the output color
+    gl_FragColor = vec4(clamp(outColor, 0.0, 1.0));
+}
+</script>
+
+<script type="text/javascript">
+
+    var gl;
+
+    function getShader(gl, id) {
+        var shaderScript = document.getElementById(id);
+        if (!shaderScript)
+            return null;
+
+        var str = "";
+        var k = shaderScript.firstChild;
+        while (k) {
+            if (k.nodeType == 3)
+                str += k.textContent;
+            k = k.nextSibling;
+        }
+
+        var shader;
+        if (shaderScript.type == "x-shader/x-fragment")
+            shader = gl.createShader(gl.FRAGMENT_SHADER);
+        else if (shaderScript.type == "x-shader/x-vertex")
+            shader = gl.createShader(gl.VERTEX_SHADER);
+        else
+            return null;
+
+        gl.shaderSource(shader, str);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            alert(gl.getShaderInfoLog(shader));
+            return null;
+        }
+
+        return shader;
+    }
+
+    var FSshaderProgram;
+
+    function initShaders() {
+        // make the full screen shader program
+        var fragmentShader = getShader(gl, "shader-fs");
+        var vertexShader = getShader(gl, "shader-vs");
+
+        FSshaderProgram = gl.createProgram();
+        gl.attachShader(FSshaderProgram, vertexShader);
+        gl.attachShader(FSshaderProgram, fragmentShader);
+        gl.linkProgram(FSshaderProgram);
+
+        if (!gl.getProgramParameter(FSshaderProgram, gl.LINK_STATUS))
+            alert("Could not initialise FS shader");
+
+        gl.useProgram(FSshaderProgram);
+
+        FSshaderProgram.vertexPositionAttribute = gl.getAttribLocation(FSshaderProgram, "aVertexPosition");
+        gl.enableVertexAttribArray(FSshaderProgram.vertexPositionAttribute);
+
+        FSshaderProgram.textureCoordinateAttribute = gl.getAttribLocation(FSshaderProgram, "aTextureCoord");
+        gl.enableVertexAttribArray(FSshaderProgram.textureCoordinateAttribute);
+
+        FSshaderProgram.samplerUniform = gl.getUniformLocation(FSshaderProgram, "uSampler");
+    }
+
+    function createTexture(byteArrayWithRGBAData, width, height) {
+        var texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(byteArrayWithRGBAData));
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return texture;
+    }
+
+    var theTexture;
+    var screenQuadBuffer;
+    var screenQuadTextureCoordinateBuffer;
+
+    function initBuffers() {
+        // make the full screen quad vertex buffer
+        screenQuadBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        vertices = [
+            // Front face
+            -1.0, -1.0,
+             1.0, -1.0,
+             1.0,  1.0,
+            -1.0, -1.0,
+             1.0,  1.0,
+            -1.0,  1.0,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        screenQuadBuffer.itemSize = 2;
+        screenQuadBuffer.numItems = 6;
+
+        // make the full screen quad texture coordinate buffer
+        screenQuadTextureCoordinateBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        vertices = [
+            0, 0,
+            2, 0,
+            2, 1,
+            0, 0,
+            2, 1,
+            0, 1,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        screenQuadTextureCoordinateBuffer.itemSize = 2;
+        screenQuadTextureCoordinateBuffer.numItems = 6;
+    }
+
+    function drawScene() {
+        gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        // draw the full screen quad
+        gl.useProgram(FSshaderProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.vertexPositionAttribute, screenQuadBuffer.itemSize, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, screenQuadTextureCoordinateBuffer);
+        gl.vertexAttribPointer(FSshaderProgram.textureCoordinateAttribute, screenQuadTextureCoordinateBuffer.itemSize, gl.FLOAT, false, 0, 0);        
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, theTexture);
+        gl.uniform1i(FSshaderProgram.samplerUniform, 0);
+        gl.drawArrays(gl.TRIANGLES,0,screenQuadBuffer.numItems);
+    }
+
+    function tick() {
+        requestAnimFrame(tick);
+        drawScene();
+    }
+
+    function VerifyExtension(ext) {
+        if (!gl.getExtension(ext))
+            alert("Could not find extension " + ext);
+    }    
+
+    function initGL() {
+        var canvas = document.getElementById("webglcanvas");
+
+        // details of options below here: https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext
+        gl = WebGLUtils.setupWebGL(canvas, {alpha:true, depth: false, stencil: false, antialias: false, premultipliedAlpha:false, preserveDrawingBuffer: false});
+
+        VerifyExtension("OES_standard_derivatives");
+
+        gl.viewportWidth = canvas.width;
+        gl.viewportHeight = canvas.height;
+        initShaders();
+        initBuffers();
+
+        var A1 = 0.0;
+        var B1 = 1.0;
+        var C1 = 1.0;
+
+        var A2 = 1.0;
+        var B2 = 1.0;
+        var C2 = 0.0;
+
+        var W1 = 1.0;
+        var W2 = 1.0 / Math.sqrt(2.0);
+        var W3 = 1.0;        
+
+        A1 *= W1;
+        B1 *= W2;
+        C1 *= W3;
+
+        A2 *= W1;
+        B2 *= W2;
+        C2 *= W3;
+
+        A1 *= 255;
+        B1 *= 255;
+        C1 *= 255;
+
+        A2 *= 255;
+        B2 *= 255;
+        C2 *= 255;
+
+        W1 *= 255;
+        W2 *= 255;
+        W3 *= 255;
+
+        var textureData = [
+             A1, A2, 0, W1,     B1, B2, 0, W2,
+             B1, B2, 0, W2,     C1, C2, 0, W3
+        ];
+
+        // create the texture
+        theTexture = createTexture(
+            textureData,
+            2, 2
+        );
+
+        gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    }
+
+    function DoOnLoad() {
+        initGL();
+        tick();
+    }
+
+</script>
+</head>
+
+<body onload="DoOnLoad()">
+    <h1>GPU Efficient Texture Based Bezier Curve Evaluation - Sine and Cosine via Rational Curves</h1>
+    <a href="index.html">Back to Index</a><br><br>
+    This shows sine and cosine calculated by using 1d (explicit) rational quadratic bezier splines.  On the left is the results with bilinear interpolation, on the right is the results doing 4 pixel reads and doing the bilinear interpolation in the fragment shader.  The curves only encode the first 90 degrees of each wave form, so the curve is flipped horizontally and veritically in other quadrants as appropriate to get the full wave form.
+    <br><br>
+    Green is cosine, Red is sine.  The white lines are the actual sine / cosine values as computed by sin() and cos() in the fragment shader.
+	<br><br>
+    Since a rational bezier curve is just one bezier curve divided by another, and in this case, both sine and cosine use the same denominator (due to using the same weights), the denominator curve is encoded the the alpha channel,  the numerator curve for sine is stored in the red channel and the numerator curve for cosine is stored in the green channel.  The red and green curves have their control points pre-multiplied by the weights. The Blue channel is unused in this example.
+    <br><br>
+    If you have several rational curves that all use the same weight values, you are able to store 3 rational curves at once by storing their numerator in R,G,B and their denominator in A.  If you want to use different weights, you can store 2 rational curves at once by storing their numerators in R,G and their denominaors in B,A.
+    <br><br>
+    <canvas id="webglcanvas" style="border: none" width="1000" height="500"></canvas><br><br>
+    <a href="index.html">Back to Index</a><br><br>
+</body>
+
+</html>
