@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#define PRIMENUMBERSTARTINDEX 6 // this is the first 3 digit prime number: 101
+#define PRIMENUMBERSTARTINDEX 26 // this is the first 3 digit prime number: 101
 
 typedef int64_t int64;
 
@@ -27,8 +27,8 @@ int64 ExtendedEuclidianAlgorithm (int64 smaller, int64 larger, int64 &s, int64 &
     std::array<int64, 2> remainders = { larger, smaller };
     std::array<int64, 2> ss = { 1, 0 };
     std::array<int64, 2> ts = { 0, 1 };
-    int64 indexNeg2 = 0;
-    int64 indexNeg1 = 1;
+    size_t indexNeg2 = 0;
+    size_t indexNeg1 = 1;
 
     // loop
     while (1)
@@ -84,7 +84,7 @@ void WaitForEnter ()
 }
 
 //=================================================================================
-int64 CalculateBit (size_t bitIndex, const std::vector<int64> &keys, const std::vector<int64> &coefficients)
+int64 CalculateBit (size_t bitIndex, const std::vector<int64> &keys, const std::vector<int64> &coefficients, int64 keysLCM)
 {
     int64 ret = 0;
     const int64 bitMask = 1 << bitIndex;
@@ -100,14 +100,14 @@ int64 CalculateBit (size_t bitIndex, const std::vector<int64> &keys, const std::
 
         int64 s, t;
         ExtendedEuclidianAlgorithm(coefficients[i], keys[i], s, t);
-        ret += coefficients[i] * t;
+        ret = (ret + ((coefficients[i] * t) % keysLCM)) % keysLCM;
     }
 
     return ret;
 }
 
 //=================================================================================
-void CalculateBitsAndKeys (int64 numBits, std::vector<int64> &superPositionedBits, std::vector<int64> &keys)
+void CalculateBitsAndKeys (int64 numBits, std::vector<int64> &superPositionedBits, std::vector<int64> &keys, int64 &keysLCM)
 {
     // size our arrays
     superPositionedBits.resize(size_t(numBits));
@@ -115,8 +115,12 @@ void CalculateBitsAndKeys (int64 numBits, std::vector<int64> &superPositionedBit
 
     // set our keys to prime numbers that aren't super tiny.  The smallest key
     // determines how much error we can tolerate building up, just like FHE over integers.
+    keysLCM = 1;
     for (size_t i = 0, c = keys.size(); i < c; ++i)
+    {
         keys[i] = g_primeNumbers[PRIMENUMBERSTARTINDEX + i];
+        keysLCM *= g_primeNumbers[PRIMENUMBERSTARTINDEX + i];
+    }
 
     // calculate our co-efficients for each term, for the chinese remainder theorem.
     // We do it here because it can be re-used for each x value we are solving for
@@ -136,7 +140,7 @@ void CalculateBitsAndKeys (int64 numBits, std::vector<int64> &superPositionedBit
 
     // calculate each x value
     for (size_t i = 0, c = superPositionedBits.size(); i < c; ++i)
-        superPositionedBits[i] = CalculateBit(i, keys, coefficients);
+        superPositionedBits[i] = CalculateBit(i, keys, coefficients, keysLCM);
 }
 
 //=================================================================================
@@ -167,7 +171,7 @@ bool TestResults (const std::vector<int64> &superPositionedBits, const std::vect
 }
 
 //=================================================================================
-void WriteResults (const std::vector<int64> &superPositionedBits, const std::vector<int64> &keys)
+void WriteResults (const std::vector<int64> &superPositionedBits, const std::vector<int64> &keys, int64 keysLCM)
 {
     FILE *file = fopen("results.txt", "w+t");
     if (file)
@@ -180,7 +184,7 @@ void WriteResults (const std::vector<int64> &superPositionedBits, const std::vec
                 fprintf(file, ", ");
             fprintf(file, "%"PRId64, superPositionedBits[i]);
         }
-        fprintf(file, "]\n");
+        fprintf(file, "] (mod %"PRId64")\n", keysLCM);
 
         // write the keys
         fprintf(file, "keys = [");
@@ -212,7 +216,8 @@ int main (int argc, char **argv)
     printf("\nCalculating Values...\n");
     std::vector<int64> superPositionedBits;
     std::vector<int64> keys;
-    CalculateBitsAndKeys(numBits, superPositionedBits, keys);
+    int64 keysLCM;
+    CalculateBitsAndKeys(numBits, superPositionedBits, keys, keysLCM);
 
     // Verify our results
     printf("Done.\n\nVerifying results...\n");
@@ -223,7 +228,7 @@ int main (int argc, char **argv)
     printf("Done.\n");
 
     // Write results to results.txt
-    WriteResults(superPositionedBits, keys);
+    WriteResults(superPositionedBits, keys, keysLCM);
     printf("\nResults written to results.txt\n");
 
     // done
@@ -234,9 +239,7 @@ int main (int argc, char **argv)
 /*
 
 TODO:
-* print out x's simplified (mod LCM!)
- * also see if you can keep the answer mod LCM as you calculate it, to be able to squeeze more out of int64s?
-
+? does mod LCM help us calculate higher bits with int64s?
 * If mod LCM doesn't help math, switch to multi precision integer library 
 
 * update the document with this method and examples etc
@@ -247,5 +250,7 @@ TODO:
 * clean up compile warnings
 ? do i need to have the PRI whatever macros for the fscanf too? i think perhaps so
 * assert or something if the values don't pass the test in TestResults.
+
+!! PRIMENUMBERSTARTINDEX of 6 doesn't work when generating 2 bits. why??
 
 */
