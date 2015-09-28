@@ -6,7 +6,7 @@
 #include <inttypes.h>
 #include <boost/multiprecision/cpp_int.hpp>
 
-#define PRIMENUMBERSTARTINDEX 26 // this is the first 3 digit prime number: 101
+#define PRIMENUMBERSTARTINDEX 0 // 26 // this is the first 3 digit prime number: 101
 
 typedef int64_t int64;
 
@@ -46,6 +46,12 @@ int64 ExtendedEuclidianAlgorithm (int64 smaller, int64 larger, int64 &s, int64 &
             t = ts[indexNeg1];
             if (swapped)
                 std::swap(s, t);
+            // TODO: investigate if this is true a bit more!
+            // http://www.cs.princeton.edu/~dsri/modular-inversion-answer.php?n=4199&p=23
+            // 4199,23
+            // if t < 0, need to add the 23 to it? or should caller?
+            if (t < 0)
+                t += smaller;
             return remainders[indexNeg1];
         }
 
@@ -91,7 +97,6 @@ int64 CalculateBit (size_t bitIndex, const std::vector<int64> &keys, const std::
     const int64 bitMask = 1 << bitIndex;
 
     // now figure out how much to multiply each coefficient by to make it have the specified modulus residue (remainder)
-    int result = 0;
     for (size_t i = 0, c = keys.size(); i < c; ++i)
     {
         // we either want this term to be 0 or 1 mod the key.  if zero, we can multiply by zero, and
@@ -264,6 +269,8 @@ int main (int argc, char **argv)
 /*
 
 TODO:
+* check out ExtendedEuclidianAlgorithm TODO
+
 * make the math use multi precision library
 
 * update the document with this method and examples etc
