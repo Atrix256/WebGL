@@ -4,6 +4,7 @@
 #include <vector>
 #include <stdint.h>
 #include <inttypes.h>
+#include <boost/multiprecision/cpp_int.hpp>
 
 #define PRIMENUMBERSTARTINDEX 26 // this is the first 3 digit prime number: 101
 
@@ -200,6 +201,27 @@ void WriteResults (const std::vector<int64> &superPositionedBits, const std::vec
 }
 
 //=================================================================================
+void BoostTest()
+{
+    using namespace boost::multiprecision;
+
+    int128_t v = 1;
+
+    // Do some fixed precision arithmetic:
+    for (unsigned i = 1; i <= 20; ++i)
+        v *= i;
+
+    std::cout << v << std::endl; // prints 20!
+
+    // Repeat at arbitrary precision:
+    cpp_int u = 1;
+    for (unsigned i = 1; i <= 100; ++i)
+        u *= i;
+
+    std::cout << u << std::endl; // prints 100!
+}
+
+//=================================================================================
 int main (int argc, char **argv)
 {
     printf("--KeyGenerator--\n\nGenerates superpositioned bit values and keys for use in superpositional\ncomputation using HE over the integers.\n\n");
@@ -231,6 +253,9 @@ int main (int argc, char **argv)
     WriteResults(superPositionedBits, keys, keysLCM);
     printf("\nResults written to results.txt\n");
 
+    // TODO: temp
+    BoostTest();
+
     // done
     WaitForEnter();
     return 0;
@@ -239,17 +264,18 @@ int main (int argc, char **argv)
 /*
 
 TODO:
-? does mod LCM help us calculate higher bits with int64s?
-* If mod LCM doesn't help math, switch to multi precision integer library 
+* make the math use multi precision library
 
 * update the document with this method and examples etc
 * make projects that do stuff with the keys (like... N bit adder program, but others too!)
  * need to figure out bootstrapping, or modulus switching at some point to make it fully homomorphic, instead of just leveled
 * if this is slow with higher numbers of bits, could multithread it! so far, very fast though.
 * clean up code (long lines, comments, etc)
-* clean up compile warnings
 ? do i need to have the PRI whatever macros for the fscanf too? i think perhaps so
 * assert or something if the values don't pass the test in TestResults.
+
+* should we use relatively prime numbers instead of prime numbers? input could be lowest key value, and then find other relatively prime numbers?
+ * prime numbers might be fine though
 
 !! PRIMENUMBERSTARTINDEX of 6 doesn't work when generating 2 bits. why??
 
