@@ -2,17 +2,15 @@
 #include <algorithm>
 #include <array>
 #include <vector>
-#include <stdint.h>
-#include <inttypes.h>
 #include <boost/multiprecision/cpp_int.hpp>
-#include <iostream>
-#include <fstream>
+#include "Shared/Shared.h"
 
-#define USEPRIMES 0 // if 1, will use primes from file. else will calcuate co-primes
+#define USEPRIMES 1 // if 1, will use primes from file. else will calcuate co-primes
 
 #define PRIMENUMBERSTARTINDEX 26 // this is the first 3 digit prime number: 101
 #define SMALLESTKEYVALUE 50      // if not using prime numbers, this will be the smallest key
 
+//typedef int64_t TINT;
 //typedef boost::multiprecision::int128_t TINT;
 typedef boost::multiprecision::cpp_int TINT;
 
@@ -86,14 +84,6 @@ void LoadPrimeNumbers ()
         fclose(file);
     }
     #endif
-}
-
-//=================================================================================
-void WaitForEnter ()
-{
-    std::cout << "\nPress Enter to quit";
-    fflush(stdin);
-    getchar();
 }
 
 //=================================================================================
@@ -212,38 +202,6 @@ bool TestResults (const std::vector<TINT> &superPositionedBits, const std::vecto
 }
 
 //=================================================================================
-void WriteResults (const std::vector<TINT> &superPositionedBits, const std::vector<TINT> &keys, TINT keysLCM)
-{
-    std::ofstream file;
-    file.open("results.txt", std::ios::out | std::ios::trunc);
-
-    if (!file.is_open())
-        return;
-
-    // write the bits
-    file << "bits = [";
-    for (size_t i = 0, c = superPositionedBits.size(); i < c; ++i)
-    {
-        if (i > 0)
-            file << ", ";
-        file << superPositionedBits[i];
-    }
-    file <<  "] (mod " << keysLCM << ")\n";
-
-    // write the keys
-    file << "keys = [";
-    for (size_t i = 0, c = keys.size(); i < c; ++i)
-    {
-        if (i > 0)
-            file << ", ";
-        file << keys[i];
-    }
-    file << "]\n";
-
-    file.close();
-}
-
-//=================================================================================
 int main (int argc, char **argv)
 {
     std::cout << "--KeyGenerator--\n\nGenerates superpositioned bit values and keys for use in superpositional\ncomputation using HE over the integers.\n\n";
@@ -266,27 +224,14 @@ int main (int argc, char **argv)
     // Verify our results
     std::cout << "Done.\n\nVerifying results...\n";
     if (!TestResults(superPositionedBits, keys))
-    {
-        // TODO: assert or something
-    }
+        std::cout << "Results Invalid!!\n";
     std::cout << "Done.\n";
 
     // Write results to results.txt
-    WriteResults(superPositionedBits, keys, keysLCM);
+    WriteBitsKeys("results.txt", superPositionedBits, keys);
     std::cout << "\nResults written to results.txt\n";
 
     // done
     WaitForEnter();
     return 0;
 }
-
-/*
-
-TODO:
-* update the document with this method and examples etc
-* make projects that do stuff with the keys (like... N bit adder program, but others too!)
- * need to figure out bootstrapping, or modulus switching at some point to make it fully homomorphic, instead of just leveled
-* clean up code (long lines, comments, etc)
-* assert or something if the values don't pass the test in TestResults.
-
-*/

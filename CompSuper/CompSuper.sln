@@ -1,0 +1,40 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Adder", "Adder\Adder.vcxproj", "{6BC71A20-FA21-433B-A203-9F8E6B48A4D6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D0F9CFEE-140E-4D0E-9F61-F3C8A1D9B9F6} = {D0F9CFEE-140E-4D0E-9F61-F3C8A1D9B9F6}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "KeyGenerator", "KeyGenerator\KeyGenerator.vcxproj", "{E08416CB-3DA9-4EB8-92DF-43295A0CC788}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D0F9CFEE-140E-4D0E-9F61-F3C8A1D9B9F6} = {D0F9CFEE-140E-4D0E-9F61-F3C8A1D9B9F6}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Shared", "Shared\Shared.vcxproj", "{D0F9CFEE-140E-4D0E-9F61-F3C8A1D9B9F6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6BC71A20-FA21-433B-A203-9F8E6B48A4D6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6BC71A20-FA21-433B-A203-9F8E6B48A4D6}.Debug|Win32.Build.0 = Debug|Win32
+		{6BC71A20-FA21-433B-A203-9F8E6B48A4D6}.Release|Win32.ActiveCfg = Release|Win32
+		{6BC71A20-FA21-433B-A203-9F8E6B48A4D6}.Release|Win32.Build.0 = Release|Win32
+		{E08416CB-3DA9-4EB8-92DF-43295A0CC788}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E08416CB-3DA9-4EB8-92DF-43295A0CC788}.Debug|Win32.Build.0 = Debug|Win32
+		{E08416CB-3DA9-4EB8-92DF-43295A0CC788}.Release|Win32.ActiveCfg = Release|Win32
+		{E08416CB-3DA9-4EB8-92DF-43295A0CC788}.Release|Win32.Build.0 = Release|Win32
+		{D0F9CFEE-140E-4D0E-9F61-F3C8A1D9B9F6}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D0F9CFEE-140E-4D0E-9F61-F3C8A1D9B9F6}.Debug|Win32.Build.0 = Debug|Win32
+		{D0F9CFEE-140E-4D0E-9F61-F3C8A1D9B9F6}.Release|Win32.ActiveCfg = Release|Win32
+		{D0F9CFEE-140E-4D0E-9F61-F3C8A1D9B9F6}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
