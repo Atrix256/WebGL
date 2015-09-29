@@ -8,14 +8,18 @@
 #include <iostream>
 #include <fstream>
 
-#define PRIMENUMBERSTARTINDEX 26 // this is the first 3 digit prime number: 101
+#define USEPRIMES 0 // if 1, will use primes from file. else will calcuate co-primes
 
+#define PRIMENUMBERSTARTINDEX 26 // this is the first 3 digit prime number: 101
+#define SMALLESTKEYVALUE 50      // if not using prime numbers, this will be the smallest key
+
+//typedef boost::multiprecision::int128_t TINT;
 typedef boost::multiprecision::cpp_int TINT;
 
 std::vector<TINT> g_primeNumbers;
 
 //=================================================================================
-TINT ExtendedEuclidianAlgorithm(TINT smaller, TINT larger, TINT &s, TINT &t)
+TINT ExtendedEuclidianAlgorithm (TINT smaller, TINT larger, TINT &s, TINT &t)
 {
     // make sure A <= B before starting
     bool swapped = false;
@@ -72,6 +76,7 @@ TINT ExtendedEuclidianAlgorithm(TINT smaller, TINT larger, TINT &s, TINT &t)
 //=================================================================================
 void LoadPrimeNumbers ()
 {
+    #if USEPRIMES
     FILE *file = fopen("primes-to-100k.txt", "rt");
     if (file)
     {
@@ -80,6 +85,7 @@ void LoadPrimeNumbers ()
             g_primeNumbers.push_back(value);
         fclose(file);
     }
+    #endif
 }
 
 //=================================================================================
@@ -91,7 +97,7 @@ void WaitForEnter ()
 }
 
 //=================================================================================
-TINT CalculateBit(size_t bitIndex, const std::vector<TINT> &keys, const std::vector<TINT> &coefficients, TINT keysLCM)
+TINT CalculateBit (size_t bitIndex, const std::vector<TINT> &keys, const std::vector<TINT> &coefficients, TINT keysLCM)
 {
     TINT ret = 0;
     const TINT bitMask = 1 << bitIndex;
@@ -113,19 +119,52 @@ TINT CalculateBit(size_t bitIndex, const std::vector<TINT> &keys, const std::vec
 }
 
 //=================================================================================
-void CalculateBitsAndKeys(int numBits, std::vector<TINT> &superPositionedBits, std::vector<TINT> &keys, TINT &keysLCM)
+bool KeyIsCoprime (std::vector<TINT> &keys, size_t keyIndex, TINT& value)
+{
+    for (size_t index = 0; index < keyIndex; ++index)
+    {
+        TINT s, t;
+        TINT gcd = ExtendedEuclidianAlgorithm(value, keys[index], s, t);
+        if (gcd != 1)
+            return false;
+    }
+
+    return true;
+}
+
+//=================================================================================
+void MakeKey (std::vector<TINT> &keys, size_t keyIndex)
+{
+#if USEPRIMES
+    keys[keyIndex] = g_primeNumbers[PRIMENUMBERSTARTINDEX + keyIndex];
+#else
+    TINT nextNumber = keyIndex > 0 ? (keys[keyIndex - 1] + 1) : TINT(SMALLESTKEYVALUE);
+    while (1)
+    {
+        if (KeyIsCoprime(keys, keyIndex, nextNumber))
+        {
+            keys[keyIndex] = nextNumber;
+            return;
+        }
+        nextNumber++;
+    }
+#endif
+}
+
+//=================================================================================
+void CalculateBitsAndKeys (int numBits, std::vector<TINT> &superPositionedBits, std::vector<TINT> &keys, TINT &keysLCM)
 {
     // size our arrays
     superPositionedBits.resize(size_t(numBits));
-    keys.resize(1 << numBits);
+    keys.resize(size_t(1) << superPositionedBits.size());
 
     // set our keys to prime numbers that aren't super tiny.  The smallest key
     // determines how much error we can tolerate building up, just like FHE over integers.
     keysLCM = 1;
     for (size_t i = 0, c = keys.size(); i < c; ++i)
     {
-        keys[i] = g_primeNumbers[PRIMENUMBERSTARTINDEX + i];
-        keysLCM *= g_primeNumbers[PRIMENUMBERSTARTINDEX + i];
+        MakeKey(keys, i);
+        keysLCM *= keys[i];
     }
 
     // calculate our co-efficients for each term, for the chinese remainder theorem.
@@ -150,7 +189,7 @@ void CalculateBitsAndKeys(int numBits, std::vector<TINT> &superPositionedBits, s
 }
 
 //=================================================================================
-bool TestResults(const std::vector<TINT> &superPositionedBits, const std::vector<TINT> &keys)
+bool TestResults (const std::vector<TINT> &superPositionedBits, const std::vector<TINT> &keys)
 {
     bool ret = true;
     for (size_t bitIndex = 0, bitCount = superPositionedBits.size(); bitIndex < bitCount; ++bitIndex)
@@ -173,7 +212,7 @@ bool TestResults(const std::vector<TINT> &superPositionedBits, const std::vector
 }
 
 //=================================================================================
-void WriteResults(const std::vector<TINT> &superPositionedBits, const std::vector<TINT> &keys, TINT keysLCM)
+void WriteResults (const std::vector<TINT> &superPositionedBits, const std::vector<TINT> &keys, TINT keysLCM)
 {
     std::ofstream file;
     file.open("results.txt", std::ios::out | std::ios::trunc);
@@ -244,13 +283,9 @@ int main (int argc, char **argv)
 /*
 
 TODO:
-
-* switch to using coprime sets, instead of prime numbers.  there are more numbers available, which means smaller numbers for same results
-
 * update the document with this method and examples etc
 * make projects that do stuff with the keys (like... N bit adder program, but others too!)
  * need to figure out bootstrapping, or modulus switching at some point to make it fully homomorphic, instead of just leveled
-* if this is slow with higher numbers of bits, could multithread it! so far, very fast though.
 * clean up code (long lines, comments, etc)
 * assert or something if the values don't pass the test in TestResults.
 
