@@ -5,15 +5,17 @@
 #include <stdint.h>
 #include <inttypes.h>
 #include <boost/multiprecision/cpp_int.hpp>
+#include <iostream>
+#include <fstream>
 
-#define PRIMENUMBERSTARTINDEX 0 // 26 // this is the first 3 digit prime number: 101
+#define PRIMENUMBERSTARTINDEX 26 // this is the first 3 digit prime number: 101
 
-typedef int64_t int64;
+typedef boost::multiprecision::cpp_int TINT;
 
-std::vector<int64> g_primeNumbers;
+std::vector<TINT> g_primeNumbers;
 
 //=================================================================================
-int64 ExtendedEuclidianAlgorithm (int64 smaller, int64 larger, int64 &s, int64 &t)
+TINT ExtendedEuclidianAlgorithm(TINT smaller, TINT larger, TINT &s, TINT &t)
 {
     // make sure A <= B before starting
     bool swapped = false;
@@ -25,9 +27,9 @@ int64 ExtendedEuclidianAlgorithm (int64 smaller, int64 larger, int64 &s, int64 &
 
     // set up our storage for the loop.  We only need the last two values so will
     // just use a 2 entry circular buffer for each data item
-    std::array<int64, 2> remainders = { larger, smaller };
-    std::array<int64, 2> ss = { 1, 0 };
-    std::array<int64, 2> ts = { 0, 1 };
+    std::array<TINT, 2> remainders = { larger, smaller };
+    std::array<TINT, 2> ss = { 1, 0 };
+    std::array<TINT, 2> ts = { 0, 1 };
     size_t indexNeg2 = 0;
     size_t indexNeg1 = 1;
 
@@ -35,8 +37,8 @@ int64 ExtendedEuclidianAlgorithm (int64 smaller, int64 larger, int64 &s, int64 &
     while (1)
     {
         // calculate our new quotient and remainder
-        int64 newQuotient = remainders[indexNeg2] / remainders[indexNeg1];
-        int64 newRemainder = remainders[indexNeg2] - newQuotient * remainders[indexNeg1];
+        TINT newQuotient = remainders[indexNeg2] / remainders[indexNeg1];
+        TINT newRemainder = remainders[indexNeg2] - newQuotient * remainders[indexNeg1];
 
         // if our remainder is zero we are done.
         if (newRemainder == 0)
@@ -46,18 +48,16 @@ int64 ExtendedEuclidianAlgorithm (int64 smaller, int64 larger, int64 &s, int64 &
             t = ts[indexNeg1];
             if (swapped)
                 std::swap(s, t);
-            // TODO: investigate if this is true a bit more!
-            // http://www.cs.princeton.edu/~dsri/modular-inversion-answer.php?n=4199&p=23
-            // 4199,23
-            // if t < 0, need to add the 23 to it? or should caller?
+
+            // if t < 0, add the modulus divisor to it, to make it positive
             if (t < 0)
                 t += smaller;
             return remainders[indexNeg1];
         }
 
         // calculate this round's s and t
-        int64 newS = ss[indexNeg2] - newQuotient * ss[indexNeg1];
-        int64 newT = ts[indexNeg2] - newQuotient * ts[indexNeg1];
+        TINT newS = ss[indexNeg2] - newQuotient * ss[indexNeg1];
+        TINT newT = ts[indexNeg2] - newQuotient * ts[indexNeg1];
 
         // store our values for the next iteration
         remainders[indexNeg2] = newRemainder;
@@ -75,7 +75,7 @@ void LoadPrimeNumbers ()
     FILE *file = fopen("primes-to-100k.txt", "rt");
     if (file)
     {
-        int64 value;
+        TINT value;
         while (fscanf(file, "%I64d", &value) == 1)
             g_primeNumbers.push_back(value);
         fclose(file);
@@ -85,16 +85,16 @@ void LoadPrimeNumbers ()
 //=================================================================================
 void WaitForEnter ()
 {
-    printf("\nPress Enter to quit");
+    std::cout << "\nPress Enter to quit";
     fflush(stdin);
     getchar();
 }
 
 //=================================================================================
-int64 CalculateBit (size_t bitIndex, const std::vector<int64> &keys, const std::vector<int64> &coefficients, int64 keysLCM)
+TINT CalculateBit(size_t bitIndex, const std::vector<TINT> &keys, const std::vector<TINT> &coefficients, TINT keysLCM)
 {
-    int64 ret = 0;
-    const int64 bitMask = 1 << bitIndex;
+    TINT ret = 0;
+    const TINT bitMask = 1 << bitIndex;
 
     // now figure out how much to multiply each coefficient by to make it have the specified modulus residue (remainder)
     for (size_t i = 0, c = keys.size(); i < c; ++i)
@@ -104,7 +104,7 @@ int64 CalculateBit (size_t bitIndex, const std::vector<int64> &keys, const std::
         if ((i & bitMask) == 0)
             continue;
 
-        int64 s, t;
+        TINT s, t;
         ExtendedEuclidianAlgorithm(coefficients[i], keys[i], s, t);
         ret = (ret + ((coefficients[i] * t) % keysLCM)) % keysLCM;
     }
@@ -113,7 +113,7 @@ int64 CalculateBit (size_t bitIndex, const std::vector<int64> &keys, const std::
 }
 
 //=================================================================================
-void CalculateBitsAndKeys (int64 numBits, std::vector<int64> &superPositionedBits, std::vector<int64> &keys, int64 &keysLCM)
+void CalculateBitsAndKeys(int numBits, std::vector<TINT> &superPositionedBits, std::vector<TINT> &keys, TINT &keysLCM)
 {
     // size our arrays
     superPositionedBits.resize(size_t(numBits));
@@ -132,7 +132,7 @@ void CalculateBitsAndKeys (int64 numBits, std::vector<int64> &superPositionedBit
     // We do it here because it can be re-used for each x value we are solving for
     // with these keys.
     const size_t c_numKeys = keys.size();
-    std::vector<int64> coefficients;
+    std::vector<TINT> coefficients;
     coefficients.resize(c_numKeys);
     fill(coefficients.begin(), coefficients.end(), 1);
     for (size_t i = 0; i < c_numKeys; ++i)
@@ -150,26 +150,22 @@ void CalculateBitsAndKeys (int64 numBits, std::vector<int64> &superPositionedBit
 }
 
 //=================================================================================
-bool TestResults (const std::vector<int64> &superPositionedBits, const std::vector<int64> &keys)
+bool TestResults(const std::vector<TINT> &superPositionedBits, const std::vector<TINT> &keys)
 {
     bool ret = true;
     for (size_t bitIndex = 0, bitCount = superPositionedBits.size(); bitIndex < bitCount; ++bitIndex)
     {
-        const int64 bitMask = 1 << bitIndex;
+        const TINT bitMask = 1 << bitIndex;
         for (size_t keyIndex = 0, keyCount = keys.size(); keyIndex < keyCount; ++keyIndex)
         {
-            int64 desiredResult = ((keyIndex & bitMask) != 0) ? 1 : 0;
+            TINT desiredResult = ((keyIndex & bitMask) != 0) ? 1 : 0;
             
             if (superPositionedBits[bitIndex] % keys[keyIndex] != desiredResult)
             {
                 ret = false;
-                printf("ERROR: bit %i (%"PRId64") mod key %i (%"PRId64") did not equal %"PRId64"!\n",
-                    bitIndex,
-                    superPositionedBits[bitIndex],
-                    keyIndex,
-                    keys[keyIndex],
-                    desiredResult
-                );
+                std::cout << "ERROR: bit " << bitIndex << " (" << superPositionedBits[bitIndex] << ") "
+                          << "mod key " << keyIndex << " (" << keys[keyIndex] << ") "
+                          << "did not equal " << desiredResult << "!\n";
             }
         }
     }
@@ -177,89 +173,68 @@ bool TestResults (const std::vector<int64> &superPositionedBits, const std::vect
 }
 
 //=================================================================================
-void WriteResults (const std::vector<int64> &superPositionedBits, const std::vector<int64> &keys, int64 keysLCM)
+void WriteResults(const std::vector<TINT> &superPositionedBits, const std::vector<TINT> &keys, TINT keysLCM)
 {
-    FILE *file = fopen("results.txt", "w+t");
-    if (file)
+    std::ofstream file;
+    file.open("results.txt", std::ios::out | std::ios::trunc);
+
+    if (!file.is_open())
+        return;
+
+    // write the bits
+    file << "bits = [";
+    for (size_t i = 0, c = superPositionedBits.size(); i < c; ++i)
     {
-        // write the bits
-        fprintf(file, "bits = [");
-        for (size_t i = 0, c = superPositionedBits.size(); i < c; ++i)
-        {
-            if (i > 0)
-                fprintf(file, ", ");
-            fprintf(file, "%"PRId64, superPositionedBits[i]);
-        }
-        fprintf(file, "] (mod %"PRId64")\n", keysLCM);
-
-        // write the keys
-        fprintf(file, "keys = [");
-        for (size_t i = 0, c = keys.size(); i < c; ++i)
-        {
-            if (i > 0)
-                fprintf(file, ", ");
-            fprintf(file, "%"PRId64, keys[i]);
-        }
-        fprintf(file, "]\n");
-        fclose(file);
+        if (i > 0)
+            file << ", ";
+        file << superPositionedBits[i];
     }
-}
+    file <<  "] (mod " << keysLCM << ")\n";
 
-//=================================================================================
-void BoostTest()
-{
-    using namespace boost::multiprecision;
+    // write the keys
+    file << "keys = [";
+    for (size_t i = 0, c = keys.size(); i < c; ++i)
+    {
+        if (i > 0)
+            file << ", ";
+        file << keys[i];
+    }
+    file << "]\n";
 
-    int128_t v = 1;
-
-    // Do some fixed precision arithmetic:
-    for (unsigned i = 1; i <= 20; ++i)
-        v *= i;
-
-    std::cout << v << std::endl; // prints 20!
-
-    // Repeat at arbitrary precision:
-    cpp_int u = 1;
-    for (unsigned i = 1; i <= 100; ++i)
-        u *= i;
-
-    std::cout << u << std::endl; // prints 100!
+    file.close();
 }
 
 //=================================================================================
 int main (int argc, char **argv)
 {
-    printf("--KeyGenerator--\n\nGenerates superpositioned bit values and keys for use in superpositional\ncomputation using HE over the integers.\n\n");
+    std::cout << "--KeyGenerator--\n\nGenerates superpositioned bit values and keys for use in superpositional\ncomputation using HE over the integers.\n\n";
 
     // Load the prime numbers
     LoadPrimeNumbers();
 
     // find out how many bits to generate for
-    printf("How many input bits are there in your circuit?\n");
-    int64 numBits;
-    scanf("%I64d", &numBits);
+    std::cout << "How many input bits are there in your circuit?\n";
+    int numBits;
+    scanf("%i", &numBits);
 
     // calculate superpositioned bits and keys
-    printf("\nCalculating Values...\n");
-    std::vector<int64> superPositionedBits;
-    std::vector<int64> keys;
-    int64 keysLCM;
+    std::cout << "\nCalculating Values...\n";
+    std::vector<TINT> superPositionedBits;
+    std::vector<TINT> keys;
+    TINT keysLCM;
     CalculateBitsAndKeys(numBits, superPositionedBits, keys, keysLCM);
 
     // Verify our results
-    printf("Done.\n\nVerifying results...\n");
+    std::cout << "Done.\n\nVerifying results...\n";
     if (!TestResults(superPositionedBits, keys))
     {
         // TODO: assert or something
     }
-    printf("Done.\n");
+    std::cout << "Done.\n";
 
     // Write results to results.txt
     WriteResults(superPositionedBits, keys, keysLCM);
-    printf("\nResults written to results.txt\n");
-
-    // TODO: temp
-    BoostTest();
+    std::cout << "\nResults written to results.txt\n";
 
     // done
     WaitForEnter();
@@ -269,21 +244,14 @@ int main (int argc, char **argv)
 /*
 
 TODO:
-* check out ExtendedEuclidianAlgorithm TODO
 
-* make the math use multi precision library
+* switch to using coprime sets, instead of prime numbers.  there are more numbers available, which means smaller numbers for same results
 
 * update the document with this method and examples etc
 * make projects that do stuff with the keys (like... N bit adder program, but others too!)
  * need to figure out bootstrapping, or modulus switching at some point to make it fully homomorphic, instead of just leveled
 * if this is slow with higher numbers of bits, could multithread it! so far, very fast though.
 * clean up code (long lines, comments, etc)
-? do i need to have the PRI whatever macros for the fscanf too? i think perhaps so
 * assert or something if the values don't pass the test in TestResults.
-
-* should we use relatively prime numbers instead of prime numbers? input could be lowest key value, and then find other relatively prime numbers?
- * prime numbers might be fine though
-
-!! PRIMENUMBERSTARTINDEX of 6 doesn't work when generating 2 bits. why??
 
 */
