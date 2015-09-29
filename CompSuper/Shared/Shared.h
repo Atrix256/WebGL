@@ -71,3 +71,40 @@ bool WriteBitsKeys (const char *fileName, const std::vector<T> &superPositionedB
     file.close();
     return true;
 }
+
+//=================================================================================
+template <typename T>
+bool ReadBitsKeys (const char *fileName, std::vector<T> &superPositionedBits, std::vector<T> &keys)
+{
+    std::ifstream file;
+    file.open("results.txt");
+
+    if (!file.is_open())
+        return false;
+
+    do
+    {
+        // read the number of bits
+        size_t numBits;
+        file >> numBits;
+        if (file.fail())
+            break;
+
+        // resize the data arrays
+        superPositionedBits.resize(numBits);
+        keys.resize(1 << numBits);
+
+        // read the bits
+        for (T &v : superPositionedBits)
+            file >> v;
+
+        // read the keys
+        for (T &v : keys)
+            file >> v;
+    }
+    while (0);
+
+    bool ret = !file.fail();
+    file.close();
+    return ret;
+}

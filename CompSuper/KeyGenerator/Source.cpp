@@ -5,10 +5,10 @@
 #include <boost/multiprecision/cpp_int.hpp>
 #include "Shared/Shared.h"
 
-#define USEPRIMES 1 // if 1, will use primes from file. else will calcuate co-primes
+#define USEPRIMES 0 // if 1, will use primes from file. else will calcuate co-primes
 
 #define PRIMENUMBERSTARTINDEX 26 // this is the first 3 digit prime number: 101
-#define SMALLESTKEYVALUE 50      // if not using prime numbers, this will be the smallest key
+#define SMALLESTKEYVALUE 10      // if not using prime numbers, this will be the smallest key
 
 //typedef int64_t TINT;
 //typedef boost::multiprecision::int128_t TINT;
