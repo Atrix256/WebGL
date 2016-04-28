@@ -5,14 +5,14 @@
 \definecolor{darkgreen}{RGB}{0,192,0}
 
 \setciteauthor{Alan Wolfe}
-\setcitetitle{GPU Efficient Texture Based Bezier Curve Evaluation}
+\setcitetitle{GPU Texture Sampler Bezier Curve Evaluation}
 
 % Mark submissions with the date of submission using the following line:
 %\submitted{\today}
 
 % Once an article is accepted accepted, switch to the following line and comment the preceding one. The editor will supply the argument values.
 \accepted{2014-02-07}{2014-02-07}{2014-02-07}{Editor Name}{3}{1}{1}{1}{2014}
-\seturl{http://jcgt.org/published/0003/01/01/}
+\seturl{http://blog.demofox.org/}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -23,10 +23,10 @@
 \usetikzlibrary{arrows.meta}
 \tikzset{>={Latex[width=3mm,length=3mm]}}
 
-\title{GPU Efficient Texture Based Bezier Curve Evaluation}
+\title{GPU Texture Sampler Bezier Curve Evaluation}
 
 \author
-       {Alan Wolfe\\Blizzard Entertainment}
+       {Alan Wolfe\\http://blog.demofox.org}
 
 \teaser{
   \begin{tikzpicture}[x=5in,y=1.7in]
@@ -84,21 +84,21 @@ Besides being useful for exposing internal parameters, the technique presented i
 \section{The Technique}
 \label{sec:thetechnique}
 
-The core of this technique is that the $N$-dimensional linear texture interpolation capabilities on the GPU can be mathematically equivalent to De Casteljeau's algorithm for evaluating Bezier curves.  We can use linear texture sampling on textures of increasing dimensionalities to have the texture sampler calculate points on curves of increasing degree.
+The core of this technique is that the $N$-dimensional linear texture interpolation capabilities on the GPU can be mathematically equivalent to De Casteljau's algorithm for evaluating Bezier curves.  We can use linear texture sampling on textures of increasing dimensionalities to have the texture sampler calculate points on curves of increasing degree.
 
 \subsection{Intuition}
 
-One dimensional linear texture sampling is just the linear interpolation between two data points.  This is equivalent to the De Casteljeau algorithm when evaluating a linear curve of degree 1.  In both cases, it is just linear interpolation between two values.
+One dimensional linear texture sampling is just the linear interpolation between two data points.  This is equivalent to the De Casteljau algorithm when evaluating a linear curve of degree 1.  In both cases, it is just linear interpolation between two values.
 
 Two dimensional linear texture sampling (bilinear texture sampling) can be thought of as just the linear interpolation across the $y$ axis, of two linear interpolations across the $x$ axis (or an interpolation across the $x$ axis of two linear interpolations across the $y$ axis - order doesn't matter).  In other words, bilinear texture sampling is just the linear interpolation of two linear interpolations. 
 
-The De Casteljeau algorithm for evaluating a quadratic curve (degree 2) is also just a linear interpolation between two linear interpolations.  If the control points of the quadratic curve are $P_0,P_1,P_2$, let's call the first interpolated point $Q_{0,1}$ which is the interpolation between $P_0$ and $P_1$ at $t$. The second linear interpolation is $Q_{1,2}$ and is the interpolation between $P_1$ and $P_2$ at $t$.  The final point on the curve will be the interpolation at $t$ between $Q_{0,1}$ and $Q_{1,2}$, which we can call $R_{0,1,2}$.  
+The De Casteljau algorithm for evaluating a quadratic curve (degree 2) is also just a linear interpolation between two linear interpolations.  If the control points of the quadratic curve are $P_0,P_1,P_2$, let's call the first interpolated point $Q_{0,1}$ which is the interpolation between $P_0$ and $P_1$ at $t$. The second linear interpolation is $Q_{1,2}$ and is the interpolation between $P_1$ and $P_2$ at $t$.  The final point on the curve will be the interpolation at $t$ between $Q_{0,1}$ and $Q_{1,2}$, which we can call $R_{0,1,2}$.  
 
 We could set up a texture such that the two $x$ axis interpolations would give us the values $Q_{0,1}$ and $Q_{1,2}$ respectively, and then the $y$ axis interpolation between those values would give us $R_{0,1,2}$.  When sampling, we would also use texture coordinates such it results in the same $t$ value for interpolation on each axis.
 
-To further see how bilinear interpolation can be equivalent to evaluating a quadratic Bezier curve with the De Casteljeau algorithm, \autoref{fig:decasteljeauBilinear} shows it visually, and you can also compare the GLSL source code in \autoref{lst:GLSLCurves}.
+To further see how bilinear interpolation can be equivalent to evaluating a quadratic Bezier curve with the De Casteljau algorithm, \autoref{fig:decasteljeauBilinear} shows it visually, and you can also compare the GLSL source code in \autoref{lst:GLSLCurves}.
 
-\begin{lstlisting}[caption={GLSL implementation of bilinear interpolation and the De Casteljeau algorithm for a quadratic Bezier curve.}, label={lst:GLSLCurves}]
+\begin{lstlisting}[caption={GLSL implementation of bilinear interpolation and the De Casteljau algorithm for a quadratic Bezier curve.}, label={lst:GLSLCurves}]
 float QuadraticBezier (
   in float t,
   in float P0, in float P1, in float P2
@@ -167,13 +167,13 @@ float BilinearInterpolate (
         \draw[black,fill=black] (0.6,0.6) circle (1mm);
         \draw[black] (0.55,0.6) node[anchor=east] {\bf{t}=0.6};
     \end{tikzpicture} 
-    \caption{\textit{Left:} A quadratic Bezier curve evaluated at {\bf{t}}=0.6 using the De Casteljeau algorithm.  \textit{Right:} The De Casteljeau algorithm using bilinear interpolation.}
+    \caption{\textit{Left:} A quadratic Bezier curve evaluated at {\bf{t}}=0.6 using the De Casteljau algorithm.  \textit{Right:} The De Casteljau algorithm using bilinear interpolation.}
     \label{fig:decasteljeauBilinear}
   \end{figure}
 
-The pattern continues for higher texture dimensions and curve degrees as well.  Linear texture sampling of textures of dimension $N$ is just the linear interpolation between two linear texture samples of dimension $N-1$.  Using the De Casteljeau algorithm to evaluate a curve of degree $N$ just means that you take a linear interpolation between curves of degree $N-1$.
+The pattern continues for higher texture dimensions and curve degrees as well.  Linear texture sampling of textures of dimension $N$ is just the linear interpolation between two linear texture samples of dimension $N-1$.  Using the De Casteljau algorithm to evaluate a curve of degree $N$ just means that you take a linear interpolation between curves of degree $N-1$.
 
-Compared to a quadratic curve evaluated with De Casteljeau's algorithm, bilinear texture sampling has two blend weights instead of one, and has four values to interpolate between instead of three, but you can set a texture up such that when you sample it a specific way, you get as output a quadratic Bezier curve.  Because of this, the De Casteljeau algorithm is a subset of the $N$-dimensional linear texture sampling available on the GPU.
+Compared to a quadratic curve evaluated with De Casteljau's algorithm, bilinear texture sampling has two blend weights instead of one, and has four values to interpolate between instead of three, but you can set a texture up such that when you sample it a specific way, you get as output a quadratic Bezier curve.  Because of this, the De Casteljau algorithm is a subset of the $N$-dimensional linear texture sampling available on the GPU.
 
 It can be seen that the actual pixel value in a bilinear sampled texture is in the middle of a pixel.  That means that when calculating our texture coordinates for eg. a 2x2 texture, we must sample between pixel location $(0.5,0.5)$ and pixel location $(1.5,1.5)$ to get the correct results.
 
@@ -198,11 +198,11 @@ The common pixel formats contain four color channels –-- Red, Green, Blue and 
     \label{fig:texbilcurve}
   \end{figure}  
 
-It is also possible to get points on curves of higher degree by taking multiple texture reads and combining them either using the De Casteljeau algorithm, or by using the Bernstein form equation of Bezier curves.
+It is also possible to get points on curves of higher degree by taking multiple texture reads and combining them either using the De Casteljau algorithm, or by using the Bernstein form equation of Bezier curves.
 
 \subsection{Mathematical Basis}
 
-The De Casteljeau algorithm is equivalent to the Bernstein form of Bezier curves (\autoref{eqn:bernsteinform}).
+The De Casteljau algorithm is equivalent to the Bernstein form of Bezier curves (\autoref{eqn:bernsteinform}).
 
 \begin{equation}
 \bf{P(t)} = \sum\limits_{i=0}^n\binom {n} {i}(1-t)^{n-i}t^i\text{\bf{P}}_i
@@ -325,7 +325,7 @@ While this technique is able to be used with any texture dimensionality, there a
       \end{scope}
     \end{scope}   
   \end{tikzpicture}
-  \caption{A tree showing the De Casteljeau algorithm for a cubic curve.  The labels on the right show what type of curves are evaluated at that level, as well as the $N$ dimensional sampling that is required to evaluate nodes at that level with a single texture read.}
+  \caption{A tree showing the De Casteljau algorithm for a cubic curve.  The labels on the right show what type of curves are evaluated at that level, as well as the $N$ dimensional sampling that is required to evaluate nodes at that level with a single texture read.}
   \label{fig:decdimensionality}
 \end{figure}  
 
@@ -333,7 +333,7 @@ While this technique is able to be used with any texture dimensionality, there a
 
 Using one dimensional textures, the built in texture interpolation is only able to perform linear interpolation, which allows calculations of only 1st degree (linear) Bezier curves (\autoref{fig:decdimensionality}).
 
-Since the De Casteljeau algorithm just interpolates between linear interpolations, we can take more texture samples and combine them in the shader program to get higher degree curves.  For a degree $N$ Bezier curve, the De Casteljeau algorithm requires $2^{N-1}$ linear interpolations for the linear level of the tree.  You need two pixels to perform a linear interpolation, so it seems that we would need $2^N$ pixels to store a curve of degree $N$ in a 1 dimensional textures.  For a cubic curve, that would look like this: $[P_0,P_1,P_1,P_2,P_1,P_2,P_2,P_3]$.
+Since the De Casteljau algorithm just interpolates between linear interpolations, we can take more texture samples and combine them in the shader program to get higher degree curves.  For a degree $N$ Bezier curve, the De Casteljau algorithm requires $2^{N-1}$ linear interpolations for the linear level of the tree.  You need two pixels to perform a linear interpolation, so it seems that we would need $2^N$ pixels to store a curve of degree $N$ in a 1 dimensional textures.  For a cubic curve, that would look like this: $[P_0,P_1,P_1,P_2,P_1,P_2,P_2,P_3]$.
 
 We can do better than that though.  Firstly, there are redundant lerps in the list for lerping between $P_1$ and $P_2$.  As the degree of the curve increases, the number of redundancies increase as well.  We don't want to have to pay the cost of pixel storage and texture samples for redundancies, so because we have $N+1$ control points and we only ever sample between  $P_i$ and $P_{i+1}$, we only need to store $N$ lerps in the 1 dimensional texture, which would mean we would need $N*2$ pixels.  A cubic curve would then look like this:  $[P_0,P_1,P_1,P_2,P_2,P_3]$.
 
@@ -382,11 +382,11 @@ It's often the case that you want $C0$ continuity for piecewise curves though, w
     \label{fig:texlayeout1d}
   \end{figure}
 
-Taking $N$ linearly interpolated texture samples from a one dimensional texture of size $N+1$ gives us the linear interpolated values we would need to continue to perform the De Casteljeau algorithm.  We can compute the final curve point either by doing that, or by plugging the values into the Bernstein form equation of Bezier curves.
+Taking $N$ linearly interpolated texture samples from a one dimensional texture of size $N+1$ gives us the linear interpolated values we would need to continue to perform the De Casteljau algorithm.  We can compute the final curve point either by doing that, or by plugging the values into the Bernstein form equation of Bezier curves.
 
-In the case of a cubic curve with four control points, the one dimensional texture will be 4 pixels in size, and three texture reads will need to be done to get the interpolations along the line segments for $\overline{P_0P_1},\overline{P_1P_2},\overline{P_2P_3}$.  Those will then need to be combined using either the De Casteljeau algorithm, or by using the Bernstein form of a quadratic Bezier curve ($P = P_0*s^2 + P_1*2st + P_2*t^2$) to elevate those three points from degree 1 to degree 3, to get the final point on the curve.  Sample code of this example is provided in \autoref{lst:GLSLCubicTexture1D}.
+In the case of a cubic curve with four control points, the one dimensional texture will be 4 pixels in size, and three texture reads will need to be done to get the interpolations along the line segments for $\overline{P_0P_1},\overline{P_1P_2},\overline{P_2P_3}$.  Those will then need to be combined using either the De Casteljau algorithm, or by using the Bernstein form of a quadratic Bezier curve ($P = P_0*s^2 + P_1*2st + P_2*t^2$) to elevate those three points from degree 1 to degree 3, to get the final point on the curve.  Sample code of this example is provided in \autoref{lst:GLSLCubicTexture1D}.
 
-\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture.  Linear texture sampling is used to evaluate the linear level of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a quadratic Bezier curve.}, label={lst:GLSLCubicTexture1D}]
+\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a 4 pixel 1d texture.  Linear texture sampling is used to evaluate the linear level of the De Casteljau algorithm, then the process is continued both with the De Casteljau algorithm, as well as the Bernstein form of a quadratic Bezier curve.}, label={lst:GLSLCubicTexture1D}]
 uniform sampler1D uSampler;  
 const float c_textureSize = 4.0; // $P_0,P_1,P_2,P_3$
 
@@ -474,7 +474,7 @@ If $M$ piecewise curves are desired, each of degree $N$, we can encode them acro
 
 GLSL source code is also provided below to help see how that would work for sampling a cubic curve from a two dimensional texture, with two bilinear texture samples combined to create the final cubic curve.
 
-\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture.  Bilinear texture sampling used to evaluate the first two levels of the De Casteljeau algorithm, then the process is continued both with the De Casteljeau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp).}, label={lst:GLSLCubicTexture2D}]
+\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,4)$ pixel 2d texture.  Bilinear texture sampling used to evaluate the first two levels of the De Casteljau algorithm, then the process is continued both with the De Casteljau algorithm, as well as the Bernstein form of a linear Bezier curve (lerp).}, label={lst:GLSLCubicTexture2D}]
 uniform sampler2D uSampler; 
 const vec2 c_textureSize = vec2(2.0,4.0); // rounded up from 2x3
 
@@ -631,7 +631,7 @@ The size of a three dimensional texture needed to encode a curve of degree $N$ i
 
 Below is some GLSL source code showing how you would sample a cubic curve stored in a 3d 2x2x2 texture, using trilinear texture sampling.
 
-\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,2,2)$ pixel 3d texture.  Trilinear texture sampling used to evaluate all three levels of the De Casteljeau algorithm.}, label={lst:GLSLCubicTexture3D}]
+\begin{lstlisting}[caption={GLSL for evaluating a cubic curve encoded in a $(2,2,2)$ pixel 3d texture.  Trilinear texture sampling used to evaluate all three levels of the De Casteljau algorithm.}, label={lst:GLSLCubicTexture3D}]
 // 2x2x2 3d texture.
 uniform sampler2D uSampler; 
 const vec3 c_textureSize = vec3(2.0, 2.0, 2.0);
@@ -696,7 +696,7 @@ If you encode Bezier curves into a texture which has multiple color channels - s
 
 For instance, if you had a 2x2 texture, you could encode the control points $P_0,P_1,P_2$ into the red channel, and the control points $P_1,P_2,P_3$ into the green channel.  Then, after you did a texture read, you could do a lerp between the red and the green channel values by $t$.  Since the red and green channel each contain a quadratic curve, the result would be a cubic curve, defined by the control points $P_0,P_1,P_2,P_3$  However, you've used up two of the channels for a single curve, so are getting fewer curves per texture read, but they are higher degree.  The blue and the alpha channel could either be quadratic curves, or could also be encoded such that they could be combined together to provide another cubic curve.
 
-You could also set it up such that R,G,B,A were meant to be combined together to make a quintic (degree 5) curve.  You'd only get a single curve value per texture read, but it would be 3 degrees higher.  You could combine the color channels either with De Casteljeau's algorithm, or with the cubic Bernstein Bezier form. 
+You could also set it up such that R,G,B,A were meant to be combined together to make a quintic (degree 5) curve.  You'd only get a single curve value per texture read, but it would be 3 degrees higher.  You could combine the color channels either with De Casteljau's algorithm, or with the cubic Bernstein Bezier form. 
 
 If you you are combining $M$ color channels, each of which are values from curves of degree $N$, the resulting curve value will be degree $N+M-1$.  The intuitive explanation to this, is that each channel has the ability to add one more control point to the curve, regardless of what texture dimensionality you are working with, and each control point added raises the curve one degree.
 
@@ -778,7 +778,7 @@ Even though there are accuracy limitations in modern GPU texture samplers, accur
 
 A naive way to do this would be to use nearest neighbor texture sampling instead of linear, and do the linear interpolations yourself in the shader program.  This would mean twice as many texture reads with a 1D texture, four times as many texture reads with a 2D texture, and eight times as many texture reads with a 3D texture.  You would also be doing a lot more blending in the shader program, so your shader programs would become heavier weight.  This solution is essentially doing software linear texture sampling.
 
-A better approach that gives the same results would be to only do one nearest neighbor texture sample per control point in the texture, and then in the shader program, either use De Casteljeau's algorithm to combine them, or use the Bernstein form equation of Bezier curves.  At this point, you are best off just using a 1D texture to store your control points in, since you don't need any of the built in interpolation.
+A better approach that gives the same results would be to only do one nearest neighbor texture sample per control point in the texture, and then in the shader program, either use De Casteljau's algorithm to combine them, or use the Bernstein form equation of Bezier curves.  At this point, you are best off just using a 1D texture to store your control points in, since you don't need any of the built in interpolation.
 
 These two techniques do all of the curve math in the shader program at full floating point precision and so are the highest quality, but are also the most computationally expensive.
 

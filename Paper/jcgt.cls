@@ -39,13 +39,13 @@
 \renewcommand{\jcgt@year}{#9}
 
 % 
-\lhead{\small \textit{Journal of Computer Graphics Techniques} \\ \jcgt@title }\chead{}\rhead{\small Vol. \jcgt@volume, No. \jcgt@number, \jcgt@year \\\href{http://jcgt.org}{http://jcgt.org}}
+%\lhead{\small \textit{Journal of Computer Graphics Techniques} \\ \jcgt@title }\chead{}\rhead{\small Vol. \jcgt@volume, No. \jcgt@number, \jcgt@year \\\href{http://jcgt.org}{http://jcgt.org}}
 
 \fancypagestyle{firstpagestyle}
 {
-   \fancyhead{\small \textit{Journal of Computer Graphics Techniques} Vol. \jcgt@volume, No. \jcgt@number, \jcgt@year}\chead{}\rhead{\small  \href{http://jcgt.org}{http://jcgt.org}}
+   %\fancyhead{\small \textit{Journal of Computer Graphics Techniques} Vol. \jcgt@volume, No. \jcgt@number, \jcgt@year}\chead{}\rhead{\small  \href{http://jcgt.org}{http://jcgt.org}}
    \fancyfoot[C]{\thepage }
-   \fancyfoot[R]{ISSN~2331-7418}
+   %\fancyfoot[R]{ISSN~2331-7418}
 }
 }
 
@@ -58,19 +58,19 @@
 \hrule
 \vspace{3mm}
 \vspace{5mm}
- \noindent\jcgt@author, \jcgt@title, \textit{Journal of Computer Graphics Techniques (JCGT)}, vol. \jcgt@volume, no. \jcgt@number, \jcgt@startpage--\jcgt@endpage, \jcgt@year\\\href{\jcgt@url}{\jcgt@url}
+%\noindent\jcgt@author, \jcgt@title, \textit{Journal of Computer Graphics Techniques (JCGT)}, vol. \jcgt@volume, no. \jcgt@number, \jcgt@startpage--\jcgt@endpage, \jcgt@year\\\href{\jcgt@url}{\jcgt@url}
 
-\vspace{5mm}
+%\vspace{5mm}
 \noindent{\small\hspace{-3mm}
 \begin{tabular*}{\textwidth}{lr@{\extracolsep{16mm}}l@{\extracolsep{3mm}}l}
-Received: &\jcgt@submitted &  \\
-Recommended: &\jcgt@recommended & Corresponding Editor: &\jcgt@editor\\
-Published: &\jcgt@published & Editor-in-Chief: &Morgan McGuire
+%Received: &\jcgt@submitted &  \\
+%Recommended: &\jcgt@recommended & Corresponding Editor: &\jcgt@editor\\
+%Published: &\jcgt@published & Editor-in-Chief: &Morgan McGuire
 \end{tabular*}}
 
 \vspace{5mm}
 \noindent \copyright~\jcgt@year~\jcgt@author~(the Authors).
-\\The Authors provide this document (the Work) under the Creative Commons CC~BY-ND 3.0 license available online at \href{http://creativecommons.org/licenses/by-nd/3.0/}{http://creativecommons.org/licenses/by-nd/3.0/}. The Authors further grant permission for reuse of images and text from the first page of the Work, provided that the reuse is for the purpose of promoting and/or summarizing the Work in scholarly venues and that any reuse is accompanied by a scientific citation to the Work.
+\\The Authors provide this document (the Work) under the Creative Commons CC~BY-ND 3.0 license available online at \href{http://creativecommons.org/licenses/by-nd/3.0/}{http://creativecommons.org/licenses/by-nd/3.0/}.
 
 \vspace{2mm}
 \noindent\includegraphics[width=2.5cm]{CC-BY-ND.png}
